@@ -1,0 +1,225 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>Bugs Fixed</title>
+</head>
+
+<body>
+<a href="contents.html"><img src="images/xfig-title.png"
+  alt="XFIG Users Manual" border=0></a>
+
+<hr>
+
+<h1><a name="bugsfixed">Bugs Fixed in <i>xfig 3.2.1</i></a></h1>
+(Released Jul 1, 1998)
+
+<p><img src="images/blueballdot.png"> 
+Line width is scaled with object scaling now
+<p><img src="images/blueballdot.png"> 
+Arrowheads are scaled when scaling lines, splines and arcs now
+<p><img src="images/blueballdot.png"> 
+Screen_res was incorrect for drawing tablets
+<p><img src="images/blueballdot.png"> 
+When scaling a compound by using the "move point" edit mode, undoing
+	  the scale didn't work properly because of rounding problems.
+	  A proper "undo" is now performed.
+<p><img src="images/blueballdot.png"> 
+Note: the -inverse (reverse video) option has been removed because
+	  the same effect can be achieved using "-cbg black -cfg white"
+<p><img src="images/blueballdot.png"> 
+Made the export_panel*mask*string same as browse_panel*mask*string
+<p><img src="images/blueballdot.png"> 
+User-defined colors weren't being merged properly in compound objects
+<p><img src="images/blueballdot.png"> 
+If Paste was performed while opening a compound object, some objects
+	  outside the opened compound object may have been lost and xfig may
+	  have crashed with a segfault later.
+<p><img src="images/blueballdot.png"> 
+ARC-BOX corner radius scaled incorrectly when box was scaled
+<p><img src="images/blueballdot.png"> 
+ARC-BOX corner radius is now only scaled with Scale operation, not
+	  move point
+<p><img src="images/blueballdot.png"> 
+Busy cursor wasn't being reset when reading some figures
+<p><img src="images/blueballdot.png"> 
+Refreshing the screen while creating a Fig object (e.g. POLYLINE)
+	  refreshes that object correctly now
+<p><img src="images/blueballdot.png"> 
+Updated pointer for hp2xx and additional pointer to Fig related apps
+	  in FIGAPPS file. From Ian MacPhedran
+<p><img src="images/blueballdot.png"> 
+Declaration of clrtab array incorrect in f_neuclrtab.h - caused
+	  problems on Digital Unix. From Ian MacPhedran
+<p><img src="images/blueballdot.png"> 
+When loading a figure that changes the canvas orientation (Portrait/
+	  Landscape), the file modified flag was not cleared
+<p><img src="images/blueballdot.png"> 
+When it can't save to a file, xfig now rings the bell and puts the
+	  error message in the *popup* message window
+<p><img src="images/blueballdot.png"> 
+Trying to use the external image editor in the edit panel for an
+	  imported picture failed if the file was compressed
+<p><img src="images/blueballdot.png"> 
+When switching to a private colormap because of importing a picture,
+	  xfig is better about matching the colormap of the popup edit panel
+<p><img src="images/blueballdot.png"> 
+Objects not aligned correctly in large drawings due to bad choice
+	  of starting min/max values (use INT_MIN and INT_MAX now)
+<p><img src="images/blueballdot.png"> 
+When running "xfig -right" (mode/edit panel on right-side) the popup
+	  balloons were too long, never showed the message and popped up and
+	  down because they appeared under the mouse.
+<p><img src="images/blueballdot.png"> 
+Cleanup of many, many function declarations (mostly type void)
+<p><img src="images/blueballdot.png"> 
+Inadvertantly used incorrect font for Avant-Garde
+<p><img src="images/blueballdot.png"> 
+When undo'ing load figure, any objects using user-defined colors may
+	  not have been displayed correctly until doing a "Redraw".  Also,
+	  non-existant user colors may have stayed in pen and/or fill color
+	  indicators.
+<p><img src="images/blueballdot.png"> 
+Bug in size of imported Picture when clicking on "Use orig size" -
+	  image was slightly too small.  Also bug when clicking "Use orig size"
+	  in metric mode - even worse scaling.
+<p><img src="images/blueballdot.png"> 
+Code to check for bad font numbers when reading Fig file was in wrong
+	  place
+<p><img src="images/blueballdot.png"> 
+Bug in pcx decoder - odd-width images caused seg fault.  This would
+	  also affect importing eps files since xfig uses pcx output from gs.
+<p><img src="images/blueballdot.png"> 
+Another bug in pcx decoder - wasn't allocating correct amount of
+	  memory for the image buffer.  This would of course, cause segfaults.
+<p><img src="images/blueballdot.png"> 
+Bug in "Fit-to-page" in metric mode fixed
+	  from Hans Werner Strube (strube@swing.physik3.gwdg.de)
+<p><img src="images/blueballdot.png"> 
+Cleaned up mode button icons to fit within button area better
+<p><img src="images/blueballdot.png"> 
+An old feature to prevent an expose event on the canvas from erasing
+	  a newly imported image while still in the picture editor is no longer
+	  needed and prevented screen refreshing
+<p><img src="images/blueballdot.png"> 
+If screen capture is attempted with no Fig filename (e.g. when
+	  starting xfig with no file name) seg fault occurred.
+	  from T. Sato
+<p><img src="images/blueballdot.png"> 
+Small correction to I18N draw_string routine
+	  from T. Sato
+<p><img src="images/blueballdot.png"> 
+Not all calls to fig2dev had I18N localization options passed
+	  from T. Sato
+<p><img src="images/blueballdot.png"> 
+If you create a new figure (no name yet) and try to export before
+	  saving, xfig asked you if you wanted to save the figure first.  If
+	  you said yes, it would popup the file panel to choose a name and save.
+	  After that though, it wouldn't do the export as you first requested.
+	  This has been fixed.
+<p><img src="images/blueballdot.png"> 
+Added "&& !defined(__GLIBC__)" to declarations of random and srandom for
+	  systems with glibc
+<p><img src="images/blueballdot.png"> 
+Imported eps files containing "initgraphics" commands weren't working
+	  correctly.  This has been fixed by defining initgraphics and
+	  initmatrix as {}.
+<p><img src="images/blueballdot.png"> 
+Yet another #if added to the never-ending list.  This one is for
+	  sys_errlist.  FreeBSD systems already define it in stdio.h.
+<p><img src="images/blueballdot.png"> 
+Inconsistent declaration uncompress_file (static)
+<p><img src="images/blueballdot.png"> 
+Missing braces around initializers for headers structure for imported
+	  bitmap file types
+<p><img src="images/blueballdot.png"> 
+Some unused variables and procedures removed
+<p><img src="images/blueballdot.png"> 
+Incorrect casts in e_align.c
+<p><img src="images/blueballdot.png"> 
+Bug in figure size in export and print panels - bounding variable
+	  was clobbered soon after being calculated
+<p><img src="images/blueballdot.png"> 
+Allowed saving over a read-only file if file panel wasn't created
+<p><img src="images/blueballdot.png"> 
+Various problems with New figure-&gt;Export-&gt;File popup sequence either
+	  segfaulting or permanently disabling xfig buttons and canvas fixed.
+<p><img src="images/blueballdot.png"> 
+GC wasn't properly setup for dragging rectangle on screen for screen
+	  capture for some systems.
+<p><img src="images/blueballdot.png"> 
+Very small arcs "blew up" making very large arcs on screen
+<p><img src="images/blueballdot.png"> 
+Bug in draw_arc() - would free unallocated memory if arc was small
+<p><img src="images/blueballdot.png"> 
+Imakefile had w_icons.o in XFIGSRC instead of w_icons.c
+<p><img src="images/blueballdot.png"> 
+Fixed annoying warning about StartScroll action not found on Linux
+	  systems that use the "modified" Xaw3d widget set (ARROW_SCROLLBAR
+	  defined, which makes the scrollbars look like the Windows scrollbars)
+<p><img src="images/blueballdot.png"> 
+Mouse indicator was leaving bits of old text behind for long messages
+<p><img src="images/blueballdot.png"> 
+Removed call to rint() because gcc can't find it on HP-UX
+<p><img src="images/blueballdot.png"> 
+Move_point_selected() called set_mousefun() with too few args
+<p><img src="images/blueballdot.png"> 
+Variable "text_translations" multiply defined
+<p><img src="images/blueballdot.png"> 
+Fixed some bugs relating to updating dash-length/dot-gap in indicator
+	  panel from dashed/dotted lines
+<p><img src="images/blueballdot.png"> 
+Bug fixed where update indicator (red box) didn't always toggle
+	  correctly
+<p><img src="images/blueballdot.png"> 
+Undo of spline&lt;-&gt;line conversion and box&lt;-&gt;arc_box fixed
+<p><img src="images/blueballdot.png"> 
+For some reason, the Solaris version of XtAppCreateShell references
+	  an argument beyond what the users specifies in the command line,
+	  causing a seg fault.
+	  Fixed by Martin Pahl (pahl@tnt.uni-hannover.de)
+<p><img src="images/blueballdot.png"> 
+Renamed suffix for AutoCad Slide export to ".sld" (was ".acad")
+<p><img src="images/blueballdot.png"> 
+Needed #ifdef USE_JPEG in w_export.c for compiling without JPEG
+	  support
+<p><img src="images/blueballdot.png"> 
+Transparent color was not passed to fig2dev for GIF output (new -t
+	  option in fig2dev do do this)
+<p><img src="images/blueballdot.png"> 
+Inappropriate arguments to sqrt() in spline calculations (not double)
+<p><img src="images/blueballdot.png"> 
+The radius value displayed in the message window was incorrect when
+	  drawing ellipses
+<p><img src="images/blueballdot.png"> 
+Both radii are reported now when drawing ellipses
+<p><img src="images/blueballdot.png"> 
+Now checks whether Fig file is read-only before renaming to .bak and
+	  allowing user to save. (after second save, original, read-only file
+	  would be gone)
+<p><img src="images/blueballdot.png"> 
+New #ifdef for glibc which has sys_errlist and random() defined
+<p><img src="images/blueballdot.png"> 
+Conflict with definition M_PI (3.14159....) on RedHat systems fixed
+<p><img src="images/blueballdot.png"> 
+Interpolated splines in Fig version 2.1 files were read incorrectly
+	  fixed by Onno Roep (O.A.Roep@twi.tudelft.nl)
+<p><img src="images/blueballdot.png"> 
+If you had a line with arrowhead(s) and deleted all the points to make
+	  it a single point object, then undid the last delete point, the
+	  arrowhead(s) didn't reappear.  This has been fixed.
+<p><img src="images/blueballdot.png"> 
+Less multiple redrawing of figure when starting xfig with filename and
+	  it needs to change orientation (portrait/landscape)
+<p><img src="images/blueballdot.png"> 
+"Ledger" paper size removed from list of paper sizes.  It is really
+	  "Tabloid" size in landscape mode.
+<p><img src="images/blueballdot.png"> 
+Undo of align to canvas wasn't refreshing display
+<hr>
+
+[ <a href="contents.html">Contents</a> |
+ <a href="introduction.html">Introduction</a> |
+ <a href="authors.html">Credits</a> ]
+
+</body>
+</html>

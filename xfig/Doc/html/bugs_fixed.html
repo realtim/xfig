@@ -1,0 +1,172 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>Bugs Fixed</title>
+</head>
+
+<body>
+<a href="contents.html"><img src="images/xfig-title.png"
+  alt="XFIG Users Manual" border=0></a>
+
+<h1>Bugs Fixed</h1>
+
+<hr>
+<h2>Current release:</h2>
+<img src="images/blueballdot.png"><a href="#bugsfixed">Bugs Fixed in <i>xfig 3.2.5-alpha</i></a> 
+<h2>Older releases of xfig:</h2>
+<img src="images/blueballdot.png"><a href="bugs_fixed.3.2.3d.html"><i>xfig 3.2.3d (May 2001)</i></a> 
+<br>
+<img src="images/blueballdot.png"><a href="bugs_fixed.3.2.3c.html"><i>xfig 3.2.3c (Jul 26, 2000)</i></a> 
+<br>
+<img src="images/blueballdot.png"><a href="bugs_fixed.3.2.3b.html"><i>xfig 3.2.3b (Jul 19, 2000)</i></a> 
+<br>
+<img src="images/blueballdot.png"><a href="bugs_fixed.3.2.3a.html"><i>xfig 3.2.3a (Jan 19, 2000)</i></a> 
+<br>
+<img src="images/blueballdot.png"><a href="bugs_fixed.3.2.3.html"><i>xfig 3.2.3 (Jan 14, 2000)</i></a> 
+<br>
+<img src="images/blueballdot.png"><a href="bugs_fixed.3.2.2.html"><i>xfig 3.2.2 (Jul 2, 1998)</i></a> 
+<br>
+<img src="images/blueballdot.png"><a href="bugs_fixed.3.2.1.html"><i>xfig 3.2.1 (Jul 1, 1998)</i></a> 
+<br>
+<hr>
+
+<h1><a name="bugsfixed">Bugs Fixed in <i>xfig 3.2.5-alpha5</i></a></h1>
+<p><img src="images/blueballdot.png"> typo in latex_and_xfig.html and LATEX_AND_XFIG files. Text should be:
+	  \convertMPtoPDF{foo.0}{1}{1}
+	  It was missing parameters {1}{1}
+<p><img src="images/blueballdot.png"> -correct_font_size missing from -help option list and man pages
+<p><img src="images/blueballdot.png"> -help and -version didn't work unless they were first in the options
+<p><img src="images/blueballdot.png"> -O option wasn't passed to fig2dev for overlapping pages in multiple
+	  page mode for PostScript export
+
+<h2><a name="bugsfixed-alpha4">Bugs Fixed in <i>xfig 3.2.5-alpha4</i></a></h2>
+<p><img src="images/blueballdot.png"> When loading a library object, if it contained only a compound and
+	  nothing else, when xfig promoted that compound to the toplevel the
+	  main comment was lost
+<p><img src="images/blueballdot.png"> Incorrect header files used for SmeBSB resulted in either segfault or
+	  none of the command panel entries being underlined
+<p><img src="images/blueballdot.png"> Drawing very large splines (e.g. at zoom = 0.01) caused integer
+	  roundoff errors, making xfig loop indefinitely
+<p><img src="images/blueballdot.png"> Bug where a line that had a zero width or length arrowhead was not
+	  redrawn after being moved, copied, canvas redraw, etc.
+<p><img src="images/blueballdot.png"> The page border and axis lines would obscure Fig objects when moving,
+	  copying etc. other objects on the canvas.
+<p><img src="images/blueballdot.png"> In the popup picture editor, if the relative position of the corners
+	  of the picture were changed, the rotation field was not updated
+	  (this bug was in 3.2.5-alpha3 only)
+
+<h2><a name="bugsfixed-alpha3">Bugs Fixed in <i>xfig 3.2.5-alpha3</i></a></h2>
+<p><img src="images/blueballdot.png"> Missing #ifdef XAW3D in SimpleMenu.c
+<p><img src="images/blueballdot.png"> Bug when breaking a compound object - depths were added twice to the
+	  counts
+<p><img src="images/blueballdot.png"> When implicitly cancelling the placement of a library object by
+	  choosing another mode, xfig would tell user to cancel or finish the
+	  current operation, but there was no way to do that
+<p><img src="images/blueballdot.png"> Picture Reread button was active before file was read the first time
+<p><img src="images/blueballdot.png"> Rereading picture in edit popup produced bad colors
+<p><img src="images/blueballdot.png"> When using multiple copies of an imported picture, h/w ratio was not
+	  computed for copies
+<p><img src="images/blueballdot.png"> Importing PCX images were incorrect when bytes per line different from
+	  width*bpp
+<p><img src="images/blueballdot.png"> When passed a filename containing a directory name for a Fig object
+	  library using -library_dir, and that directory only contains Fig files
+	  and no subdirectories with Fig files, xfig segfaulted
+<p><img src="images/blueballdot.png"> Several checks for memory allocation failure added to the library
+	  loading procs
+<p><img src="images/blueballdot.png"> Forgot to free allocated memory when return abnormally from loading
+	  libraries
+<p><img src="images/blueballdot.png"> Path length check in loading libraries fixed
+<p><img src="images/blueballdot.png"> Missing include for put_msg prototype in e_measeure.c
+<p><img src="images/blueballdot.png"> Needed #ifdef for XtVersion in SmeBSB.c (X11R5 doesn't have
+	  international fontset)
+<p><img src="images/blueballdot.png"> Added SIGPIPE signal to ignore in case an external program dies when we're
+	  using pipes
+<p><img src="images/blueballdot.png"> Screen capture on an MSBFirst X server with 24/32 bits per pixel was
+	  incorrect.
+<p><img src="images/blueballdot.png"> Importing any image file on such a server was incorrect (bytes/bits
+	  reversed).
+<p><img src="images/blueballdot.png"> Reading GIF or PCX files on 24-bit server *and* on big-endian machine
+	  (e.g. Sparcstation) resulted in bytes being swapped and funny colors
+<p><img src="images/blueballdot.png"> Could popup unit dialog when drawing/editing objects
+<p><img src="images/blueballdot.png"> Embedded whitespace in filenames in recently loaded files weren't
+	  parsed properly (.xfigrc)
+<p><img src="images/blueballdot.png"> When pasting an object on the canvas, point positioning grid wasn't used
+<p><img src="images/blueballdot.png"> Bug when reading a compressed eps file (file handle was passed to open
+	  proc instead of name)
+<p><img src="images/blueballdot.png"> Minor grid spec used twice instead of minor/major when passed to fig2dev
+<p><img src="images/blueballdot.png"> Fixed conversions of export/print grid values when switching to/from
+	  metric, decimal or fraction
+<p><img src="images/blueballdot.png"> When loading or merging a file, xfig appended ".fig" to the name if
+	  there wasn't ".fig" in the name. Now it only appends ".fig" if there
+	  is no suffix (no ".").
+<p><img src="images/blueballdot.png"> When appending the ".fig" before the previous change, xfig would segfault
+<p><img src="images/blueballdot.png"> Libraries/Electronic/Schematic/transformer and transformer_ironcore
+	  aligned to 1/16" grid
+<p><img src="images/blueballdot.png"> Bugs in indicator panel display of text flags, dimension line params
+	  and arrow size params when cycling through settings with middle or
+	  right mouse button
+<p><img src="images/blueballdot.png"> Bug in callbacks for dimension line checkboxes that select actual
+	  length or user text
+<p><img src="images/blueballdot.png"> When exporting to Combined PDF/LaTeX it uses ".pdf" and ".pdf_t"
+	  suffixes because LaTeX doesn't recognize ".pdftex" as a PDF file
+<p><img src="images/blueballdot.png"> Better clipping around arrowheads on thick lines (lines that are
+	  thicker than the arrowhead is wide)
+<p><img src="images/blueballdot.png"> Checks for open splines of less than 2 points when reading figure file and
+	  removes them
+<p><img src="images/blueballdot.png"> Clicking middle mouse button after creating first point of closed
+	  spline switched to freehand mode
+<p><img src="images/blueballdot.png"> Export panel sections would get messed up when changing export
+	  languages
+<p><img src="images/blueballdot.png"> Now checks whether scrollbars support StartScroll before trying to use
+	  it for the wheel scrolling.  When the Xaw widgets are compiled with
+	  ARROW_SCROLLBAR, there is no such action.
+<p><img src="images/blueballdot.png"> pstex_t export lacked border option (-b) to align LaTeX text when
+	  pstex figure specified border (also fixed in fig2dev)
+<p><img src="images/blueballdot.png"> Create one picture object with no filename, then create another and
+	  xfig crashed
+<p><img src="images/blueballdot.png"> Some bugs when freeing dimension line components
+<p><img src="images/blueballdot.png"> Bad choices for grid dot spacing in metric mode in the 5mm grid, and
+	  decimal inch mode in the 0.5 and 1.0 inch grids
+<p><img src="images/blueballdot.png"> -international flag missing from xfig.html and xfig.man docs
+<p><img src="images/blueballdot.png"> Added call to XsetLocaleModifiers() when initializing input method
+	  (-international mode only)
+<p><img src="images/blueballdot.png"> xfig was limiting arrowhead lengths to 50 pixels instead of 50 inches,
+	  and the width to 10 pixels instead of 10 inches.
+<p><img src="images/blueballdot.png"> edit panel for circles shouldn't have "angle" entry
+<p><img src="images/blueballdot.png"> edit panel wasn't allowing typing in of negative angles for text and
+	  ellipses
+<p><img src="images/blueballdot.png"> Objects were sometimes drawn with a wild point when zooming
+<p><img src="images/blueballdot.png"> Full path was being added to default export filename and wasn't
+	  changing when user changed directories
+<p><img src="images/blueballdot.png"> When drawing a box or rounded box with the "show line lengths" on, the
+	  sizes were in Fig units (1200ppi) instead of user units.
+<p><img src="images/blueballdot.png"> Spacing cedilla (ISO 0xB8 / octal 270) was missing from CompKeyDB file
+<p><img src="images/blueballdot.png"> Changing the units in the popup edit panel for a text object caused a
+	  segfault.
+<p><img src="images/blueballdot.png"> Rulers and grid didn't change scale when user scale was != 1.0.  Even
+	  though the message window showed the correct user scale when drawing
+	  objects, the rulers and grid still showed the unscaled values.
+<p><img src="images/blueballdot.png"> Axis lines through 0,0 now drawn after page border so it remains
+	  visible when there is a grid
+<p><img src="images/blueballdot.png"> Segfault if current directory was deleted after starting xfig
+<p><img src="images/blueballdot.png"> Positioning grid was set to "ANY" when editing a compound object,
+	  causing the original bounding box to be lost
+<p><img src="images/blueballdot.png"> Bug in arc drawing caused arcs to be drawn as circles at high zoom
+<p><img src="images/blueballdot.png"> Computing the area of a polygon larger than 38x38 inches overflowed
+	  calculation
+<p><img src="images/blueballdot.png"> Bug in bounds calculation for ellipses and circles that increased
+	  bounding box even with line width = 1
+<p><img src="images/blueballdot.png"> Limit on number of styles in a family wasn't checked
+<p><img src="images/blueballdot.png"> If all depths were turned off and any edit operation was attempted on
+	  the canvas such as move object, delete object, xfig would hang,
+	  searching for objects indefinitely.
+
+
+<hr>
+
+[ <a href="contents.html">Contents</a> |
+ <a href="introduction.html">Introduction</a> |
+ <a href="authors.html">Credits</a> ]
+
+</body>
+</html>

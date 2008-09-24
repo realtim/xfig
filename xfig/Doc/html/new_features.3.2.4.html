@@ -1,0 +1,293 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>New Features in xfig 3.2.4 (Released December 2002)</title>
+</head>
+
+<body>
+<a href="contents.html"><img src="images/xfig-title.png"
+  alt="XFIG Users Manual" border=0></a>
+
+<hr>
+
+<img src="images/blueballdot.png"><a href="#newfeatures">New Features in <i>xfig 3.2.4</i></a> 
+<br>
+<img src="images/blueballdot.png"><a href="#newlibraries">New Libraries and Examples</a> 
+
+<h1><a name="newfeatures">New Features in <i>xfig 3.2.4</i></a></h1> 
+<p><img src="images/blueballdot.png"> 
+	The xfig documentation is nearly entirely GIF-free (TM).  Only the frames images
+	use GIF because they use a transparent background, which many browsers don't honor.
+	PNG is used for all other images.
+<p><img src="images/blueballdot.png"> 
+	Xfig reference manual now available in PDF besides html.
+	The English version is in Doc/xfig_en.pdf and the Japanese in 
+	  Doc/xfig_jp.pdf.  These are also available in the Help menu.
+
+<p><img src="images/blueballdot.png"> 
+	Binary and source RPM files available for systems with rpm (RedHat
+	  Package Manager).
+<p><img src="images/blueballdot.png"> 
+<img src = "images/dimension-line-newfeature.png" align=right>
+Dimension lines - Hold the shift key down while drawing a polyline,
+	  and after specifying the two endpoints a "dimension line" is created,
+	  which is actually a compound object containing the line drawn (with
+	  arrowheads if auto arrow mode is on) in the current color, "tick"
+	  lines at each endpoint, text showing the length of the line in the
+	  current units, and a box around the text filled in the current fill
+	  color.  If this compound object is rescaled or one or more endpoints
+	  are moved, the actual length is recalculated and the text is updated.
+<p><img src="images/blueballdot.png"> New Xfig logo courtesy of Marc-Aurele Darche.
+<img src = "images/xfig-logo.png" align=top>
+<p><img src="images/blueballdot.png"> Can now paste text in text mode using Shift+Middle-mouse-button in
+	  addition to F20 and Sun's Paste key (F18).
+<p><img src="images/blueballdot.png"> If xfig is compiled with #define WHEELMOUSE uncommented in the
+	  Imakefile, the wheel may be used for several things 
+	  (see <a href="miscellaneous.html#wheelmouse">Miscellaneous/Wheel Mouse</a>).
+<p><img src="images/blueballdot.png"> New grid/positioning option for inches mode: -grid_unit.  If the value
+	  given is "1/10", "ten", "tenth", "1/10" or "10", (e.g. -grid_unit ten)
+	  then the grid and point positioning is in decimal inches.  Otherwise
+	  they are in 1/16 inch units (as before).  When in this mode, the grid
+	  step sizes are 0.1, 0.2, 0.5 and 1 inch and the positioning steps are
+	  0.05, 0.10, 0.2, 0.5, and 1.0 inch.
+<p><img src="images/blueballdot.png"> Background (-g to fig2dev) option for tk export honored now.
+<p><img src="images/blueballdot.png"> New command-line argument -correct_font_size (X resource
+	  Fig.correct_font_size) to make xfig use real points for font sizes
+	  instead of units of 1/80 inch.  xfig has always claimed that the font
+	  size units are points (1/72inch), but in fact they were 1/80 inch.
+	  This new option is not the default because it will break some figures
+	  by making the text too large compared to other Fig objects, but it
+	  will be the default in a future version.
+	  The corresponding argument to fig2dev is -F (xfig automatically sets
+	  this when calling fig2dev).
+<p><img src="images/blueballdot.png"> Added "Stop" button to stop loading library.
+<p><img src="images/blueballdot.png"> Much more efficient when copying large imported pictures - existing
+	  pixmap is used instead of creating new one.  This also precludes the
+	  need to remap colors when running out of colors when the colors are
+	  identical.
+<p><img src="images/blueballdot.png"> When changing an attribute of an imported picture that doesn't change
+	  the picture itself (e.g. depth), the pixmap is not regenerated,
+	  therefore saving time.  The same is true when copying a picture.
+<p><img src="images/blueballdot.png"> New X resource Fig.ghostscript and command-line argument -ghostscript
+	  by which you can tell xfig what your ghostscript is called (e.g. "gs"
+	  or "gswin32").
+<p><img src="images/blueballdot.png"> 
+	Can now add ASCII (EPSI) preview to EPS export. See export panel.
+<p><img src="images/blueballdot.png"> Can now add monochrome or color TIFF preview to EPS export.  This is
+	  needed by Microsoft Word, Powerpoint, etc. to display the EPS on the
+	  screen. Select from the pulldown menu of export languages.  You must
+	  have fig2dev 3.2.4 for these features. See export panel.
+<p><img src="images/blueballdot.png"> Translations of LATEX.AND.XFIG document into two popular Chinese
+	  encodings (GB2312 and Big5).  These are called LATEX.AND.XFIG.zh_CN
+	  and LATEX.AND.XFIG.zh_TW respectively.
+	  From Mendel Chan
+<p><img src="images/blueballdot.png"> When text becomes too small to see (e.g. small zoom), xfig will
+	  "Greek" it, meaning it draws a gray line segment for each word in the string.
+<img src = "images/showgreeking.png" align=top>
+<p><img src="images/blueballdot.png"> When resizing canvas to a smaller height, the number of buttons per
+	  row of the mode (side) panel increases so that it doesn't protrude
+	  into the indicator (bottom) panel
+<p><img src="images/blueballdot.png"> Smarter redraw when turning on depths from the depth manager.  If
+	  depth N is turned on and there are no active depths &lt; N, only depth N
+	  is drawn - otherwise, the canvas is erased and the whole figure is
+	  redrawn.
+<p><img src="images/blueballdot.png"> If the user's pointer (mouse) buttons are switched (usually 3 2 1)
+	  xfig will automatically flip the mouse hints messages. This overrides
+	  the -flipvisualhints command-line argument.
+<p><img src="images/blueballdot.png"> If the user clicks on or modifies an existing text, and presses
+	  return, the new text on the next line will use the attributes of the
+	  first text instead of the attributes from the indicator panel.
+<p><img src="images/blueballdot.png"> Note in README and Imakefile about not casually setting the DESTDIR
+	  make variable.
+<p><img src="images/blueballdot.png"> Picture objects are drawn as filled gray boxes when their layer is
+	  inactive in gray mode.
+<p><img src="images/blueballdot.png"> xfig no longer requires fonts that are named "-adobe-..." (e.g. for
+	  RedHat systems with URW fonts).
+<p><img src="images/blueballdot.png"> Updating the attribute panel from a compound object will retrieve
+	  (only) the smallest depth from the compound.
+<p><img src="images/blueballdot.png"> When scaling an object, the line thickness is no longer scaled with it
+<p><img src="images/blueballdot.png"> New measuring modes: angle, length and area. 
+		See <a href="editing.html#measure-angle">Measure Angle/length/area</a>.  
+		From Alex Durner.
+		<br>
+		<a href="editing.html#measure-angle"><img src="images/measure-angle-button.png"></a>
+		<a href="editing.html#measure-area"><img src="images/measure-area-button.png"></a>
+		<a href="editing.html#measure-length"><img src="images/measure-length-button.png"></a>
+<p><img src="images/blueballdot.png"> New feature to add tangents and normal lines to curves. 
+		See <a href="editing.html#add-tangent">Add Tangent</a>.  
+		From Alex Durner.
+		<br>
+		<a href="editing.html#add-tangent"><img src="images/add-tangent-button.png"></a>
+
+<p><img src="images/blueballdot.png"> Splash screen on startup. Disable with -nosplash (resource Fig.splash).
+	  Interior logo by  Marc-Aurèle Darche.
+	<br>
+	<img src = "images/splash-screen.png">
+<p><img src="images/blueballdot.png"> New command-line option -grid_color (resource grid_color) to set the
+	  color of the canvas grid (default: red).
+<p><img src="images/blueballdot.png"> New option to print grid when exporting or printing (see printing/
+	  exporting section in html docs).
+<p><img src="images/blueballdot.png"> When drawing an arc by specifying the center point, a circle is drawn
+	  showing the radius of the arc as the user drags the mouse, then when
+	  the first end point is clicked an arc is drawn as the mouse is dragged.
+	  The user then clicks in the direction the arc should go, followed by
+	  the final angle to complete it.
+<p><img src="images/blueballdot.png"> If the Ruler unit is Imperial (in), you may have xfig display
+	  measurements using fractions where possible.  If a measurement can be
+	  shown as an integer multiple of 64ths of an inch (or 32nds, 16ths,
+	  etc.) it will show it as such (e.g. 3-5/64 in), otherwise a decimal
+	  value will be shown (e.g. 3.085 in).
+<p><img src="images/blueballdot.png"> When opening a compound object, if the middle button us used to open
+	  the compound, all other objects on the canvas are kept visible.
+	  From Alex Durner.
+<p><img src="images/blueballdot.png"> When opening a compound object, the "point positioning" indicator is
+	  enabled, allowing you to set the bounds of the compound according to
+	  the indicator when you close the compound.
+<p><img src="images/blueballdot.png"> Zero-crossing lines on canvas have own command-line parameter
+	  (-zero_lines) and resource (Fig.zero_lines) for setting color separate
+	  from page border color.
+<p><img src="images/blueballdot.png"> Smooth factor when exporting to bitmap format is now a pull-down menu
+	  with: No smoothing, Some smoothing, More smoothing.
+<p><img src="images/blueballdot.png"> When flipping compound objects with text, a vertical flip will now
+	  shift the text to maintain its relative position to the other objects
+	  in the compound and its angle is rotated by 180 degrees minus the
+	  original angle.  This behavior will for example, keep the orientation
+	  of a text inside a polygon consistent with the polygon.
+	  A horizontal flip of a compound containing text will change the angle
+	  in the same way.
+<p><img src="images/blueballdot.png"> Three-D borders for buttons, etc reduced from 2 to 1 pixel for "lean"
+	  look (resource Fig*shadowWidth in Fig-color.ad).
+<p><img src="images/blueballdot.png"> Additional JPEG file format (EXIF) added for import. These usually come from
+	  digital cameras.
+<p><img src="images/blueballdot.png"> Validation for integer spinners - doesn't allow non-numeric input when
+	  typing in values directly.
+<p><img src="images/blueballdot.png"> When scaling an object, the scale factor is shown in the message.
+	  window in addition to the width/height. From Alex Durner.
+<p><img src="images/blueballdot.png"> New url for pstoedit (mentioned in installation.html).
+<p><img src="images/blueballdot.png"> When picking points of an object at high zoom, the tolerance has been
+	  reduced to make it easier to pick the correct point.
+<p><img src="images/blueballdot.png"> When "graying" inactive depths, the inactive objects are drawn first
+	  followed by active objects ensuring visibility of active objects.
+<p><img src="images/blueballdot.png"> xfig now draws "grayed out" picture objects (inactive depth) as a gray
+	  box with the filename only.
+<p><img src="images/blueballdot.png"> Line style in edit panel now shows graphic of style instead of
+	  textual description.
+<p><img src="images/blueballdot.png"> Cap style in edit panel was inadvertantly left off open-splines.
+<p><img src="images/blueballdot.png"> Popup dialog to edit behavior of spline point now pops up near the
+	  point being edited.
+<p><img src="images/blueballdot.png"> When cancelling drawing a picture object from the popup editor, the
+	  empty object is removed rather than showing a &lt;empty&gt; in the box.
+<p><img src="images/blueballdot.png"> Pressing Return or Escape in popup message window will dismiss it.
+<p><img src="images/blueballdot.png"> In picture browser popup, double clicking or clicking and pressing
+	  Return will apply the selected picture AND close the browser.
+<p><img src="images/blueballdot.png"> New popup query if updating the depth in a compound object would
+	  result in any depth exceeding the maximum.  The popup gives the user
+	  the option to cancel the depth update part.
+	  From Marcus Eger (eger.m@gmx.de)
+<p><img src="images/blueballdot.png"> More consistent placement of Cancel/Ok/Set etc. buttons in dialogs.
+	  Generally, the Cancel button is first followed by the others, and
+	  where possible, they are at the bottom of the dialog.
+<p><img src="images/blueballdot.png"> More meaningful message "Cut buffer is empty" if there is no .xfig
+	  file in the user's home directory.
+<p><img src="images/blueballdot.png"> New MetaPost driver for TransFig 3.2.4 supported.
+<p><img src="images/blueballdot.png"> New option for binary CGM export (must have TransFig 3.2.4 too). The
+	  ralcgm program is required for this option.
+	  See <a href="ftp://ftp.cc.rl.ac.uk/pub/graphics/ralcgm/">ftp://ftp.cc.rl.ac.uk/pub/graphics/ralcgm/</a>
+<p><img src="images/blueballdot.png"> In popup edit panel for compound objects, one may easily shift a
+	  compound object by changing either corner's x, y values and pressing
+	  return or scale it by changing the width and/or height and pressing
+	  return.
+<p><img src="images/blueballdot.png"> "condensed" alias for "narrow" fonts (urw changed their helvetica-
+	   narrow to helvetica-condensed).
+<p><img src="images/blueballdot.png"> Pressing escape in a popup dialog will dismiss it
+<p><img src="images/blueballdot.png"> Zoom/Unzoom (Shift-Z/z) changes zoom by a factor of 1.5 instead of adding or
+	  subtracting 1 from the zoom value.
+	  Also, the zoom/unzoom is centered on the canvas.
+<p><img src="images/blueballdot.png"> Exporting to JPEG doesn't require compiling with USE_JPEG defined in
+	  Imakefile.
+<p><img src="images/blueballdot.png"> 
+	Minimum and maximum depths of objects in a compound are displayed in popup edit panel.
+<p><img src="images/blueballdot.png">
+	Rulers show units now every 10 units (e.g. 0cm, 10cm, ...)
+<p><img src="images/blueballdot.png">
+	"Front" and "Back" labels in depth manager to show relative
+	  positioning of depths on drawing.
+<p><img src="images/blueballdot.png">
+	If you wish to place a library object at the position it was
+	  originally created, e.g. for laser printer labels, hold down the Shift
+	  key and press mouse button 3 (`place at orign posn') to place it.
+<p><img src="images/blueballdot.png">
+	New URL for chemtool, a chemical structure editor:
+	  <a href="http://ruby.chemie.uni-freiburg.de/~martin/chemtool/chemtool.html">
+	  http://ruby.chemie.uni-freiburg.de/~martin/chemtool/chemtool.html</a>
+<p><img src="images/blueballdot.png">
+	Named styles where user can save attributes that are often used for
+	  quick access.  For example, the user may want dashed, thick, red lines
+	  often so he can save those attributes and call it (e.g.) "thickred",
+	  and easily call it up later.
+	  See the <a href="main_menus.html#manage-styles">View/Manage Styles...)</a> menu entry.
+<p><img src="images/blueballdot.png">
+	The minimum and maximum depth of objects are shown in the edit panel
+	  for compound objects
+<p><img src="images/blueballdot.png">
+	SVG (Scalable Vector Graphics) beta driver (for TransFig/fig2dev) from
+	  Anthony Starks with major improvements by Martin Kroeker
+	  (martin@ruby.chemie.uni-freiburg.de).  Some caveats when using
+	  Mozilla-SVG to view these: 
+	  <ol>
+	  <li>the file must be exported with magnification = 6.6% (0.066 in fig2dev) to scale to screen coords
+	  <li>the file suffix must be ".xml"
+	  </ol>
+<p><img src="images/blueballdot.png">
+	EMF (Enhanced Metafile) export driver (TransFig/fig2dev) based on CGM
+	  driver. Converted by M. Schrick
+
+
+<p>
+<img src="images/blueramp.png" alt="-">
+
+<h1><a name="newlibraries">New Libraries and Examples</i></a></h1> 
+
+<p><img src="images/blueballdot.png"> 
+	Examples moved to Libraries/Examples so they are installed in a
+	  convenient place for viewing (via the library feature)
+<p><img src="images/blueballdot.png"> 
+	  Poster advertizing German version of "Little Shop of Horrors" in
+	  Libraries/Examples/poster.fig.  From Kai-Martin Knaak
+<p><img src="images/blueballdot.png"> Three new Examples from Carlo Kopp (in Libraries/Examples):
+	  <br> &nbsp;&nbsp;&nbsp; Python-4.fig  - RAFAEL Python 4 all aspect agile heatseeking missile
+	  <br> &nbsp;&nbsp;&nbsp; YF-23A.fig    - Development example of the USAF's Northrop-MDC YF-23A
+	  <br> &nbsp;&nbsp;&nbsp; tsr2-side.fig - Notional camouflages for BAC TSR.2 production aircraft.
+<p><img src="images/blueballdot.png"> Over 160 new country flags in the Libraries/Flags directory.  Now
+	  organized by region of the world (e.g. Africa, Oceania).
+<p><img src="images/blueballdot.png"> New flags of Bosnia and Slovenia with vector coat of arms in
+	  Libraries/Flags directory from Roman Maurer 
+<p><img src="images/blueballdot.png"> New maps of Yugoslavia, Macedonia, Croatia, Bosnia-Herzegovina and
+	  Slovenia
+<p><img src="images/blueballdot.png"> New Avery label templates in Libraries/Labels directory, including a
+	  CD label, Avery_5931, done by William Chimiak.
+<p><img src="images/blueballdot.png"> New Avery and PerfectData Corp CD label templates in Libraries/Labels
+	  directory, done by Len Hickey.
+<p><img src="images/blueballdot.png"> New computers and printers in Libraries/Computers library from Ernst
+	  Pisch
+<p><img src="images/blueballdot.png"> 
+	New network library devices Extreme Networks Inc. Black Diamond and
+	  Summit 5i network switches, Net Gear Hub, and new CODECs in
+	  Audiovisual library from Bill Chimiak
+<p><img src="images/blueballdot.png">
+	New DSP component library from Jakub Stastny (stastnj1@volny.cz)
+<p><img src="images/blueballdot.png">
+	Standard welding bevels library from Erik Engh (Libraries/Welding)
+<p><img src="images/blueballdot.png"> Canadian map from Seymour Green.
+
+<p><img src="images/blueballdot.png">
+	A Uno hand (card game) drawn by Roland Rosendfeld
+	  (Libraries/Examples/uno_hand.fig)
+<hr>
+
+[ <a href="contents.html">Contents</a> |
+ <a href="introduction.html">Introduction</a> |
+ <a href="authors.html">Credits</a> ]
+
+</body>
+</html>

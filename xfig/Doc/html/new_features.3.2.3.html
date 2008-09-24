@@ -1,0 +1,313 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>New Features in xfig 3.2.3 (Released Jan 14, 2000)</title>
+</head>
+
+<body>
+<a href="contents.html"><img src="images/xfig-title.png"
+  alt="XFIG Users Manual" border=0></a>
+
+<hr>
+<h1><a name="newfeatures">New Features in <i>xfig 3.2.3</i></a></h1> 
+(Released Jan 14, 2000)
+
+<p><img src="images/blueballdot.png"> 
+Arrow thickness is a function of line width by default now instead of
+	  absolute
+<p><img src="images/blueballdot.png"> 
+If figure is modified and user does "File/New", <i>xfig</i> first asks if
+	  user wants to save the file before doing the "new" operation
+<p><img src="images/blueballdot.png"> 
+Changed the "paste text" key in app-defaults file from F20 to F12,
+	  because most systems don't have an F20 key.  The "Paste" key on Sun
+	  workstations (it is really F18) may also be used to paste text.
+<p><img src="images/blueballdot.png"> 
+Changed default export border margin width to 0
+<p><img src="images/blueballdot.png"> 
+Re-enabled export magnification for EPS
+<p><img src="images/blueballdot.png"> 
+New "Flags" group of library objects from Roland Rosenfeld.  These are
+	  flags of Europe which Roland converted from a Sketch example.
+	  There is also Japan's and the U.S.'s flag which were drawn in <i>xfig</i> by
+	  Brian Smith
+<p><img src="images/blueballdot.png"> 
+Added Ian MacPhedran's web site http://duke.usask.ca/~macphed/soft/fig/
+	  for FIG-related information to the html docs under "Related
+	  Applications" in the "Getting and Installing Xfig" section
+<p><img src="images/blueballdot.png"> 
+Moved allocation of <i>xfig's</i> 32 "standard" colors last in the widget
+	  setup procedure so that there is a better chance of the widgets
+	  getting the correct colors before the colormap fills up and <i>xfig</i>
+	  changes to a private map.
+<p><img src="images/blueballdot.png"> 
+Assumes default of Letter(or A4 if metric mode) if no %%BoundingBox in
+	  imported eps
+<p><img src="images/blueballdot.png"> 
+All traces of GIF decoding/encoding have removed from <i>xfig</i> so as to
+	  avoid the patent royalty issue with Unisys corp.  <i>xfig</i> now calls
+	  giftopnm (part of the netpbm package) to read the GIF file and then
+	  ppmtopcx to convert it to a colormapped image that <i>xfig's</i> read_pcx
+	  routine can handle.
+<p><img src="images/blueballdot.png"> 
+Mr. T. Sato's email address has changed to VEF00200@nifty.ne.jp as
+	  of July 15, 1998. He is the person to whom you should send email if
+	  you have any questions about the Japanese HTML pages.
+<p><img src="images/blueballdot.png"> 
+New depth manager.  Enable/disable depths individually or all at once
+	  to selectively hide parts of drawing.  Can also click on one depth
+	  button and drag mouse up or down to enable/disable multiple buttons.
+	  Command-line options -showdepthmanager and -hidedepthmanager to
+	  control it (resource Fig.showdepthmanager). The default is to show it.
+<p><img src="images/blueballdot.png"> 
+When updating the depth of a compound object, the relative depths of
+	  the objects inside are retained, with the object having the smallest
+	  depth number being assigned to the value updated by the user.  For
+	  example, if you update a compound object to depth = 5, and it contains
+	  objects with depths 8 and 11, after the update they will have depths
+	  5 and 8 respectively. From T. Sato.
+<p><img src="images/blueballdot.png"> 
+Default depth for creating new objects is now 50 to make it easier to
+	  put new objects on top without having to remember to start the older
+	  objects at a depth > 0.
+<p><img src="images/blueballdot.png"> 
+Xfig allows panning to negative x and y now. This is the default
+	  and may be turned and off with the -allow_neg command-line option
+	  and from the global settings panel.
+<p><img src="images/blueballdot.png"> 
+Command panel has pull-down menus for File, Edit, View and Help
+	  operations.  Default accelerators for these menus are Meta-F, Meta-E,
+	  Meta-V and Meta-H respectively.
+	  File menu includes list of recently loaded Fig files.
+<p><img src="images/blueballdot.png"> 
+Comments in Fig files are preserved with the objects and are written
+	  back when the file is saved.  Popup edit for objects allows entering/
+	  editing of comments.  Also, clicking mouse button 2 on the canvas in
+	  edit mode will popup a panel to edit comments for whole figure.
+<p><img src="images/blueballdot.png"> 
+From the File/Open panel, you may startup another <i>xfig</i> process to open
+	  a Fig file.  From T. Sato.
+<p><img src="images/blueballdot.png"> 
+New join/split button to split a line/spline/etc into two, or to join
+	  two lines/splines etc together to make one.  Also, will convert a box
+	  to a line by splitting between two corners, and close an open line
+	  or spline by joining the two ends.
+<p><img src="images/blueballdot.png"> 
+Arrow keys, Home and End keys may be used to browse any of the lists
+	  in <i>xfig</i>. (e.g. Open file list, library popup object list, misspelled
+	  word list in spell checker)
+<p><img src="images/blueballdot.png"> 
+Border option put back in for exporting to EPS and bitmap formats
+	  (fig2dev -b option).
+	  User may specify border margin in pixels (roughly).  This will be
+	  a background margin area around the figure bounding area.
+<p><img src="images/blueballdot.png"> 
+New background color option for printing and exporting - sets whole
+	  background of figure to this color.  Available for all bitmap formats
+	  and PostScript, EPS, PSTEX and PDF
+<p><img src="images/blueballdot.png"> 
+New background option to specify background color for figure.  This
+	  works for all bitmap formats and PostScript (including pstex).
+	  This is passed to fig2dev as the -g option.
+<p><img src="images/blueballdot.png"> 
+If your system uses /etc/printcap to define printers, <i>xfig</i> will make
+	  a pulldown menu for the printer selection in the printer panel.
+<p><img src="images/blueballdot.png"> 
+New "smooth" button in export to smooth when exporting to bitmap
+	  format (e.g. GIF, JPEG).  Causes fig2dev (using -S 2 option) to force
+	  ghostscript to render at 2x magnification which improves font
+	  rendering, then passes through pnmscale to reduce to original size,
+	  which also smooths the image by averaging colors of adjacent pixels.
+<p><img src="images/blueballdot.png"> 
+Export/Print errors now appear in the popup error message window
+<p><img src="images/blueballdot.png"> 
+Popup object editor positions itself adjacent to object being edited
+	  instead of possibly being on top of it
+<p><img src="images/blueballdot.png"> 
+Xfig automatically chooses pwidth, pheight and the number of buttons
+	  per row on the mode panel (left side) if necessary, to fit on a small
+	  screen.  If the user explicitely chooses any of those options, their
+	  choice overrides the automatic setting.
+	  From T. Sato (VEF00200@nifty.ne.jp).
+<p><img src="images/blueballdot.png"> 
+New PDF export driver (uses ps2pdf from the ghostscript distribution)
+<p><img src="images/blueballdot.png"> 
+New CGM export driver (Computer Graphics Metafile) for fig2dev (and in
+	  <i>xfig</i> export menu)
+	  from Philippe Bekaert (Philippe.Bekaert@cs.kuleuven.ac.be)
+<p><img src="images/blueballdot.png"> 
+More paper sizes (Japanese JIS B0-B10 and ISO A0-A9)
+<p><img src="images/blueballdot.png"> 
+Middle button in paste mode will place object at its original position
+	  (where it was when it was placed in the <i>xfig</i> cut file)
+"Spinners" increment/decrement by value appropriate to item being
+	  modified.  E.g., fill intensity % now steps by 5% for each click
+	  of the mouse on the spinner arrows, and text step by 0.1.
+<p><img src="images/blueballdot.png"> 
+Also, if mouse button is held down on spinup/down button, spinner
+	  counts automatically after "spinner_delay" every "spinner_rate"
+	  milliseconds (resources).
+<p><img src="images/blueballdot.png"> 
+Fill intensity and Pattern fill now show image in popup edit panel
+<p><img src="images/blueballdot.png"> 
+Can now draw arcs by defining:
+		1. Center point
+		2. First angle/Radius
+		3. Second point to deterimine direction
+		4. Final angle
+	    Initiate this mode by starting arc with mouse button 2. Original
+	    arc mode still available.  From T. Sato (VEF00200@nifty.ne.jp).
+<p><img src="images/blueballdot.png"> 
+New color scheme (grayish instead of bisque) - can still use old
+	  colors by using Fig-color.bisque.ad or really old colors in
+	  Fig-color.classic.ad
+<p><img src="images/blueballdot.png"> 
+I have made the web pages available from our server at:
+	      http://www-epb.lbl.gov/xfig
+	  A mirror site in Japan is
+	      http://www.lint.ne.jp/~masashi/xfig/index.html
+<p><img src="images/blueballdot.png"> 
+Popup window with global settings (use Meta-g or Alt-g) containing:
+	checkbutton for tracking mouse in rulers
+	checkbutton for showing page borders
+	checkbutton for showing info balloons
+	checkbutton for lengths on lines
+	checkbutton for showing vertex numbers on objects
+	entry for max image colors
+	entry for image editor
+	entry for spelling checker
+	entry for HTML browser
+	entry for PDF viewer
+	checkbutton for turning on/off debug information
+	     Consequently, the balloon on/off checkbutton has been removed from
+	     the message window area
+<p><img src="images/blueballdot.png"> 
+Two new "make" options:
+<ol>
+<li>
+	   "make install.doc" - install only the documentation files (i.e.
+	      man pages, html and pdf files)
+<li>
+	   "make install.libs" - install only <i>xfig</i> object libraries
+</ol>
+<p><img src="images/blueballdot.png"> 
+Filename mask for File and Export panels can have multiple wildcard
+	  masks separated by blanks or tabs, e.g. "*.fig *.fig.gz *.fig.[Zz]"
+<p><img src="images/blueballdot.png"> 
+Export wildcard mask is dynamically changed when selecting the export
+	  language (e.g. *.gif when GIF is selected for export).  Thus, the
+	  Fig*export_panel*mask*string resource is defunct.
+<p><img src="images/blueballdot.png"> 
+New format for browser resource will parse for "%f" and replace with
+	  the filename.  Using this and the -remote option for netscape, <i>xfig</i>
+	  will either use a running netscape to open the help file (html) or
+	  will start one if one isn't already running.
+<p><img src="images/blueballdot.png"> 
+PDF viewer resource is also parsed for %f (filename)
+<p><img src="images/blueballdot.png"> 
+Xfig will first try the correct PostScript font name (e.g. AvantGarde)
+	  and then try a backup font name if the first fails.  If that one fails
+	  too, it will use 6x13.  In the past, because the AvantGarde, Bookman,
+	  HelveticaNarrow and Palatino fonts were NOT distributed with the X
+	  distribution from the Open Group (and the X Consortium before that),
+	  <i>xfig</i> would substitute fonts for those, that were close.  Now it will
+	  try the correct one and switch to one of the backups if it doesn't
+	  exist.
+<p><img src="images/blueballdot.png"> 
+FIGAPPS file updated with new information about GNU plotutils
+<p><img src="images/blueballdot.png"> 
+Rulers shows fewer ticks for smaller zooms
+<p><img src="images/blueballdot.png"> 
+Rulers show more labels between major ticks for larger zooms
+<p><img src="images/blueballdot.png"> 
+New floppy disk library object in "Computers"
+<p><img src="images/blueballdot.png"> 
+New firewall symbol and "generic hardware" library objects in "Networks"
+	  from Tomi Ollila (Tomi.Ollila@tfi.net)
+<p><img src="images/blueballdot.png"> 
+New "Optics" library includes mirrors, lenses, fiber optics
+	  from Kai-Martin Knaak (kmk@abraxas.physik.uni-mainz.de)
+<p><img src="images/blueballdot.png"> 
+New Structural Analysis library includes plates, supports, loads,
+	  beams, coordinate systems and trusses.
+	  From Roman Putanowicz (putanowr@twins.pk.edu.pl)
+	  Please see copyright information in the Structural_Analysis/readme
+	  object. (Examples/Libraries/Structural_Analysis/readme.fig
+<p><img src="images/blueballdot.png"> 
+More descriptive error message about non-existent or old app-defaults
+	  file
+<p><img src="images/blueballdot.png"> 
+Removed restriction that fonts are ISO8859-1 encoded to allow, e.g.
+	  iso646.1991, which is what the scalable Schumacher fonts are.
+<p><img src="images/blueballdot.png"> 
+New computers/terminals in Computers library, and new network comp-
+	  onents in the Networks library of objects.
+	    From T. Sato (VEF00200@nifty.ne.jp).
+<p><img src="images/blueballdot.png"> 
+When a compound object containing right- or left-justified text is
+	  flipped horizontally, the justification of those text objects is also
+	  swapped (i.e. right-justified text becomes left-justified and vice
+	  versa)
+<p><img src="images/blueballdot.png"> 
+Warning printed if user uses Fig.geometry resource to size main <i>xfig</i>
+	  window - should only use -geometry command-line argument or
+	  pwidth/pheight args/resources.
+<p><img src="images/blueballdot.png"> 
+Uses ANSI stdargs.h instead of varargs.h now.
+	  From Roland Rosenfeld (roland@spinnaker.de)
+<p><img src="images/blueballdot.png"> 
+Spell check command uses "%f" now instead of "%s" for filename
+<p><img src="images/blueballdot.png"> 
+Can define BINDIR to install <i>xfig</i> in custom directory (see README file)
+<p><img src="images/blueballdot.png"> 
+Xfig windows aren't unmapped now when user presses "Edit Image" to
+	  edit imported image file (not necessary)
+<p><img src="images/blueballdot.png"> 
+When in edit mode and you hit Control-Return inside of a text box
+	  rather than just Return, it's a shortcut for DONE.
+	  From Jeff Hakner (hak@cooper.edu)
+<p><img src="images/blueballdot.png"> 
+When editing a compound object, any text objects in it are shown and
+	  editable.
+	  From Jeff Hakner (hak@cooper.edu)
+<p><img src="images/blueballdot.png"> 
+In library place mode, the change draw mode function was moved to
+	  Shift-Middle rather than Shift-Left.  Shift-Left now has the behavior
+	  of placing the object and doing an edit on it.  When you conclude the
+	  edit, it resumes place mode.  This combined with including the text
+	  objects in editing compound objects, allows you to edit any text
+	  labels in library objects as they are placed.
+	  From Jeff Hakner (hak@cooper.edu)
+<p><img src="images/blueballdot.png"> 
+Rotation angle of objects may be floating point now.
+	  From Marc Joosen (marcj@historia.et.tudelft.nl)
+<p><img src="images/blueballdot.png"> 
+Spelling checker and search/replace popup more useful now
+<p><img src="images/blueballdot.png"> 
+New "zoom to fit canvas" feature - Ctrl-Z accelerator in canavs will
+	  zoom the figure to just fit the canvas.  New button in popup zoom
+	  dialog to do same.
+<p><img src="images/blueballdot.png"> 
+After closing an open compound, the "Open Compound" mode is selected
+<p><img src="images/blueballdot.png"> 
+If the Shift key is held down while mouse button 2 is clicked on an
+	  object, any comments in the object are displayed in a popup until the
+	  mouse button is released
+<p><img src="images/blueballdot.png"> 
+New command-line option -flipvisualhints (resource Fig.flipvisualhints)
+	  which will flip left/right mouse indicator messages for mice whose
+	  buttons have been switched.
+<p><img src="images/blueballdot.png"> 
+New import picture formats supported - TIFF and PPM
+<p><img src="images/blueballdot.png"> 
+Added -hiddentext and -rigidtext command-line options and X resources
+	  to fill out the text flags options (first was -specialtext)
+
+<hr>
+
+[ <a href="contents.html">Contents</a> |
+ <a href="introduction.html">Introduction</a> |
+ <a href="authors.html">Credits</a> ]
+
+</body>
+</html>

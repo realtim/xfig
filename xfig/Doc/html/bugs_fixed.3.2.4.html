@@ -1,0 +1,234 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>Bugs Fixed</title>
+</head>
+
+<body>
+<a href="contents.html"><img src="images/xfig-title.png"
+  alt="XFIG Users Manual" border=0></a>
+
+<hr>
+
+<h1><a name="bugsfixed">Bugs Fixed in <i>xfig 3.2.4</i></a></h1>
+(Released Dec 2002)
+
+<p><img src="images/blueballdot.png"> Undo of join/split now works correctly.
+	  From Pieter-Tjerk de Boer (ptdeboer@cs.utwente.nl)
+<p><img src="images/blueballdot.png"> Pulldown menu for object library didn't always go away while loading
+	  library
+<p><img src="images/blueballdot.png"> If -library_dir was relative path, any imported pictures in library
+	  files wouldn't be found.
+<p><img src="images/blueballdot.png"> If in text draw mode and user uses Alt- accelerator, the compose LED
+	  would stay on
+<p><img src="images/blueballdot.png"> Middle mouse emulation for 2-button mice wasn't accepting Alt-Right-
+	  click, only Meta-Right-click.
+<p><img src="images/blueballdot.png"> If one created a new figure and didn't save it before exporting, the
+	  export command was malformed resulting in an error message.
+<p><img src="images/blueballdot.png"> Numeric locale setting moved to routines that read and write Fig files
+	  so that the user's numeric convention is used in everything else.
+<p><img src="images/blueballdot.png"> Point positioning was truncated in the negative X and Y regions of the
+	  canvas instead of being rounded.
+<p><img src="images/blueballdot.png"> -b (border margin) wasn't being passed to fig2dev for PDF and PSTEX
+	  output.
+<p><img src="images/blueballdot.png"> xfig only recalculate the bounds of compound objects being read if
+	  there are no bounds following the "6" or they are all 0.  This fixes
+	  the problem introduced in 3.2.3d where objects that were bound at a
+	  certain point positioning were rebound at the current positioning.
+<p><img src="images/blueballdot.png"> When xfig reads in a .fig file (merge_file or load_lib_obj) it will
+	  not put the file into another compound if it contains only one
+	  compound. This will prevent the double compounding of library objects
+	  or merged files.
+<p><img src="images/blueballdot.png"> If a compound with more than 64 strings was edited, xfig segfaulted
+	  because the limit wasn't checked.  This is fixed, and the limit has
+	  been increased to 200.
+<p><img src="images/blueballdot.png"> Typo in figx.h. "#ifdef XAW3d" instead of "#ifdef XAW3D" (capital "D")
+<p><img src="images/blueballdot.png"> If the XFIGDOCDIR directory didn't already exist, install.doc failed.
+<p><img src="images/blueballdot.png"> The "make install.all" directive did not install the executable, as
+	  the README file said is would.  This has been fixed.
+<p><img src="images/blueballdot.png"> Deleting a region (middle mouse button delete) of a figure resulted in
+	  all other objects dissappearing after a screen refresh.
+<p><img src="images/blueballdot.png"> If the user mistakenly clicked the *left* mouse button on a point
+	  where he wanted to *split* a line, the ability to split was turned off.
+<p><img src="images/blueballdot.png"> Toplevel library directory wasn't included in library menu when it
+	  contained .fig files.
+<p><img src="images/blueballdot.png"> Subdirectories without any .fig files appeared in the library menus,
+	  contrary to the documentation.
+<p><img src="images/blueballdot.png"> If xfig was renamed to anything else, the command-line arguments and
+	  X resources weren't parsed by the Intrinsics.  This is fixed.
+<p><img src="images/blueballdot.png"> Some versions of "make" don't like the blank line produced by the
+	  "#ifdef I18N" in the install.html section of the Imakefile, so it has
+	  been reworked to get around that bug.
+<p><img src="images/blueballdot.png"> Array placement with horizontally/vertically constrained copy works now
+<p><img src="images/blueballdot.png"> Html "options" page showed "-pa" as abbreviation for -paper_size, when
+	  in fact it is now "-pap" because of the new "-pageborder" option.
+<p><img src="images/blueballdot.png"> If display zoom was large (&gt; 20) and grid was turned on, very large
+	  pixmap was being created for the grid.
+<p><img src="images/blueballdot.png"> Inconsistancy with "char" vs "unsigned char" in get_canvas_clipboard().
+<p><img src="images/blueballdot.png"> Text input and editing more efficient when redrawing large fonts.
+<p><img src="images/blueballdot.png"> Box curve indicator now appears when in "convert box&lt;-&gt;arcbox" mode.
+<p><img src="images/blueballdot.png"> If user called xfig with empty (but existing) file, the filename was
+	  not retained for subsequent save.
+<p><img src="images/blueballdot.png"> Cleaned up redrawing of corner markers when editing objects from popup
+	  edit panel.
+<p><img src="images/blueballdot.png"> Scaling arcbox didn't report scaling messages.
+<p><img src="images/blueballdot.png"> When scaling rotated ellipses, scaling messages were overwritten.
+<p><img src="images/blueballdot.png"> Improved redraw when moving/scaling/copying objects and screen is
+	  redrawn.
+<p><img src="images/blueballdot.png"> Drawing units indicator was not updated when reading Fig file.
+<p><img src="images/blueballdot.png"> Cleaned up "move point" code.  When moving a corner point of a box or
+	  compound or the radius or diameter of a circle or ellipse, it would
+	  first make the object dissappear until the mouse was moved.  This
+	  doesn't happen anymore.
+<p><img src="images/blueballdot.png"> Command-line -userunit (X resource Fig.userunit) were overwritten when
+	  reading Fig file.  Now it is only changed if units are inconsistent
+	  with value in file.  E.g. if file has "Inches" and xfig has "cm", xfig
+	  changes to "in" when reading file.
+<p><img src="images/blueballdot.png"> A few files were left open that should be closed.
+<p><img src="images/blueballdot.png"> If the print and/or export panels are up and the figure units are
+	  changed from/to Metric/Imperial, the figure size wasn't updated in
+	  the print/export panel(s).
+<p><img src="images/blueballdot.png"> Missing link from editing.html file to "Paste Objects" in
+	  main_menus.html.
+<p><img src="images/blueballdot.png"> Bug in array place item - didn't work when number of X copies and
+	  Y copies = 1.
+<p><img src="images/blueballdot.png"> Bug in <b>undo</b> of array place - didn't account for adding back object
+	  depths
+<p><img src="images/blueballdot.png"> (dx, dy) values weren't displayed when moving the midpoints of a line
+	  or arc.
+<p><img src="images/blueballdot.png"> While drawing freehand (middle mouse button start), if the user wanted
+	  to delete points by holding down the shift key and pressing the left
+	  button, moving the mouse would still add points to the object
+<p><img src="images/blueballdot.png"> PNGINC Imakefile variable added to specify where png.h is located (was
+	  already there in fig2dev)
+<p><img src="images/blueballdot.png"> The depth counts were erased when deleting a region of a figure.
+<p><img src="images/blueballdot.png"> If you choose one object from a library to place on the canvas and
+	  then popup the library panel and choose another object, the depths
+	  from the temporary object following the pointer weren't accounted for.
+<p><img src="images/blueballdot.png"> Added "Fig*AllowShellResize: false" to the app-defaults file to fix a
+	  problem that some window managers have with xfig continually resizing
+	  itself
+<p><img src="images/blueballdot.png"> When saving path of imported picture, xfig thought path was relative
+	  to current directory when it wasn't
+<p><img src="images/blueballdot.png"> Added "|| defined(apollo)" in fig.h to include sys/types.h
+<p><img src="images/blueballdot.png"> Doc/FORMAT3.2 file had imported picture description line reversed with
+	  points lines
+<p><img src="images/blueballdot.png"> Doc/FORMAT3.2 file had incorrect values for object types in the first
+	  part of section 3.
+<p><img src="images/blueballdot.png"> Segfault when merging a Fig file with only color objects (no drawing
+	  objects)
+<p><img src="images/blueballdot.png"> No message when toggling on/off depth manager
+<p><img src="images/blueballdot.png"> If xfig couldn't open ~/.xfigrc for writing (e.g. because of
+	  permissions) it would segfault
+<p><img src="images/blueballdot.png"> Segfault when converting a 2-point line to a polygon.
+	  Bugfix from Tom Sato.
+<p><img src="images/blueballdot.png"> Segfault when creating a closed spline with three points, where the
+	  last two points are coincident.
+	  Bugfix from Tom Sato.
+<p><img src="images/blueballdot.png"> Typo in attributes.html in describing the selection of the previous or
+	  next attribute with mouse buttons 2 and 3 respectively.  For mouse
+	  button 2 it should read "previous" and for button 3 "next". 
+<p><img src="images/blueballdot.png"> Typo in Doc/FORMAT3.2 and Doc/html/fig-format.html for backward_arrow
+	  description:
+	  said "(0: no forward arrow, 1: on)" instead of ... no backward ...
+<p><img src="images/blueballdot.png"> Added $(DUSESMALLICONS) to dependencies for main.c in Imakefile
+<p><img src="images/blueballdot.png"> Reduced height of object edit panels by only displaying 3 comment
+	  lines and 6 x,y pairs before scrolling.
+<p><img src="images/blueballdot.png"> Special texts weren't filtered by the depth filter when exporting to
+	  combined ps/latex or pdf/latex
+<p><img src="images/blueballdot.png"> Various typographical errors found by Daniel Frèrejacque
+<p><img src="images/blueballdot.png"> Segfault if fast export (Alt-Shift-X) is done before either the file,
+	  export or browse panel was created
+<p><img src="images/blueballdot.png"> When xfig was compiled with WHEELMOUSE support, zooming was always
+	  "centered" even not zooming with wheel
+<p><img src="images/blueballdot.png"> Typo in Fig.ad resource file for pasting text using F8 key
+<p><img src="images/blueballdot.png"> When doing a panic save (segfault, etc.), xfig now closes any open
+	  compound objects first
+<p><img src="images/blueballdot.png"> Bug in importing GIF file.  File descriptor changed between first open
+	  and final close.
+<p><img src="images/blueballdot.png"> Bug in Imakefile with JPEGINCDIR
+<p><img src="images/blueballdot.png"> Had to include SimpleMenu.c and header files because of changes to
+	  some Xaw SimpleMenu implementations that were incompatible with xfig's
+	  own SmeBSB object
+<p><img src="images/blueballdot.png"> Bug in "Figure size" label in export panel caused segfault sometimes
+<p><img src="images/blueballdot.png"> Macro call (up_part) in e_update.c caused problems on HP/UX ANSI
+	  compiler
+<p><img src="images/blueballdot.png"> Same compiler takes issue with empty action records in w_style.c:
+	  library_actions[] ={}; Removed because it isn't used anymore.
+<p><img src="images/blueballdot.png"> 
+	After pressing the "Reread" button in imported picture edit popup, the
+	  Shrink, Expand and Original size buttons were disabled
+<p><img src="images/blueballdot.png"> 
+	Bug in SmeCascadeP.h when not using 3D widget set (Xaw3d)
+<p><img src="images/blueballdot.png"> 
+	One remaining use of sys_errlist[] should have been changed to strerror() in f_util.c
+<p><img src="images/blueballdot.png"> 
+	Pressing Escape while drawing an object caused segfault
+<p><img src="images/blueballdot.png"> 
+	When line type is dotted and the dot gap is &lt; 0.5, XSetDashes() produced
+	  "Bad Value" error.  Found by Tom Sato
+<p><img src="images/blueballdot.png"> 
+	init_break_tag() and init_break_only() each had an extraneous parameter
+	  (loc_tag) which wasn't used and wasn't passed by the caller anyway. This
+	  caused havoc with (at least) the gcc optimizer on an Alpha processor.
+	  Found by Jay Estabrook.
+<p><img src="images/blueballdot.png"> 
+	Didn't allow smoothing when exporting to AutoCAD slide file.
+<p><img src="images/blueballdot.png"> 
+	Changing browser or pdfviewer in dialog had no effect.
+<p><img src="images/blueballdot.png"> 
+	Fixed problem with RedHat imake rules not installing Doc/xfig.man
+	  properly.
+<p><img src="images/blueballdot.png"> 
+	When making a compound object including lines that have arrowheads and
+	  large coordinates (&gt;= 100000), an incorrect bounding box was produced.
+	  This same bug was in fig2dev 3.2.3d and earlier.
+<p><img src="images/blueballdot.png"> 
+	Drawing an arc by starting with the center and dragging it out now
+	  reports the angles of the endpoints after clicking on first endpoint
+	  instead of incorrectly reporting the radius.
+<p><img src="images/blueballdot.png"> 
+	Checks that closed splines have at least 3 points when reading Fig
+	  file and removes any that have fewer.
+<p><img src="images/blueballdot.png"> 
+	Exporting with color TIFF preview option missing parameter when
+	  calling fig2dev
+<p><img src="images/blueballdot.png"> 
+	Export grid option disabled for languages other than PS/EPS/PDF/bitmaps
+<p><img src="images/blueballdot.png"> 
+	Not really a bug, but the message that tells the user when xfig is
+	  converting a figure from an older file format to the current format
+	  has been removed.
+<p><img src="images/blueballdot.png"> 
+	When changing the height of xfig, the number of buttons per row on the
+	  mode (left) panel increase OR decrease as needed.
+<p><img src="images/blueballdot.png"> 
+	Chemical Process Flowsheet library Valve_horizontal and Valve_vertical
+	  valves reversed.
+<p><img src="images/blueballdot.png"> 
+	Bug in forcing absolute path for picture objects in libraries
+<p><img src="images/blueballdot.png"> 
+	Bug where xfig may change the Major/Minor printing/export grid tick
+	  values from "None" to 0.0
+<p><img src="images/blueballdot.png"> 
+	When an imported picture is compressed but the .fig file has the
+	  uncompressed name, export failed.
+<p><img src="images/blueballdot.png"> 
+	Xfig allowed "splitting" a picture box into a polyline.  This has been
+	  fixed to disallow it.
+<p><img src="images/blueballdot.png"> 
+	Queries user if hasn't saved named styles after adding or deleting same.
+<p><img src="images/blueballdot.png"> 
+	Print-to-batch-file didn't call print_to_file with all parms
+<p><img src="images/blueballdot.png"> 
+	xfig crashed if the window manager deleted the color popup panel in the
+	  popup editors
+
+<hr>
+
+[ <a href="contents.html">Contents</a> |
+ <a href="introduction.html">Introduction</a> |
+ <a href="authors.html">Credits</a> ]
+
+</body>
+</html>

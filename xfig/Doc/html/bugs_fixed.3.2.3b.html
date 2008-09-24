@@ -1,0 +1,133 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>Bugs Fixed</title>
+</head>
+
+<body>
+<a href="contents.html"><img src="images/xfig-title.png"
+  alt="XFIG Users Manual" border=0></a>
+
+<hr>
+
+<h1><a name="bugsfixed">Bugs Fixed in <i>xfig 3.2.3b</i></a></h1>
+(Released Jul 19, 2000)
+
+<p><img src="images/blueballdot.png"> 
+If the BSD symbol is defined but has no value, the "#if" condition
+		#if ( !(defined(BSD) && (BSD >= 199306)) && ...
+<p><img src="images/blueballdot.png"> 
+Importing 24-bit PCX files works now with the new PCX reader from
+	  Russell Marks (public domain).
+<p><img src="images/blueballdot.png"> 
+Importing PPM images with more than 256 colors failed because it was
+	  first converted to 24-bit PCX, which <i>xfig</i> couldn't read before now.
+<p><img src="images/blueballdot.png"> 
+Importing TIFF files (which is first converted to PPM them to PCX)
+	  works now with new PCX reader to handle 24-bit images.
+<p><img src="images/blueballdot.png"> 
+Bug where updating an arrowhead used the line thickness from the
+	  current settings instead of the line being updated to set the
+	  arrowhead thickness.
+<p><img src="images/blueballdot.png"> 
+"=" instead of "==" in checking if picture type is XBM to allow
+	  updating pen color from update button
+<p><img src="images/blueballdot.png"> 
+<i>xfig</i> would stop reading objects from a file when it encountered one
+	  bad object unless it had already read one or more good objects
+<p><img src="images/blueballdot.png"> 
+If a polygon was created with ALL coincident points (i.e. zero width/
+	  height, <i>xfig</i> would remove ALL points when reading the file and would
+	  subsequently crash.  Objects with zero width/height are now removed
+	  when reading the file.
+<p><img src="images/blueballdot.png"> 
+If a box with fewer than four points or a polygon with fewer than
+	  three points is read from a file, <i>xfig</i> removes it
+<p><img src="images/blueballdot.png"> 
+Could still move point of object even if its depth was not active
+<p><img src="images/blueballdot.png"> 
+References to "make" in Imakefile changed to "$(MAKE)"
+<p><img src="images/blueballdot.png"> 
+When vertex number display was turned on, canvas wasn't refreshed to
+	  show them
+<p><img src="images/blueballdot.png"> 
+When the page border was turned off, the zero-crossing lines weren't
+	  redrawn
+<p><img src="images/blueballdot.png"> 
+User colors defined in the current session weren't saved with the
+	  figure.
+<p><img src="images/blueballdot.png"> 
+User could click on text in disabled layer when in text mode
+<p><img src="images/blueballdot.png"> 
+Bug which allowed only 511 user colors instead of 512
+<p><img src="images/blueballdot.png"> 
+Background color of RGB slider lock buttons changed to random color
+	  when lock turned off
+<p><img src="images/blueballdot.png"> 
+User colors in current figure would be lost if user previewed more
+	  than one file before cancelling file popup
+<p><img src="images/blueballdot.png"> 
+"Transparent" color menu button for GIF export wasn't updated after
+	  export panel was created when loading new figure
+<p><img src="images/blueballdot.png"> 
+Spurious comments would appear in spline after editing control point
+<p><img src="images/blueballdot.png"> 
+If editing spline point for curvature and spline line had zero
+	  thickness, the spline would dissappear during edit
+<p><img src="images/blueballdot.png"> 
+Incorrect declaration for put_msg()
+<p><img src="images/blueballdot.png"> 
+Prepended $(DESTDIR) to $(XFIGLIBDIR) directory variable in Imakefile
+	  to be portable
+<p><img src="images/blueballdot.png"> 
+Changed w_menuentryP.h and w_menuentry.c to explicitely use
+	  X11/Xaw3d/...  path for menu entry when user has XAW3D set in
+	  Imakefile to use 3D Athena Widget set
+<p><img src="images/blueballdot.png"> 
+<i>xfig</i> now uses gunzip instead of uncompress to uncompress .Z files to
+	  be more portable for Cygwin environment
+<p><img src="images/blueballdot.png"> 
+Current directory for loading/saving figures was overwritten when
+	  changing export or picture browse directory
+<p><img src="images/blueballdot.png"> 
+Loading a .fig file or importing a picture from an MSDOS filesystem
+	  failed because <i>xfig</i> tried to see if the file existed with a suffix of
+	  .Z, .gz, or .z, all of which were reported by stat() to exist because
+	  it apparently truncates any suffixes after the first
+<p><img src="images/blueballdot.png"> 
+Bounding box of objects in negative region weren't calculated
+	  correctly when positioning grid was on
+<p><img src="images/blueballdot.png"> 
+If "allow negative coordinates" was turned off, one could still pan
+	  into negative region by dragging mouse on side ruler with middle
+	  button pressed
+<p><img src="images/blueballdot.png"> 
+Bug which prevented dragging rulers (with middle mouse button) into
+	  negative region unless it had been moved into the positive region first
+<p><img src="images/blueballdot.png"> 
+If user specified a -geometry on the command-line and then switched to
+	  Portrait mode, the geometry requested was overridden
+<p><img src="images/blueballdot.png"> 
+Various bugs in export commands when calling fig2dev
+<p><img src="images/blueballdot.png"> 
+Inconsistent prototypes declared for pw_arcbox() and curve()
+<p><img src="images/blueballdot.png"> 
+One of the header values for TIFF files was incorrect (was "DD", should be "II")
+<p><img src="images/blueballdot.png"> 
+When scaling a box and the point positioning grid is more coarse than
+	  the points in the box, and you try to grab a corner of the box, <i>xfig</i>
+	  thought you want to scale either horizontally or vertically only.
+<p><img src="images/blueballdot.png"> 
+Excessive updating of layer buttons when reading Fig file fixed
+<p><img src="images/blueballdot.png"> 
+Problem when exporting to GIF with transparent = background
+<p><img src="images/blueballdot.png"> 
+Certain files are now opened in binary mode ("wb" or "rb") for DOS compatibility
+<hr>
+
+[ <a href="contents.html">Contents</a> |
+ <a href="introduction.html">Introduction</a> |
+ <a href="authors.html">Credits</a> ]
+
+</body>
+</html>

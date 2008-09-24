@@ -1,0 +1,297 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>Bugs Fixed</title>
+</head>
+
+<body>
+<a href="contents.html"><img src="images/xfig-title.png"
+  alt="XFIG Users Manual" border=0></a>
+
+<hr>
+
+<h1><a name="bugsfixed">Bugs Fixed in <i>xfig 3.2.3</i></a></h1>
+(Released Jan 2000)
+
+<p><img src="images/blueballdot.png"> 
+In "move point" mode, mouse button 3 incorrectly labelled as "Locate
+	  Object", when in fact no function is associated with that button
+<p><img src="images/blueballdot.png"> 
+Error reading GIF header under certain circumstances
+<p><img src="images/blueballdot.png"> 
+For JPEG and GIF export, -g option was being passed to fig2dev even
+	  with no background color selected
+<p><img src="images/blueballdot.png"> 
+Exporting to PDF using <i>xfig</i> actually exported to PS.  Fig2dev does the
+	  correct thing, though.
+<p><img src="images/blueballdot.png"> 
+Depth manager didn't update correctly if depth between two other
+	  depths was removed (e.g. when deleteing an object of depth 51 leaving
+	  only depths 50 and 52, the indicator for depth 51 wasn't removed from
+	  the display)
+<p><img src="images/blueballdot.png"> 
+PAPER_A4 pointed to A9 entry
+<p><img src="images/blueballdot.png"> 
+Docmentation incorrectly mentioned "page_size" when it should say
+	  "paper_size" (Doc/html/options.html)
+<p><img src="images/blueballdot.png"> 
+Split line didn't work on ArcBox
+<p><img src="images/blueballdot.png"> 
+Opening a compound object, changing an object inside, closing the
+	  compound then pressing "Undo" would result in the original object
+	  outside the compound, plus the changed object still inside, and would
+	  then eventually segfault if the compound was operated on in any way.
+<p><img src="images/blueballdot.png"> 
+Imakefile didn't install pdf files as advertised with "make install"
+<p><img src="images/blueballdot.png"> 
+"XEvent event" missing from input tablet code in main.c
+<p><img src="images/blueballdot.png"> 
+If <i>xfig</i> tried to import a compressed image file and the directory was
+	  not writable, it segfaulted while trying to close an unopen file
+<p><img src="images/blueballdot.png"> 
+Inadvertantly removed "Help/Xfig man pages" menu entry
+<p><img src="images/blueballdot.png"> 
+Wrong path for installation of the xfig-howto.pdf file
+<p><img src="images/blueballdot.png"> 
+Bad hyperlink for "Help Menu" in html docs
+<p><img src="images/blueballdot.png"> 
+Fig files with "#FIG" but no version number crashed <i>xfig</i>
+<p><img src="images/blueballdot.png"> 
+"Show depth manager" missing from screenshot and description of global
+	  settings
+<p><img src="images/blueballdot.png"> 
+Background color for exporting didn't have "None" option
+<p><img src="images/blueballdot.png"> 
+PDF export ignored centering, background color and multiple pages
+	  options
+<p><img src="images/blueballdot.png"> 
+Warnings from fig2dev weren't displayed when exporting
+<p><img src="images/blueballdot.png"> 
+Various command-line options missing from man pages and html docs
+<p><img src="images/blueballdot.png"> 
+When turning on or off the depth manager the canvas needed refreshing
+<p><img src="images/blueballdot.png"> 
+Symbol "MAXCOMLEN" defined by <i>xfig</i> is already used on some systems
+<p><img src="images/blueballdot.png"> 
+Character array illegally freed in screen capture procedure
+<p><img src="images/blueballdot.png"> 
+There is a less restrictive copyright on the html pages.  Instead of:
+<blockquote>
+	    "However, you may not modify any part of this documentation
+	    without explicit permission of T.Sato or Brian V. Smith."
+</blockquote>
+there is now:
+<blockquote>
+	    "Modification of this documentation is also granted as long as
+	    this copyright notice remain intact and name of the person who made
+	    the modification is explicitly written in the documentation.
+	    However, contact to T.Sato and/or Brian V. Smith is strongly
+	    recommended if you want to distribute modified version of this
+	    documentation."
+</blockquote>
+<p><img src="images/blueballdot.png"> 
+"Smart links" wasn't working when copying compound object with link -
+	  the link wasn't copied
+<p><img src="images/blueballdot.png"> 
+Preview figure wasn't freeing memory
+<p><img src="images/blueballdot.png"> 
+Text lines with trailing carriage returns (^M) were read incorrectly
+	  from .fig file, causing following object lines to be included with the
+	  text object
+<p><img src="images/blueballdot.png"> 
+Some calls to free_spline were passing wrong type of pointer
+	  Fixed by Bradley Kuszmaul (bradley@ee.yale.edu)
+<p><img src="images/blueballdot.png"> 
+Call to init_point_array shouldn't have arguments
+	  Fixed by Bradley Kuszmaul (bradley@ee.yale.edu)
+<p><img src="images/blueballdot.png"> 
+Changing to/from PostScript and LaTeX font type using the update
+	  button didn't work unless "update text flags" was also enabled
+<p><img src="images/blueballdot.png"> 
+The CompKeyDB file didn't get installed correctly if user specified
+	  a path for DESTDIR (normally empty).
+<p><img src="images/blueballdot.png"> 
+arrowhead thickness/width/height were being truncated to integers in
+	  popup edit panel
+<p><img src="images/blueballdot.png"> 
+was using /tmp instead of TMPDIR env variable for <i>xfig</i> cut file if
+	  user .xfig file couldn't be used
+<p><img src="images/blueballdot.png"> 
+cleaned up routines that "show line lengths" while drawing/moving
+	  objects (-showlengths).  Much less detritus now.
+<p><img src="images/blueballdot.png"> 
+bug when allocating more user colors than colortable can handle
+<p><img src="images/blueballdot.png"> 
+message string not large enough for some of the balloons for the
+	  attribute panel. From Martin Kroeker
+<p><img src="images/blueballdot.png"> 
+Fixed bug in arc arrows introduced when units for arrowhead width and
+	  height were changed to be the same as for arrowhead thickness
+<p><img src="images/blueballdot.png"> 
+Pie-wedge arcs can no longer have arrowheads.
+<p><img src="images/blueballdot.png"> 
+In the popup edit panel, if no numeric value was in either the fill
+	  intensity or fill pattern entry and carriage return was pressed, an
+	  illegal value might have appeared there
+<p><img src="images/blueballdot.png"> 
+Filename sometimes trashed when trying to call external image editor
+	  from edit popup on imported picture
+<p><img src="images/blueballdot.png"> 
+If the text mode is selected followed by the "Paste" mode, <i>xfig</i> would
+	  segfault
+<p><img src="images/blueballdot.png"> 
+Another change to the "make install.doc" and "make install.libs"
+	  because some systems' install program can only take one file at a time
+<p><img src="images/blueballdot.png"> 
+"make install.doc" doesn't install the Japanese html files unless I18N
+	  is set in the Imakefile (Internationalization)
+<p><img src="images/blueballdot.png"> 
+If Fig.ad isn't installed, <i>xfig</i> died because "browser" or "pdfviewer"
+	  resources were NULL
+<p><img src="images/blueballdot.png"> 
+Mouse function indicator wasn't being reset for cancel library popup
+<p><img src="images/blueballdot.png"> 
+Cancelling the library popup wasn't quite working
+<p><img src="images/blueballdot.png"> 
+If preview of any library object failed, user couldn't place any more
+	  library objects
+<p><img src="images/blueballdot.png"> 
+Typing characters other than 'r', 'l', 'h' and 'v' are ignored when
+	  placing library objects on canvas
+<p><img src="images/blueballdot.png"> 
+When calling external image editor (via "edit image" from importing
+	  picture object), argument list[0] wasn't name of image editor
+<p><img src="images/blueballdot.png"> 
+When using the external image editor on an imported picture, <i>xfig</i>
+	  compared the file modification time before and after to re-read it if
+<p><img src="images/blueballdot.png"> 
+	  it changed, however the modification time before the edit was never
+	  obtained
+<p><img src="images/blueballdot.png"> 
+Moved JPEGINCDIR definition in the Imakefile near the #ifdef USEJPEG
+	  for easier access
+<p><img src="images/blueballdot.png"> 
+Bug in code which redisplays canvas sometimes left ghosts behind if a
+	  "move object" was cancelled
+<p><img src="images/blueballdot.png"> 
+Center/Flushleft setting was not properly set from figure file
+<p><img src="images/blueballdot.png"> 
+Align-to-canvas assumed US Size A or ISO A4 paper instead of using the
+	  current page size from export/print
+<p><img src="images/blueballdot.png"> 
+Objects with large coordinates (e.g. 190000 Fig units) were drawn
+	  incorrectly because of a peculiarity in either the X server or the
+	  X Drawing procedures that didn't work correctly for screen coords > 16000.
+<p><img src="images/blueballdot.png"> 
+If the canvas was either refreshed or zoomed while previewing a file,
+	  things failed miserably
+<p><img src="images/blueballdot.png"> 
+Line counter corrected when reading Fig file.  Was in error sometimes
+	  when reporting bad input lines.
+<p><img src="images/blueballdot.png"> 
+Fill patterns (e.g. bricks, vertical lines etc.) were not zoomed
+	  correctly in figure preview
+<p><img src="images/blueballdot.png"> 
+INLINE definition changed from "inline" to "__inline" to satisify DEC
+	  Unix or Irix and Solaris OSs
+<p><img src="images/blueballdot.png"> 
+Removed all "NullParameter" from Imakefile because OpenWindows doesn't
+	  have it
+<p><img src="images/blueballdot.png"> 
+Changed XPointer to XVisualInfo * in call to XFree in main.c for those
+	  still running OpenWindows
+<p><img src="images/blueballdot.png"> 
+The "About Xfig" window didn't trap for "Delete Window" so a window
+	  manager that substitutes "Destroy Window" in that case would kill <i>xfig</i>
+<p><img src="images/blueballdot.png"> 
+If user is previewing a figure (via popup file panel) and the canvas
+	  needs to be redrawn it is deferred until the preview is finished,
+	  preventing the Bad Window error previously seen.
+<p><img src="images/blueballdot.png"> 
+Doesn't segfault now if no app-defaults file is installed
+<p><img src="images/blueballdot.png"> 
+Bug fixed where a rotated string with only blanks (spaces) would
+	  segfault
+<p><img src="images/blueballdot.png"> 
+Mask for attribute panel button management changed to unsigned long to
+	  insure 32-bit values
+<p><img src="images/blueballdot.png"> 
+When reading in a figure containing an image, any offset in the file
+	  panel was applied to the SIZE of the image.  This is obviously
+	  incorrect.
+<p><img src="images/blueballdot.png"> 
+When cancelling the file panel during a file preview <i>xfig</i> would
+	  sometimes die with an X error.
+	  Fix from Patrick Gosling (jpmg@eng.cam.ac.uk)
+<p><img src="images/blueballdot.png"> 
+There was a bug when converting Fig 3.1 splines to 3.2 under certain
+	  circumstances
+<p><img src="images/blueballdot.png"> 
+Changed fig.h to always include (sys/param.h)
+<p><img src="images/blueballdot.png"> 
+Various function mis-declarations and signed/unsigned casts fixed by
+		Jonathan R. Ferro (jferro@corwin.ece.cmu.edu)
+<p><img src="images/blueballdot.png"> 
+Bug in image capture fixed by
+		Jonathan R. Ferro (jferro@corwin.ece.cmu.edu)
+<p><img src="images/blueballdot.png"> 
+Not really a bug, but a change in default - define HAVE_NO_DIRENT
+	  in the Imakefile if your system DOESN'T have dirent.h
+<p><img src="images/blueballdot.png"> 
+When browsing pictures in the import picture interface, if you single-
+	  click on a filename and then close the browse panel, it now applies
+	  that picture.  In the past you had to double-click on a filename to
+	  apply it.
+<p><img src="images/blueballdot.png"> 
+Cleaned up error reporting of line numbers in Fig file
+<p><img src="images/blueballdot.png"> 
+cur_dir[] array in mode.c wasn't large enough (changed to PATH_MAX).
+	  From Martin Pahl (pahl@tnt.uni-hannover.de)
+<p><img src="images/blueballdot.png"> 
+Hidden, Rigid and Special text flags weren't updated correctly with
+	  update tool
+<p><img src="images/blueballdot.png"> 
+-international and -inputStyle added to help message.
+<p><img src="images/blueballdot.png"> 
+Multiple page option was being turned off but pulldown menu showed
+	  otherwise
+<p><img src="images/blueballdot.png"> 
+If the user changes directories in the file/open panel but then
+	  presses "cancel", the original directory is restored now
+<p><img src="images/blueballdot.png"> 
+Stops parsing library directories when limit is reached
+<p><img src="images/blueballdot.png"> 
+Doc/FORMAT3.2 file (and all previous) incorrectly described the
+	  bounding box for compound objects as having upper-right and lower-left
+	  values, when in fact they have upper-*left* and lower-*right* bound
+	  values
+<p><img src="images/blueballdot.png"> 
+On a PseudoColor server, with <i>xfig</i> in -mono mode, it attempted to
+	  store a color illegally
+<p><img src="images/blueballdot.png"> 
+Editing of comments for picture objects wasn't retained
+<p><img src="images/blueballdot.png"> 
+Library directory now may include files with more than just .fig in
+	  name (e.g. .fig.gz, .fig.Z, etc).  Also, explicit check is made to
+	  ensure that whatever matches *.fig* isn't a directory.
+<p><img src="images/blueballdot.png"> 
+Missing quote for MKDIRHIER variable in Imakefile:
+	  XCOMM MKDIRHIER = "/bin/sh /usr/bin/X11/mkdirhier"
+<p><img src="images/blueballdot.png"> 
+When using small icons, <i>xfig</i> would still use 3 buttons per row on
+	  small screens even when not necessary.
+<p><img src="images/blueballdot.png"> 
+Allocation error in reading some pcx files
+<p><img src="images/blueballdot.png"> 
+Bug in HSV color sliders when clicking left or right (increase/
+	  descrease) mouse button
+<p><img src="images/blueballdot.png"> 
+Bug in HSV color sliders on 16bpp PseudoColor visuals
+<hr>
+
+[ <a href="contents.html">Contents</a> |
+ <a href="introduction.html">Introduction</a> |
+ <a href="authors.html">Credits</a> ]
+
+</body>
+</html>

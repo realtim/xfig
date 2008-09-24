@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<title>New Features in xfig 3.2.1 (Released Jul 1, 1998)</title>
+</head>
+
+<body>
+<a href="contents.html"><img src="images/xfig-title.png"
+  alt="XFIG Users Manual" border=0></a>
+
+<hr>
+<h1><a name="newfeatures">New Features in <i>xfig 3.2.1</i></a></h1> 
+(Released Jul 1, 1998)
+
+<p><img src="images/blueballdot.png"> 
+Preview of figure is created when you single click on a filename
+	  in the popup file panel. It also shows the size of the figure.
+<p><img src="images/blueballdot.png"> 
+Library feature - load a library of Fig objects and pick and place
+	  objects from the library on the canvas where you want.
+	  See the man pages for details, and see Examples/Libraries for some
+	  examples.  From Stephane Mancini (mancini@elecsrv.enst.fr) with
+	  modifications by Brian V. Smith
+<p><img src="images/blueballdot.png"> 
+Preview of library objects in library popup similar to figure preview
+	  by Brian Smith
+<p><img src="images/blueballdot.png"> 
+The library objects in the Electrical and Logic libraries were done
+	  by Peter Hiscocks (phiscock@ee.ryerson.ca)
+<p><img src="images/blueballdot.png"> 
+Xfig tutorial (PDF) in Doc/xfig-howto.pdf.  Also available from the
+	  Help menu. Written by Peter Hiscocks (phiscock@ee.ryerson.ca)
+<p><img src="images/blueballdot.png"> 
+"make install" installs the Fig object libraries to the library
+	  directory.
+	  The default is $XFIGLIBDIR/Libraries (/usr/lib/X11/xfig/Libraries),
+	  which may be changed in the Imakefile.
+<p><img src="images/blueballdot.png"> 
+When pasting a Fig object from the <i>xfig</i> cut buffer it appears under
+	  the mouse (or near the mouse if pressing the "Paste" button) where
+	  it may then be moved around on the canvas before pressing mouse
+	  button 1 to place it.
+<p><img src="images/blueballdot.png"> 
+Unit box in upper-right corner now shows the scale (e.g. 1cm=3km)
+	  This necessitated making the top ruler a little narrower to make the
+	  unitbox fit.  If the mode panel is on the right side, the side ruler
+	  is made wider to fit the unit box above it.
+<p><img src="images/blueballdot.png"> 
+The path of imported pictures is saved as relative path if picture is
+	  in subdirectory of main figure file, else it is saved as absolute.
+	  from T. Sato
+<p><img src="images/blueballdot.png"> 
+When drawing a line, moving a point on a line, or adding a point to
+	  the end of a line, the angle to horizontal is shown in the message
+	  window
+<p><img src="images/blueballdot.png"> 
+Pressing <Meta>-I turns on and off new feature that draws red
+	  horizontal and vertical lines near the line you are drawing, or point
+	  you are moving, to indicate rise and run.  Also, the length is shown
+	  next to and above the horizontal and vertical line respectively, and
+	  the actual length of the line is shown near the line itself.
+	  The command-line argument -showlengths (resource Fig.showlengths) will
+	  enable this feature as <i>xfig</i> starts.
+<p><img src="images/blueballdot.png"> 
+Print popup button is active even when print panel is up which makes
+	  it easy to force it to the top of the window stack if it is hidden
+<p><img src="images/blueballdot.png"> 
+Pressing the File button in the command panel while the Export panel
+	  is up will popdown the export panel and popup the file panel.  The
+	  converse is also true - if the Export button is pressed while the file
+	  panel is up, the file panel will be popped down and the export panel
+	  is popped up.
+<p><img src="images/blueballdot.png"> 
+When merging a file/figure into the current figure it is made into
+	  a compound object first
+<p><img src="images/blueballdot.png"> 
+Merging a figure keeps the file panel up to be able to merge more
+	  figures
+<p><img src="images/blueballdot.png"> 
+Better memory allocation for temporary arrays when drawing objects -
+	  may be slightly faster now
+	  from T. Sato
+<p><img src="images/blueballdot.png"> 
+Freehand line/polygon drawing - use mouse button 2 to start after
+	  choosing polyline.  As the mouse is moved points are added to the
+	  line or polygon.
+	  NOTE - this changes the line drawing behaviour:  Mouse button 3 is
+	  now used to create a single-point object.
+<p><img src="images/blueballdot.png"> 
+Whole window screen capture in addition to area capture in picture
+	  object popup.  The behaviour of the mouse has changed with this -
+	  Mouse button 1 captures whole window now and mouse button 2 is used
+	  to capture area of screen.
+<p><img src="images/blueballdot.png"> 
+Characters added to Fig*browse_panel*mask*string to include .tif
+	  and .sld files
+<p><img src="images/blueballdot.png"> 
+If <i>xfig</i> is started without a filename, the default filename is empty
+	  instead of unnamed.fig.  This forces the file panel popup when save
+	  is done, to enter a new file name.
+<p><img src="images/blueballdot.png"> 
+Variable time delay for popup information balloons, specified in
+	  milliseconds (-balloon_delay; resource Fig.balloon_delay)
+<p><img src="images/blueballdot.png"> 
+If you enlarge the File, Export or Library panels only the file list
+	  area is enlarged to show more files
+<p><img src="images/blueballdot.png"> 
+New "spinner" widgets to increment/decrement values in popup indicator
+	  entries (e.g. line thickness indicator popup)
+<p><img src="images/blueballdot.png"> 
+Option of using either absolute values for arrowhead sizes or multiple
+	  of current line length (see arrow size popup)
+<p><img src="images/blueballdot.png"> 
+Arrowhead thickness, width and height can be set explicitely in
+  	  bottom panel for creating arrowheads.  Update button also copies
+  	  arrowhead size info to/from objects and indicator panel.
+	  The arrowhead width and height parameters are now the same units as
+	  the arrowhead thickness, which is units of line thickness, not 1/1200
+	  inch as they were in previous versions of <i>xfig</i>.
+<p><img src="images/blueballdot.png"> 
+Color popup menu in popup edit panel handles lots of colors better
+<p><img src="images/blueballdot.png"> 
+Option of smaller icons for the mode panel (left side) by compiling
+	  with USESMALLICONS in Imakefile.  See the Imakefile for details. Also
+	  see Fig.ad.  Look for "icons".
+	  From Andrew Morgan (morgan@physics.ucla.edu)
+<p><img src="images/blueballdot.png"> 
+New grid and point positioning setting at 1/8" (or 2mm in metric mode)
+<p><img src="images/blueballdot.png"> 
+When moving, copying, moving a point of or adding a point to objects,
+	  all the "grab corners" of the other objects in the figure disappear
+	  to make the figure less cluttered.  They reappear when the operation
+	  is complete.
+<p><img src="images/blueballdot.png"> 
+Pull-down menu buttons have an arrow icon to show that it is a pull-
+	  down
+<p><img src="images/blueballdot.png"> 
+Units such as "i" for inches and "c" for cm may be entered following
+	  coordinates in popup edit panel for editing objects (e.g. 3c for 3 cm).
+	  From Rick Richardson (rick@dgii.com)
+<p><img src="images/blueballdot.png"> 
+When importing a picture file (eps, GIF, etc) <i>xfig</i> is more intelligent
+	  and faster about deciding the format
+<p><img src="images/blueballdot.png"> 
+"Integer area zoom" option in zoom popup - if checked, when using the
+	  mouse to zoom an area of the canvas, the zoom amount will be an
+	  integral value (e.g. 2, 3, 4)
+<p><img src="images/blueballdot.png"> 
+Compose key LED may be turned on for multi-key characters (e.g.
+	  a-umlaut etc) on Sun Sparcstations.  See README file about COMP_LED.
+	  from Hans Werner Strube (strube@swing.physik3.gwdg.de)
+<p><img src="images/blueballdot.png"> 
+New fig2dev driver for tk (tcl/tk) - Generates tk canvas and canvas
+	  objects.  From Mike Markowski (mm@udel.edu)
+<p><img src="images/blueballdot.png"> 
+Added "Alt" key definitions to the accelerators in Fig.ad to
+	  accomodate those machines which don't have a Meta key
+
+<hr>
+
+[ <a href="contents.html">Contents</a> |
+ <a href="introduction.html">Introduction</a> |
+ <a href="authors.html">Credits</a> ]
+
+</body>
+</html>
