@@ -120,7 +120,9 @@ change_directory(char *path)
 int get_directory(char *direct)
 {
 #if defined(SYSV) || defined(SVR4) || defined(_POSIX_SOURCE)
+#if !defined(getcwd)
     extern char	   *getcwd(char *, size_t);
+#endif
 
 #else
     extern char	   *getwd();
