@@ -278,7 +278,7 @@ InstallManPageLong(file,dest,file)
 DUSESMALLICONS = -DUSE_SMALL_ICONS
 #endif /* USESMALLICONS */
 
-PNGLIBS = -L$(PNGLIBDIR) -lpng -L$(ZLIBDIR) -lz
+PNGLIBS = -L$(PNGLIBDIR) -lpng
 
 #ifdef USEJPEG
 DUSEJPEG = -DUSE_JPEG
