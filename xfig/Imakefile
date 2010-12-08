@@ -47,6 +47,16 @@ XCOMM purpose of DESTDIR is to test an install process by installing in a benign
 
 XAPPLOADDIR = /etc/X11/app-defaults
 
+/* This code is get from LinuxDebian part of /usr/share/X11/config/linux.cf
+   to avoid symlink in /usr/share/X11 */
+# if defined(InstallAppDefFiles) && InstallAppDefFiles
+#  define InstallAppDefaults(class)                            @@\
+InstallNamedTarget(install,class.ad,$(INSTAPPFLAGS),$(XAPPLOADDIR),class)
+# else
+#  define InstallAppDefaultsLong(class)                            @@\
+InstallNamedTargetNoClobber(install,class.ad,$(INSTAPPFLAGS),$(XAPPLOADDIR),class)
+# endif /* InstallAppDefFiles */
+
 XCOMM Comment out the following definition for XAW3D if you don't to want to use
 XCOMM the 3d Athena Widget Set
 
