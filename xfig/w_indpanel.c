@@ -1879,7 +1879,7 @@ void popup_choice_panel(ind_sw_info *isw)
 
 /* handle text flag settings */
 
-static int      hidden_text_flag, special_text_flag, rigid_text_flag;
+static intptr_t hidden_text_flag, special_text_flag, rigid_text_flag;
 static Widget   hidden_text_panel, rigid_text_panel, special_text_panel;
 
 static void
@@ -1919,7 +1919,7 @@ hidden_text_select(Widget w, XtPointer new_hidden_text, XtPointer call_data)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(hidden_text_panel);
-    hidden_text_flag = (int) new_hidden_text;
+    hidden_text_flag = (intptr_t) new_hidden_text;
     if (hidden_text_flag)
 	put_msg("Text will be displayed as hidden");
     else
@@ -1931,7 +1931,7 @@ rigid_text_select(Widget w, XtPointer new_rigid_text, XtPointer call_data)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(rigid_text_panel);
-    rigid_text_flag = (int) new_rigid_text;
+    rigid_text_flag = (intptr_t) new_rigid_text;
     if (rigid_text_flag)
 	put_msg("Text in compound group will not scale with compound");
     else
@@ -1943,7 +1943,7 @@ special_text_select(Widget w, XtPointer new_special_text, XtPointer call_data)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(special_text_panel);
-    special_text_flag = (int) new_special_text;
+    special_text_flag = (intptr_t) new_special_text;
     if (special_text_flag)
 	put_msg("Text will be printed as special during print/export");
     else
@@ -1966,9 +1966,9 @@ void popup_flags_panel(ind_sw_info *isw)
     nval_i = isw;
     XtSetSensitive(nval_i->button, False);
 
-    rigid_text_flag = (cur_textflags & RIGID_TEXT) ? 1 : 0;
-    special_text_flag = (cur_textflags & SPECIAL_TEXT) ? 1 : 0;
-    hidden_text_flag = (cur_textflags & HIDDEN_TEXT) ? 1 : 0;
+    rigid_text_flag = (intptr_t) ((cur_textflags & RIGID_TEXT) ? 1 : 0);
+    special_text_flag = (intptr_t) ((cur_textflags & SPECIAL_TEXT) ? 1 : 0);
+    hidden_text_flag = (intptr_t) ((cur_textflags & HIDDEN_TEXT) ? 1 : 0);
 
     FirstArg(XtNwidth, &width);
     NextArg(XtNheight, &height);

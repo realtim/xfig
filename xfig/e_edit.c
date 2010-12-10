@@ -234,7 +234,7 @@ static	Pixel	form_bg = -1;
 
 static char	*unit_items[] = {NULL,	 /* this is modified in unit_select() */
 				 "Fig units"};
-static int	points_units=0;		/*  0=Ruler scale, 1=Fig*/
+static intptr_t	points_units=0;		/*  0=Ruler scale, 1=Fig*/
 static int	conv_array_idx = 0;	/* to keep track of widgets that need unit conversions */
 static Widget	convert_array[MAXDISPTS*2]; /* array for those widgets */
 
@@ -263,15 +263,15 @@ static char	*pic_names[] = {
 		};
 
 static int	ellipse_flag;
-static int	fill_flag;
-static int	flip_pic_flag;
+static intptr_t	fill_flag;
+static intptr_t	flip_pic_flag;
 static void	(*done_proc) ();
 static int	button_result;
-static int	textjust;
+static intptr_t	textjust;
 static Color	pen_color, fill_color;
-static int	hidden_text_flag;
-static int	special_text_flag;
-static int	rigid_text_flag;
+static intptr_t	hidden_text_flag;
+static intptr_t	special_text_flag;
+static intptr_t	rigid_text_flag;
 static int	new_ps_font, new_latex_font;
 static int	new_psflag;
 static int	min_compound_depth;
@@ -432,7 +432,7 @@ static struct {
     Color	 pen_color;
     Color	 fill_color;
     int		 depth;
-    int		 arc_type;
+    intptr_t	 arc_type;
     int		 cap_style;
     int		 join_style;
     int		 style;
@@ -2252,7 +2252,7 @@ void make_window_text(F_text *t)
     textjust = new_t->type;	/* get current justification */
     hidden_text_flag = hidden_text(new_t) ? 1 : 0;
     new_psflag = psfont_text(new_t) ? 1 : 0;
-    rigid_text_flag = rigid_text(new_t) ? 1 : 0;
+    rigid_text_flag = (intptr_t) (rigid_text(new_t) ? 1 : 0);
     special_text_flag = special_text(new_t) ? 1 : 0;
     new_ps_font = cur_ps_font;
     new_latex_font = cur_latex_font;
@@ -3501,7 +3501,8 @@ spline_point_window(int x, int y)
 {
     Widget          but_spline[3];
     Dimension	    label_height, label_width;
-    int		    i, dist;
+    intptr_t	    i;
+    int		    dist;
 
     static char use_item[]="Edit the behavior\nof the control point";
     
@@ -3608,7 +3609,7 @@ spline_point_window(int x, int y)
 static void
 toggle_sfactor_type(Widget panel_local, XtPointer _sfactor_index, XtPointer call_data)
 {
-  int             sfactor_index = (int) _sfactor_index;
+  intptr_t         sfactor_index = (intptr_t)_sfactor_index;
 
   update_sfactor_value(sfactor_type[sfactor_index].value);
   XawScrollbarSetThumb(sfactor_bar,
@@ -3629,10 +3630,10 @@ change_sfactor_value(Widget panel_local, XtPointer closure, XtPointer _top)
 static void
 scroll_sfactor_value(Widget panel_local, XtPointer closure, XtPointer _num_pixels)
 {
-  int 		   *num_pixels = (int *) _num_pixels;
+  intptr_t 	   num_pixels = (intptr_t) _num_pixels;
 
   update_sfactor_value(sub_sfactor->s + 
-		       (STEP_VALUE * SFACTOR_SIGN((int) num_pixels)));
+		       (STEP_VALUE * SFACTOR_SIGN(num_pixels)));
   XawScrollbarSetThumb(panel_local, SFACTOR_TO_PERCENTAGE(sub_sfactor->s),
 		       THUMB_H);
 }
@@ -4653,12 +4654,13 @@ cvt_to_fig(double real_unit)
 static void
 unit_select(Widget w, XtPointer new_unit, XtPointer call_data)
 {
-    int		    i, new_points_units;
+    int		    i;
+    intptr_t	    new_points_units;
     char	    buf[30];
     int		    ival;
     double	    val;
 
-    new_points_units = (int) new_unit;
+    new_points_units = (intptr_t) new_unit;
     if (points_units == new_points_units)
 	return;
 
@@ -4739,7 +4741,7 @@ arc_type_select(Widget w, XtPointer new_style, XtPointer call_data)
     FirstArg(XtNlabel, XtName(w));
     SetValues(arc_type_panel);
 
-    generic_vals.arc_type = (int) new_style;
+    generic_vals.arc_type = (intptr_t) new_style;
     /* if now a pie-wedge type, make the arrow panels insensitive */
     if (generic_vals.arc_type == T_PIE_WEDGE_ARC) {
 	/* unmanage arrow forms */
@@ -4927,7 +4929,7 @@ hidden_text_select(Widget w, XtPointer new_hidden_text, XtPointer call_data)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(hidden_text_panel);
-    hidden_text_flag = (int) new_hidden_text;
+    hidden_text_flag = (intptr_t) new_hidden_text;
 }
 
 static void
@@ -4935,7 +4937,7 @@ rigid_text_select(Widget w, XtPointer new_rigid_text, XtPointer call_data)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(rigid_text_panel);
-    rigid_text_flag = (int) new_rigid_text;
+    rigid_text_flag = (intptr_t) new_rigid_text;
 }
 
 static void
@@ -4943,7 +4945,7 @@ special_text_select(Widget w, XtPointer new_special_text, XtPointer call_data)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(special_text_panel);
-    special_text_flag = (int) new_special_text;
+    special_text_flag = (intptr_t) new_special_text;
 }
 
 static void
@@ -4951,7 +4953,7 @@ textjust_select(Widget w, XtPointer new_textjust, XtPointer call_data)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(textjust_panel);
-    textjust = (int) new_textjust;
+    textjust = (intptr_t) new_textjust;
 }
 
 static void
@@ -4963,7 +4965,7 @@ flip_pic_select(Widget w, XtPointer new_flipflag, XtPointer call_data)
 
     FirstArg(XtNlabel, XtName(w));
     SetValues(flip_pic_panel);
-    flip_pic_flag = (int) new_flipflag;
+    flip_pic_flag = (intptr_t) new_flipflag;
     p1.x = panel_get_dim_value(x1_panel);
     p1.y = panel_get_dim_value(y1_panel);
     p2.x = panel_get_dim_value(x2_panel);
@@ -4990,13 +4992,14 @@ static void
 rotation_select(Widget w, XtPointer new_rotation, XtPointer call_data)
 {
     struct f_point  p1, p2;
-    int		    dx, dy, cur_rotation, rotation;
+    int		    dx, dy, cur_rotation;
+    intptr_t    rotation;
     int		    x1, y1, x2, y2;
 
     FirstArg(XtNlabel, XtName(w));
     SetValues(rotation_panel);
     /* get new rotation (0 = 0 degrees, 1 = 90, 2 = 180, 3 = 270) */
-    rotation = (int) new_rotation;
+    rotation = (intptr_t) new_rotation;
 
     /* get the two opposite corners */
     p1.x = panel_get_dim_value(x1_panel);
@@ -5104,7 +5107,7 @@ fill_style_select(Widget w, XtPointer new_fillflag, XtPointer call_data)
 
     FirstArg(XtNlabel, XtName(w));
     SetValues(fill_style_button);
-    fill_flag = (int) new_fillflag;
+    fill_flag = (intptr_t) new_fillflag;
 
     if (fill_flag == 0) { 
       /* no fill; blank out fill density value and pattern */

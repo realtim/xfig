@@ -181,7 +181,7 @@ static Widget   pcl_cmd_checkbox;
 static Widget   hpgl_font_label;
 static Widget   hpgl_font_checkbox;
 
-static int	xoff_unit_setting, yoff_unit_setting;
+static intptr_t	xoff_unit_setting, yoff_unit_setting;
 
 DeclareStaticArgs(15);
 
@@ -402,7 +402,7 @@ just_select(Widget w, XtPointer client_data, XtPointer call_data)
 static void
 papersize_select(Widget w, XtPointer client_data, XtPointer call_data)
 {
-    int papersize = (int) client_data;
+    intptr_t papersize = (intptr_t) client_data;
 
     FirstArg(XtNlabel, paper_sizes[papersize].fname);
     SetValues(export_papersize_panel);
@@ -417,7 +417,7 @@ papersize_select(Widget w, XtPointer client_data, XtPointer call_data)
 static void
 multiple_select(Widget w, XtPointer client_data, XtPointer call_data)
 {
-    int multiple = (int) client_data;
+    intptr_t multiple = (intptr_t) client_data;
 
     FirstArg(XtNlabel, multiple_pages[multiple]);
     SetValues(export_multiple_panel);
@@ -451,7 +451,7 @@ multiple_select(Widget w, XtPointer client_data, XtPointer call_data)
 static void
 overlap_select(Widget w, XtPointer client_data, XtPointer call_data)
 {
-    int overlap = (int) client_data;
+    intptr_t overlap = (intptr_t) client_data;
 
     FirstArg(XtNlabel, overlap_pages[overlap]);
     SetValues(export_overlap_panel);
@@ -544,7 +544,7 @@ void set_export_mask(int lang)
 static void
 smooth_select(Widget w, XtPointer client_data, XtPointer call_data)
 {
-    int new_smooth = (int) client_data;
+    intptr_t new_smooth = (intptr_t) client_data;
     appres.smooth_factor = new_smooth==0? 1: new_smooth*2;
     FirstArg(XtNlabel, smooth_choices[new_smooth]);
     SetValues(smooth_menu_button);
@@ -985,7 +985,7 @@ exp_xoff_unit_select(Widget w, XtPointer client_data, XtPointer call_data)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(exp_xoff_unit_panel);
-    xoff_unit_setting = (int) client_data;
+    xoff_unit_setting = (intptr_t) client_data;
 }
 
 static void
@@ -993,7 +993,7 @@ exp_yoff_unit_select(Widget w, XtPointer client_data, XtPointer call_data)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(exp_yoff_unit_panel);
-    yoff_unit_setting = (int) client_data;
+    yoff_unit_setting = (intptr_t) client_data;
 }
 
 /* when the user checks PCL command option. */
@@ -1049,7 +1049,7 @@ void create_export_panel(Widget w)
 	char		 buf[50];
 	char		*unit;
 	float		 mult;
-	int		 i;
+	intptr_t	 i;
 	Position	 xposn, yposn;
 
 	xoff_unit_setting = yoff_unit_setting = (int) appres.INCHES? 0: 1;

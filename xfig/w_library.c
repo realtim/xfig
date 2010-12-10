@@ -1156,7 +1156,7 @@ sel_view(Widget w, XtPointer new_view, XtPointer garbage)
 static void
 change_icon_size(Widget w, XtPointer menu_entry, XtPointer garbage)
 {
-    char	   *new_size = (char*) icon_sizes[(int) menu_entry];
+    char	   *new_size = (char*) icon_sizes[(intptr_t) menu_entry];
     int		    i;
 
     /* update the menu label with the new size */

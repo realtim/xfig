@@ -162,7 +162,7 @@ static float	pass_value;
 static int	last_pos;
 static Boolean	do_change = True;
 static Boolean	modified[2];
-static int	edit_fill;
+static intptr_t	edit_fill;
 static Pixel	original_background;
 static XColor	mixed_color[2];
 static int	mixed_color_indx[2];
@@ -262,7 +262,7 @@ void YStoreColors(Colormap colormap, XColor *color, int ncolors)
 
 void create_color_panel(Widget form, Widget label, Widget cancel, ind_sw_info *isw)
 {
-	int		 i;
+	intptr_t	 i;
 	choice_info	*choice;
 	XColor		 col;
 	Pixel		 form_fg;
@@ -807,7 +807,7 @@ void pen_fill_activate(int func)
 	set_slider_sensitivity();
 
 	/* activate the one the user pressed (pen or fill) */
-	XawToggleSetCurrent(mixedEdit[0],(XtPointer) (func==I_PEN_COLOR? 1:2));
+	XawToggleSetCurrent(mixedEdit[0],(XtPointer) (intptr_t)(func==I_PEN_COLOR? 1:2));
 }
 
 void restore_mixed_colors(void)
@@ -1451,7 +1451,7 @@ color_used(int color, F_compound *list)
 static void 
 switch_edit(Widget w, XtPointer client_data, XtPointer call_data)
 {
-	edit_fill = (int) XawToggleGetCurrent(mixedEdit[0]) - 1;
+	edit_fill = (intptr_t) XawToggleGetCurrent(mixedEdit[0]) - 1;
 	/* sometimes XawToggleGetCurrent() returns 0 if the
 	   toggle hasn't been set manually */
  	if (edit_fill == -1)
@@ -1900,8 +1900,8 @@ void StoreMix_and_Mem(void)
 static void
 Scrolled(Widget w, XtPointer closure, XtPointer call_data)
 {
-	Boolean going_up = (int) call_data < 0;
-	int which = (int) closure;
+	Boolean going_up = (intptr_t) call_data < 0;
+	intptr_t which = (intptr_t) closure;
 	int pos = 0;
 	float blip = 1.0/256.0;
 
@@ -1952,7 +1952,7 @@ Scrolled(Widget w, XtPointer closure, XtPointer call_data)
 static void
 Update_HSV(Widget w, XtPointer closure, XtPointer call_data)
 {
-	int which = (int) closure;
+	intptr_t which = (intptr_t) closure;
 	float top = *(float*) call_data;
 
 	switch (which) {
@@ -1995,7 +1995,7 @@ void ThumbHSV(Widget w, float top)
 static void
 Thumbed(Widget w, XtPointer closure, XtPointer call_data)
 {
-	int which = (int) closure;
+	intptr_t which = (intptr_t) closure;
 	int mix;
 	float top = *(float*) call_data;
 	XEvent event;

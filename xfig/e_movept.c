@@ -133,7 +133,7 @@ init_move_point(F_line *obj, int type, int x, int y, F_point *p, F_point *q)
       case O_ELLIPSE:
 	force_noanglegeom();
 	/* dirty trick - arcpoint_num is stored in p */
-	movedpoint_num = (int) p;
+	movedpoint_num = (intptr_t) p;
 	cur_e = (F_ellipse *) obj;
 	if (!init_ellipsepointmoving()) /* selected center, ignore */
 	    return False;
@@ -141,7 +141,7 @@ init_move_point(F_line *obj, int type, int x, int y, F_point *p, F_point *q)
       case O_ARC:
 	force_noanglegeom();
 	/* dirty trick - arcpoint_num is stored in p */
-	movedpoint_num = (int) p;
+	movedpoint_num = (intptr_t) p;
 	cur_a = (F_arc *) obj;
 	init_arcpointmoving();
 	break;

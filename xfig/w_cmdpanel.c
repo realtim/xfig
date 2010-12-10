@@ -415,7 +415,7 @@ create_menu_item(main_menu_info *menup)
 				menup->widget, Args, ArgCount);
 	/* make the menu items */
 	for (i = 0; menup->menu[i].name != NULL; i++) {
-	    if ((int) menup->menu[i].name == -1) {
+	    if ((intptr_t) menup->menu[i].name == -1) {
 		/* put in a separator line */
 		FirstArg(XtNlineWidth, 2);
 		(void) XtCreateManagedWidget("line", smeLineObjectClass, 
@@ -1535,7 +1535,8 @@ popup_character_map(void)
 {
 	Widget	    	 beside, below;
 	XFontStruct	*font;
-	int		 i, vertDist;
+	intptr_t	 i;
+	int		 vertDist;
 	char		 fname[80], chr[2];
 	static Boolean	 actions_added=False;
 

@@ -66,7 +66,7 @@ void
 init_fontmenu(Widget tool)
 {
     Widget	    tmp_but, ps_cancel, latex_cancel;
-    register int    i;
+    register intptr_t i;
     register MenuItemRec *mi;
     XtTranslations  pane_actions;
 

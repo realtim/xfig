@@ -41,7 +41,7 @@ int		x1off, x2off, y1off, y2off;
 Cursor		cur_latexcursor;
 int		from_x, from_y;
 double		cosa, sina;
-int		movedpoint_num;
+intptr_t	movedpoint_num;
 F_point	       *left_point, *right_point;
 
 /**************** LOCAL ***********/

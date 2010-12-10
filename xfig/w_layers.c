@@ -677,7 +677,7 @@ static void
 switch_layer_mode(Widget w, XtPointer closure, XtPointer call_data)
 {
     Boolean	    state;
-    int		    which;
+    intptr_t	    which;
 
     /* check state of the toggle and set/remove checkmark */
     FirstArg(XtNstate, &state);
@@ -700,7 +700,7 @@ switch_layer_mode(Widget w, XtPointer closure, XtPointer call_data)
 	XtSetSensitive(graytoggle, state);
     }
     /* which button */
-    which = (int) XawToggleGetCurrent(w);
+    which = (intptr_t) XawToggleGetCurrent(w);
     if (which == 0)		/* no buttons on, in transition so return now */
 	return;
     if (which == 2)		/* "blank" button, invert state */

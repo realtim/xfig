@@ -361,7 +361,7 @@ Widget
 make_pulldown_menu(char **entries, Cardinal nent, int divide_line, char *divide_message, Widget parent, XtCallbackProc callback)
 {
     Widget	    pulldown_menu, entry;
-    int		    i;
+    intptr_t	    i;
 
     pulldown_menu = XtCreatePopupShell("menu", simpleMenuWidgetClass, parent,
 				  NULL, ZERO);
@@ -427,7 +427,7 @@ make_color_popup_menu(Widget parent, char *name, XtCallbackProc callback, Boolea
 {
     Widget	    pop_menu, pop_form, color_box;
     Widget	    viewp, entry, label;
-    int		    i;
+    intptr_t	    i;
     char	    buf[30];
     Position	    x_val, y_val;
     Dimension	    height;

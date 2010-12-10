@@ -407,7 +407,7 @@ switch_file_mode(Widget w, XtPointer closure, XtPointer call_data)
 {
     DeclareArgs(5);
     Boolean	    state;
-    int		    which;
+    intptr_t	    which;
 
     /* check state of the toggle and set/remove checkmark */
     FirstArg(XtNstate, &state);
@@ -430,7 +430,7 @@ switch_file_mode(Widget w, XtPointer closure, XtPointer call_data)
 	XtSetSensitive(appendtoggle, state);
     }
     /* which button */
-    which = (int) XawToggleGetCurrent(w);
+    which = (intptr_t) XawToggleGetCurrent(w);
     if (which == 0)		/* no buttons on, in transition so return now */
 	return;
     if (which == 2)		/* "newfile" button, invert state */

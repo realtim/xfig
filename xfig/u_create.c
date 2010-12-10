@@ -464,7 +464,7 @@ create_picture_entry(void)
     picture->refcount = 0;
     picture->prev = picture->next = NULL;
     if (appres.DEBUG)
-	fprintf(stderr,"create picture entry %x\n",(int) picture);
+	fprintf(stderr,"create picture entry %x\n",(intptr_t) picture);
     return picture;
 }
 

@@ -40,7 +40,7 @@ extern int	x1off, x2off, y1off, y2off;
 extern Cursor	cur_latexcursor;
 extern int	from_x, from_y;
 extern double	cosa, sina;
-extern int	movedpoint_num;
+extern intptr_t	movedpoint_num;
 extern F_point *left_point, *right_point;
 
 extern void	elastic_box(int x1, int y1, int x2, int y2);

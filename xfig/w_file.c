@@ -115,7 +115,7 @@ static Widget	fig_offset_lbl_x, fig_offset_lbl_y;
 static Widget	fig_offset_x, fig_offset_y;
 static Widget	file_xoff_unit_panel;
 static Widget	file_yoff_unit_panel;
-static int	xoff_unit_setting, yoff_unit_setting;
+static intptr_t	xoff_unit_setting, yoff_unit_setting;
 
 static String	file_list_load_translations =
 			"<Btn1Down>,<Btn1Up>: Set()Notify()\n\
@@ -710,7 +710,7 @@ file_xoff_unit_select(Widget w, XtPointer new_unit, XtPointer garbage)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(file_xoff_unit_panel);
-    xoff_unit_setting = (int) new_unit;
+    xoff_unit_setting = (intptr_t) new_unit;
 }
 
 static void
@@ -718,7 +718,7 @@ file_yoff_unit_select(Widget w, XtPointer new_unit, XtPointer garbage)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(file_yoff_unit_panel);
-    yoff_unit_setting = (int) new_unit;
+    yoff_unit_setting = (intptr_t) new_unit;
 }
 
 void create_file_panel(void)
@@ -729,7 +729,7 @@ void create_file_panel(void)
 	Widget		 preview_form;
 	Position	 xposn, yposn;
 
-	xoff_unit_setting = yoff_unit_setting = (int) appres.INCHES? 0: 1;
+	xoff_unit_setting = yoff_unit_setting = (intptr_t) appres.INCHES? 0: 1;
 
 	XtTranslateCoords(tool, (Position) 0, (Position) 0, &xposn, &yposn);
 

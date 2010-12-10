@@ -47,6 +47,7 @@ extern	char	*my_strdup(char *str);
 #include <stdio.h>
 #include <ctype.h>
 #include <errno.h>
+#include <stdint.h>
 
 #ifdef NEED_STRERROR
 extern char	*strerror();

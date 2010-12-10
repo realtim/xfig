@@ -622,7 +622,7 @@ fig_unit_select(Widget w, XtPointer new_unit, XtPointer garbage)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(fig_unit_panel);
-    fig_unit_setting = (Boolean) (int) new_unit;
+    fig_unit_setting = (Boolean) (intptr_t) new_unit;
     if (fig_unit_setting) {
 	/* set foreground to original so we can se it */
 	FirstArg(XtNforeground, unit_fg);
@@ -642,7 +642,7 @@ fig_scale_select(Widget w, XtPointer new_scale, XtPointer garbage)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(fig_scale_panel);
-    fig_scale_setting = (Boolean) (int) new_scale;
+    fig_scale_setting = (Boolean) (intptr_t) new_scale;
     if (fig_scale_setting) {
 	/* set foreground to original so we can se it */
 	FirstArg(XtNforeground, scale_fg);
@@ -660,7 +660,7 @@ fig_scale_select(Widget w, XtPointer new_scale, XtPointer garbage)
 static void
 rul_unit_select(Widget w, XtPointer closure, XtPointer garbage)
 {
-    int		    new_unit = (int) closure;
+    intptr_t	    new_unit = (intptr_t) closure;
 
     /* return if no change */
     if (new_unit == cur_gridunit)
