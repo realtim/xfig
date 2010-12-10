@@ -1,16 +1,22 @@
-Summary:      An X Window System tool for drawing basic vector graphics.
 Name:         xfig
 Version:      3.2.5_alpha5
-Release:      0
-Epoch:        1
-Copyright:    Freeware
-Vendor:       Brian V. Smith <bvsmith@lbl.gov>
-Distribution: xfig/transfig
-Group:        Applications/Multimedia
-Source0:      xfig.3.2.5_alpha5.full.tar.gz
+Release:      alt13
+
+Summary:      An X Window System tool for drawing basic vector graphics.
+Group:        Graphics
 URL:          http://epb.lbl.gov/xfig/
-Requires:     transfig >= 3.2.5_alpha5
-Buildroot:    %{_tmppath}/%{name}-root
+License:      Freeware
+
+Packager:     Vladislav Zavjalov <slazav@altlinux.org>
+Source:       %name-%version.tar.gz
+Patch1:       %name-%version-alt.patch
+
+Requires:     transfig >= 3.2.5 fonts-type1-urw
+
+BuildPreReq:  imake xorg-cf-files
+BuildPreReq:  libXpm-devel libXt-devel libXmu-devel libXaw-devel
+BuildPreReq:  libpng-devel libjpeg-devel libXi-devel libXp-devel
+BuildPreReq:  libXaw3d-devel >= 1.5e
 
 %description
 Xfig is an X Window System tool for creating basic vector graphics,
@@ -21,42 +27,117 @@ Encapsulated PostScript, LaTeX).
 
 You should install xfig if you need a program to create vector graphics.
 
+%package -n xfig-libs
+Summary:  XFig image libraries
+Group:    Graphics
+BuildArch: noarch
+
+%description -n xfig-libs
+Library of FIG images
+
+%package -n xfig-docs
+Summary:  XFig documentation
+Group:    Graphics
+BuildArch: noarch
+
+%description -n xfig-docs
+XFig documentation
+
 %prep
-%setup -q -n xfig.%{version}
+%setup -q
+%patch1 -p1
 
 %build
-export PATH=$PATH:/usr/X11R6/bin
-xmkmf
+CDEBUGFLAGS=OptimizedCDebugFlags
+# Optimization can break xfig on x86_64?
+#%ifarch x86_64
+#CDEBUGFLAGS=NoOpCDebugFlags
+#%endif
+# Uncomment to build with -g flag:
+# CDEBUGFLAGS=DebuggableCDebugFlags
+xmkmf -DXAW3D -DXAW3D1_5E -DDefaultCDebugFlags=$CDEBUGFLAGS
 ln -nfs Doc/xfig.man xfig.man
-make DOCDIR=%{_docdir}
+make DESTDIR=%buildroot
 
 %install
-rm -rf $RPM_BUILD_ROOT
+make DESTDIR=%buildroot install.all
 
-make DESTDIR=$RPM_BUILD_ROOT DOCDIR=%{_docdir} install install.all
-
-mkdir -p $RPM_BUILD_ROOT/usr/X11R6/lib/X11/xfig \
-	$RPM_BUILD_ROOT/etc/X11/applnk/Graphics \
-        $RPM_BUILD_ROOT/usr/share/pixmaps
-
-install -m 755 xfig $RPM_BUILD_ROOT/usr/X11R6/bin
-install -m 644 xfig.man $RPM_BUILD_ROOT/usr/X11R6/man/man1/xfig.1x
-install -m 644 CompKeyDB $RPM_BUILD_ROOT/usr/X11R6/lib/X11/xfig
-install -m 644 Fig.ad $RPM_BUILD_ROOT/usr/X11R6/lib/X11/app-defaults/Fig
-install -m 644 Fig-color.ad $RPM_BUILD_ROOT/usr/X11R6/lib/X11/app-defaults/Fig-color
-install -m 644 xfig.png $RPM_BUILD_ROOT/usr/share/pixmaps
-install -m 644 xfig.desktop $RPM_BUILD_ROOT/etc/X11/applnk/Graphics
-
-%clean
-rm -rf $RPM_BUILD_ROOT
+install -D -m 644 xfig48.png   %buildroot/%_liconsdir/xfig.png
+install -D -m 644 xfig32.png   %buildroot/%_niconsdir/xfig.png
+install -D -m 644 xfig16.png   %buildroot/%_miconsdir/xfig.png
+install -D -m 644 xfig.desktop %buildroot/%_desktopdir/xfig.desktop
 
 %files
-%defattr(-,root,root)
-/usr/X11R6/bin/*
-/usr/X11R6/lib/X11/%{name}/*
-/usr/X11R6/man/*/*
-/usr/share/pixmaps/%{name}.png
-%doc %{_docdir}/%{name}
-/usr/X11R6/lib/X11/app-defaults/*
-%config /etc/X11/applnk/Graphics/%{name}.desktop
+/usr/bin/xfig
+/usr/share/man/man1/*
+/etc/X11/app-defaults/*
+%_desktopdir/xfig.desktop
+%_liconsdir/xfig.png
+%_niconsdir/xfig.png
+%_miconsdir/xfig.png
+%dir /usr/share/xfig/
+/usr/share/xfig/CompKeyDB
+
+%files -n xfig-libs
+/usr/share/xfig/Libraries
+
+%files -n xfig-docs
+/usr/share/doc/xfig
+
+%changelog
+* Wed Nov 03 2010 Vladislav Zavjalov <slazav@altlinux.org> 3.2.5_alpha5-alt13
+- fix xfig.desktop
+- rebuild with set-versioned libXaw3d
+
+* Thu Sep 24 2009 Vladislav Zavjalov <slazav@altlinux.org> 3.2.5_alpha5-alt12
+- xfig.desktop: add Categories
+- xfig.spec: remove unsupported Vendor tag
+
+* Tue Jun 23 2009 Vladislav Zavjalov <slazav@altlinux.org> 3.2.5_alpha5-alt11
+- rebuild with new libpng
+
+* Tue Jun 09 2009 Vladislav Zavjalov <slazav@altlinux.org> 3.2.5_alpha5-alt10
+- replace incomplete mkstemp patch from Fedora with one from SUSE (CVE-2009-1962)
+
+* Fri Mar 13 2009 Vladislav Zavjalov <slazav@altlinux.org> 3.2.5_alpha5-alt9
+- Fig.ad: use 9x18bold for bold fonts
+  (7x14bold has no proper alias in bitmap-cyrillic-misc)
+- build with xaw3d + increase msg_panel height 18->24 
+  (there is no text shown when height is too small for used font;
+   xaw3d makes this height smaller)
+
+* Thu Nov 20 2008 Vladislav Zavjalov <slazav@altlinux.org> 3.2.5_alpha5-alt8
+- move directories from spec to Imakefile
+- don't use libXaw3d (it breaks msg_panel)
+- fix typo in w_msgpanel.c
+- fix xfig.desktop
+
+* Wed Nov 19 2008 Vladislav Zavjalov <slazav@altlinux.org> 3.2.5_alpha5-alt7
+- make libs and docs to be noarch
+
+* Wed Nov 19 2008 Vladislav Zavjalov <slazav@altlinux.org> 3.2.5_alpha5-alt6
+- fix xfig.desktop according to freedesktop.org policy
+- add icons according to altlinux policy
+
+* Mon Nov 10 2008 Vladislav Zavjalov <slazav@altlinux.org> 3.2.5_alpha5-alt5
+- add BuildPreReq: libXp-devel
+
+* Thu Oct 02 2008 Vladislav Zavjalov <slazav@altlinux.org> 3.2.5_alpha5-alt4
+- rename "utf8_encoding" option to "locale_encoding" (it must work with any encoding)
+- fix null function crash
+- do not specify font charsets in international mode
+
+* Tue Sep 30 2008 Vladislav Zavjalov <slazav@altlinux.org> 3.2.5_alpha5-alt3
+- add utf8 support:
+  Fig.eucEncoding: false
+  Fig.utf8Encoding: true
+  (default settings)
+
+* Fri Sep 26 2008 Vladislav Zavjalov <slazav@altlinux.org> 3.2.5_alpha5-alt2
+- apply some Alt, Fedora and Debian patches
+- split into three packages: xfig, xfig-docs, xfig-libs
+- problem: only latin characters are ok in text objects...
+
+* Wed Sep 24 2008 Vladislav Zavjalov <slazav@altlinux.org> 3.2.5_alpha5-alt1
+- first build
 

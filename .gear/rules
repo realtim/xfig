@@ -1,0 +1,4 @@
+tar.gz: @version@:@name@
+diff: @version@:xfig xfig name=@name@-@version@-alt.patch
+
+

@@ -1,7 +1,10 @@
 [Desktop Entry]
-Exec=/usr/X11R6/bin/xfig
-InitialPreference=2
-MimeType=image/x-xfig
 Name=xfig
+Comment=Editor for vector graphics in FIG format
+MimeType=image/x-xfig;
+TryExec=xfig
+Exec=xfig %f
+Icon=xfig
 Terminal=false
 Type=Application
+Categories=Graphics;2DGraphics;VectorGraphics;
