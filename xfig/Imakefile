@@ -150,7 +150,7 @@ XCOMM Comment out the next line if you have any problems with the locale.
 XCOMM If your setlocale() doesn't support the locale, you should
 XCOMM add -DSETLOCALE to I18N_DEFS.
 
-XCOMM #define I18N
+#define I18N
 
 XCOMM If using an input tablet uncomment the following
 
