@@ -48,7 +48,7 @@ Fig.buttonFont:			6x13
 Fig.normalFont:			6x13
 
 ! font for the file name and popup query widgets
-Fig.boldFont:			8x13bold
+Fig.boldFont:			9x18bold
 
 ! font for the ruler numbers
 Fig*topruler.font:		6x13
@@ -58,7 +58,7 @@ Fig*sideruler.font:		6x13
 Fig*unitbox.font:		6x13
 
 ! font for everything else
-Fig*Font:			7x13bold
+Fig*Font:			9x18bold
 
 ! filename mask for the file popup browser
 Fig*file_panel*mask*string:	*.fig *.fig.gz *.fig.[Zz]
