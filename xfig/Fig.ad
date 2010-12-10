@@ -178,7 +178,13 @@ Fig.internalborderwidth:	1
 
 ! If xfig is compiled with I18N option, you may want to uncomment following line.
 !
-!Fig.international: true
+Fig.international: true
+Fig.eucEncoding: off
+Fig.alwaysUseFontSet: true
+Fig.inputStyle: root
+
+Fig.inches: false
+Fig.splash: false
 
 ! Note that you shouldn't remove the following "Fig*international: false".  
 ! It must be there to cancel any *international: true that may defined via xrdb.
