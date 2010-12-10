@@ -657,7 +657,7 @@ Fig*sideruler.background: 		gray95
 
 Fig*FigList*background: 		gray95
 Fig*List*background: 			gray95
-Fig*Scrollbar.background: 		gray80
+! Fig*Scrollbar.background: 		gray80
 
 Fig*Label.background: 			gray80
 Fig*ind_box.background:			gray80
@@ -700,3 +700,14 @@ Fig*color_box*topShadowPixel:		gray80
 
 Fig*toggle*bottomShadowPixel:		gray80
 Fig*toggle*topShadowPixel:		gray50
+
+! repare damage done to scrollbar shadows non color resources file
+
+Fig*horizontal.topShadowPixel: gray95
+Fig*horizontal.bottomShadowPixel: gray50
+Fig*horizontal.topShadow: gray95
+Fig*horizontal.bottomShadow: gray50
+Fig*Scrollbar.topShadow: gray95
+Fig*Scrollbar.bottomShadow: gray50
+Fig*Scrollbar.topShadowPixel: gray95
+Fig*Scrollbar.bottomShadowPixel: gray50
