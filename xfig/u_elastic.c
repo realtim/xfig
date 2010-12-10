@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -28,6 +28,10 @@
 #include "w_zoom.h"
 #include "d_arc.h"
 
+#include "u_draw.h"
+#include "w_cursor.h"
+#include "w_msgpanel.h"
+
 /********************** EXPORTS **************/
 
 int		constrained;
@@ -42,17 +46,18 @@ F_point	       *left_point, *right_point;
 
 /**************** LOCAL ***********/
 
-static void	elastic_links();
-static void	angle0_line();
-static void	angle45_line();
-static void	angle90_line();
-static void	angle135_line();
+static void	elastic_links(int dx, int dy, float sx, float sy);
+static void	angle0_line(int x, int y);
+static void	angle45_line(int x, int y);
+static void	angle90_line(int x, int y);
+static void	angle135_line(int x, int y);
 
 /*************************** BOXES *************************/
 
+
+
 void
-elastic_box(x1, y1, x2, y2)
-    int		    x1, y1, x2, y2;
+elastic_box(int x1, int y1, int x2, int y2)
 {
     int		    wid, ht;
 
@@ -64,13 +69,13 @@ elastic_box(x1, y1, x2, y2)
 }
 
 void
-elastic_fixedbox()
+elastic_fixedbox(void)
 {
     elastic_box(fix_x, fix_y, cur_x, cur_y);
 }
 
 void
-elastic_movebox()
+elastic_movebox(void)
 {
     register int    x1, y1, x2, y2;
 
@@ -83,8 +88,7 @@ elastic_movebox()
 }
 
 void
-moving_box(x, y)
-    int		    x, y;
+moving_box(int x, int y)
 {
     elastic_movebox();
     adjust_pos(x, y, fix_x, fix_y, &cur_x, &cur_y);
@@ -93,8 +97,7 @@ moving_box(x, y)
 }
 
 void
-resizing_box(x, y)
-    int		    x, y;
+resizing_box(int x, int y)
 {
     elastic_fixedbox();
     cur_x = x;
@@ -104,8 +107,7 @@ resizing_box(x, y)
 }
 
 void
-constrained_resizing_box(x, y)
-    int		    x, y;
+constrained_resizing_box(int x, int y)
 {
     elastic_fixedbox();
     adjust_box_pos(x, y, from_x, from_y, &cur_x, &cur_y);
@@ -114,8 +116,7 @@ constrained_resizing_box(x, y)
 }
 
 void
-constrained_resizing_scale_box(x, y)
-    int		    x, y;
+constrained_resizing_scale_box(int x, int y)
 {
     elastic_fixedbox();
     adjust_box_pos(x, y, from_x, from_y, &cur_x, &cur_y);
@@ -124,8 +125,7 @@ constrained_resizing_scale_box(x, y)
 }
 
 void
-scaling_compound(x, y)
-    int		    x, y;
+scaling_compound(int x, int y)
 {
     elastic_scalecompound(cur_c);
     adjust_box_pos(x, y, fix_x, fix_y, &cur_x, &cur_y);
@@ -133,14 +133,13 @@ scaling_compound(x, y)
 }
 
 void
-elastic_scale_curcompound()
+elastic_scale_curcompound(void)
 {
     elastic_scalecompound(cur_c);
 }
 
 void
-elastic_scalecompound(c)
-    F_compound	   *c;
+elastic_scalecompound(F_compound *c)
 {
     double	    newx, newy, oldx, oldy;
     double	    newd, oldd, scalefact;
@@ -166,7 +165,7 @@ elastic_scalecompound(c)
 /* refresh a line segment */
 
 void
-elastic_line()
+elastic_line(void)
 {
     pw_vector(canvas_win, fix_x, fix_y, cur_x, cur_y,
 	      INV_PAINT, 1, RUBBER_LINE, 0.0, DEFAULT);
@@ -179,8 +178,7 @@ elastic_line()
    the canvas_locmove_proc for drawing arcs */
 
 void
-unconstrained_line(x, y, numpoint)
-    int		    x, y, numpoint;
+unconstrained_line(int x, int y)
 {
     elastic_line();
     cur_x = x;
@@ -190,8 +188,7 @@ unconstrained_line(x, y, numpoint)
 }
 
 void
-latex_line(x, y)
-    int		    x, y;
+latex_line(int x, int y)
 {
     Cursor c;
 
@@ -208,8 +205,7 @@ latex_line(x, y)
 }
 
 void
-constrainedangle_line(x, y)
-    int		    x, y;
+constrainedangle_line(int x, int y)
 {
     double	    angle, dx, dy;
 
@@ -258,24 +254,21 @@ constrainedangle_line(x, y)
 }
 
 static void
-angle0_line(x, y)
-    int		    x, y;
+angle0_line(int x, int y)
 {
     cur_x = x;
     cur_y = fix_y;
 }
 
 static void
-angle90_line(x, y)
-    int		    x, y;
+angle90_line(int x, int y)
 {
     cur_y = y;
     cur_x = fix_x;
 }
 
 static void
-angle45_line(x, y)
-    int		    x, y;
+angle45_line(int x, int y)
 {
     if (abs(x - fix_x) < abs(y - fix_y)) {
 	cur_x = fix_x - y + fix_y;
@@ -287,8 +280,7 @@ angle45_line(x, y)
 }
 
 static void
-angle135_line(x, y)
-    int		    x, y;
+angle135_line(int x, int y)
 {
     if (abs(x - fix_x) < abs(y - fix_y)) {
 	cur_x = fix_x + y - fix_y;
@@ -300,8 +292,7 @@ angle135_line(x, y)
 }
 
 void
-reshaping_line(x, y)
-    int		    x, y;
+reshaping_line(int x, int y)
 {
     elastic_linelink();
     adjust_pos(x, y, from_x, from_y, &cur_x, &cur_y);
@@ -318,7 +309,7 @@ reshaping_line(x, y)
 }
 
 void
-elastic_linelink()
+elastic_linelink(void)
 {
     if (left_point != NULL) {
 	pw_vector(canvas_win, left_point->x, left_point->y,
@@ -331,8 +322,7 @@ elastic_linelink()
 }
 
 void
-moving_line(x, y)
-    int		    x, y;
+moving_line(int x, int y)
 {
     elastic_moveline(new_l->points);
     adjust_pos(x, y, fix_x, fix_y, &cur_x, &cur_y);
@@ -341,14 +331,13 @@ moving_line(x, y)
 }
 
 void
-elastic_movenewline()
+elastic_movenewline(void)
 {
     elastic_moveline(new_l->points);
 }
 
 void
-elastic_moveline(pts)
-    F_point	   *pts;
+elastic_moveline(F_point *pts)
 {
     F_point	   *p;
     int		    dx, dy, x, y, xx, yy;
@@ -377,9 +366,7 @@ elastic_moveline(pts)
 }
 
 static void
-elastic_links(dx, dy, sx, sy)
-    int		    dx, dy;
-    float	    sx, sy;
+elastic_links(int dx, int dy, float sx, float sy)
 {
     F_linkinfo	   *k;
 
@@ -419,8 +406,7 @@ elastic_links(dx, dy, sx, sy)
 }
 
 void
-scaling_line(x, y)
-    int		    x, y;
+scaling_line(int x, int y)
 {
     elastic_scalepts(cur_l->points);
     adjust_box_pos(x, y, fix_x, fix_y, &cur_x, &cur_y);
@@ -430,15 +416,13 @@ scaling_line(x, y)
 }
 
 void
-elastic_scale_curline(x, y)
-    int		    x, y;
+elastic_scale_curline(int x, int y)
 {
     elastic_scalepts(cur_l->points);
 }
 
 void
-scaling_spline(x, y)
-    int		    x, y;
+scaling_spline(int x, int y)
 {
     elastic_scalepts(cur_s->points);
     adjust_box_pos(x, y, fix_x, fix_y, &cur_x, &cur_y);
@@ -446,14 +430,13 @@ scaling_spline(x, y)
 }
 
 void
-elastic_scale_curspline()
+elastic_scale_curspline(void)
 {
     elastic_scalepts(cur_s->points);
 }
 
 void
-elastic_scalepts(pts)
-    F_point	   *pts;
+elastic_scalepts(F_point *pts)
 {
     F_point	   *p;
     double	    newx, newy, oldx, oldy;
@@ -481,8 +464,7 @@ elastic_scalepts(pts)
 }
 
 void
-elastic_poly(x1, y1, x2, y2, numsides)
-    int		    x1, y1, x2, y2, numsides;
+elastic_poly(int x1, int y1, int x2, int y2, int numsides)
 {
     register float  angle;
     register int    nx, ny, i; 
@@ -514,8 +496,7 @@ elastic_poly(x1, y1, x2, y2, numsides)
 }
 
 void
-resizing_poly(x, y)
-    int		    x, y;
+resizing_poly(int x, int y)
 {
     elastic_poly(fix_x, fix_y, cur_x, cur_y, work_numsides);
     cur_x = x;
@@ -528,7 +509,7 @@ resizing_poly(x, y)
 /*********************** ELLIPSES *************************/
 
 void
-elastic_ebr()
+elastic_ebr(void)
 {
     register int    x1, y1, x2, y2;
     int		    rx, ry;
@@ -549,8 +530,7 @@ elastic_ebr()
 }
 
 void
-resizing_ebr(x, y)
-    int		    x, y;
+resizing_ebr(int x, int y)
 {
     elastic_ebr();
     cur_x = x;
@@ -560,8 +540,7 @@ resizing_ebr(x, y)
 }
 
 void
-constrained_resizing_ebr(x, y)
-    int		    x, y;
+constrained_resizing_ebr(int x, int y)
 {
     elastic_ebr();
     adjust_box_pos(x, y, from_x, from_y, &cur_x, &cur_y);
@@ -570,7 +549,7 @@ constrained_resizing_ebr(x, y)
 }
 
 void
-elastic_ebd()
+elastic_ebd(void)
 {
     int	    centx,centy;
 
@@ -589,8 +568,7 @@ elastic_ebd()
 }
 
 void
-resizing_ebd(x, y)
-    int		    x, y;
+resizing_ebd(int x, int y)
 {
     elastic_ebd();
     cur_x = x;
@@ -600,8 +578,7 @@ resizing_ebd(x, y)
 }
 
 void
-constrained_resizing_ebd(x, y)
-    int		    x, y;
+constrained_resizing_ebd(int x, int y)
 {
     elastic_ebd();
     adjust_box_pos(x, y, from_x, from_y, &cur_x, &cur_y);
@@ -610,7 +587,7 @@ constrained_resizing_ebd(x, y)
 }
 
 void
-elastic_cbr()
+elastic_cbr(void)
 {
     register int    radius, x1, y1, x2, y2;
     double	    rx, ry;
@@ -627,8 +604,7 @@ elastic_cbr()
 }
 
 void
-resizing_cbr(x, y)
-    int		    x, y;
+resizing_cbr(int x, int y)
 {
     elastic_cbr();
     cur_x = x;
@@ -638,7 +614,7 @@ resizing_cbr(x, y)
 }
 
 void
-elastic_cbd()
+elastic_cbd(void)
 {
     register int    x1, y1, x2, y2;
     int		    radius;
@@ -656,8 +632,7 @@ elastic_cbd()
 }
 
 void
-resizing_cbd(x, y)
-    int		    x, y;
+resizing_cbd(int x, int y)
 {
     elastic_cbd();
     cur_x = x;
@@ -667,8 +642,7 @@ resizing_cbd(x, y)
 }
 
 void
-constrained_resizing_cbd(x, y)
-    int		    x, y;
+constrained_resizing_cbd(int x, int y)
 {
     elastic_cbd();
     adjust_box_pos(x, y, from_x, from_y, &cur_x, &cur_y);
@@ -677,7 +651,7 @@ constrained_resizing_cbd(x, y)
 }
 
 void
-elastic_moveellipse()
+elastic_moveellipse(void)
 {
     register int    x1, y1, x2, y2;
 
@@ -696,8 +670,7 @@ elastic_moveellipse()
 }
 
 void
-moving_ellipse(x, y)
-    int		    x, y;
+moving_ellipse(int x, int y)
 {
     elastic_moveellipse();
     adjust_pos(x, y, fix_x, fix_y, &cur_x, &cur_y);
@@ -706,8 +679,7 @@ moving_ellipse(x, y)
 }
 
 void
-elastic_scaleellipse(e)
-    F_ellipse	   *e;
+elastic_scaleellipse(F_ellipse *e)
 {
     register int    x1, y1, x2, y2;
     int		    rx, ry;
@@ -741,8 +713,7 @@ elastic_scaleellipse(e)
 }
 
 void
-scaling_ellipse(x, y)
-    int		    x, y;
+scaling_ellipse(int x, int y)
 {
     elastic_scaleellipse(cur_e);
     adjust_box_pos(x, y, fix_x, fix_y, &cur_x, &cur_y);
@@ -756,7 +727,7 @@ scaling_ellipse(x, y)
 }
 
 void
-elastic_scale_curellipse()
+elastic_scale_curellipse(void)
 {
     elastic_scaleellipse(cur_e);
 }
@@ -764,8 +735,7 @@ elastic_scale_curellipse()
 /*************************** ARCS *************************/
 
 void
-arc_point(x, y, numpoint)
-    int		    x, y, numpoint;
+arc_point(int x, int y, int numpoint)
 {
     elastic_line();
     cur_x = x;
@@ -775,8 +745,7 @@ arc_point(x, y, numpoint)
 }
 
 void
-reshaping_arc(x, y)
-    int		    x, y;
+reshaping_arc(int x, int y)
 {
     elastic_arclink();
     adjust_pos(x, y, cur_a->point[movedpoint_num].x,
@@ -794,7 +763,7 @@ reshaping_arc(x, y)
 }
 
 void
-elastic_arclink()
+elastic_arclink(void)
 {
     switch (movedpoint_num) {
     case 0:
@@ -815,8 +784,7 @@ elastic_arclink()
 }
 
 void
-moving_arc(x, y)
-    int		    x, y;
+moving_arc(int x, int y)
 {
     elastic_movearc(new_a);
     adjust_pos(x, y, fix_x, fix_y, &cur_x, &cur_y);
@@ -825,14 +793,13 @@ moving_arc(x, y)
 }
 
 void
-elastic_movenewarc()
+elastic_movenewarc(void)
 {
     elastic_movearc(new_a);
 }
 
 void
-elastic_movearc(a)
-    F_arc	   *a;
+elastic_movearc(F_arc *a)
 {
     int		    dx, dy;
 
@@ -847,8 +814,7 @@ elastic_movearc(a)
 }
 
 void
-scaling_arc(x, y)
-    int		    x, y;
+scaling_arc(int x, int y)
 {
     elastic_scalearc(cur_a);
     adjust_box_pos(x, y, fix_x, fix_y, &cur_x, &cur_y);
@@ -856,14 +822,13 @@ scaling_arc(x, y)
 }
 
 void
-elastic_scale_curarc()
+elastic_scale_curarc(void)
 { 
     elastic_scalearc(cur_a);
 }
 
 void
-elastic_scalearc(a)
-    F_arc	   *a;
+elastic_scalearc(F_arc *a)
 {
     double	    newx, newy, oldx, oldy;
     double	    newd, oldd, scalefact;
@@ -899,8 +864,7 @@ elastic_scalearc(a)
 /*************************** TEXT *************************/
 
 void
-moving_text(x, y)
-    int		    x, y;
+moving_text(int x, int y)
 {
     elastic_movetext();
     adjust_pos(x, y, fix_x, fix_y, &cur_x, &cur_y);
@@ -912,7 +876,7 @@ moving_text(x, y)
    shifted under the cursor */
 
 void
-elastic_movetext()
+elastic_movetext(void)
 {
     pw_text(canvas_win, cur_x + x1off, cur_y + y1off, INV_PAINT, MAX_DEPTH+1,
 	    new_t->fontstruct, new_t->angle, 
@@ -923,8 +887,7 @@ elastic_movetext()
 /*************************** SPLINES *************************/
 
 void
-moving_spline(x, y)
-    int		    x, y;
+moving_spline(int x, int y)
 {
     elastic_moveline(new_s->points);
     adjust_pos(x, y, fix_x, fix_y, &cur_x, &cur_y);
@@ -933,7 +896,7 @@ moving_spline(x, y)
 }
 
 void
-elastic_movenewspline()
+elastic_movenewspline(void)
 {
     elastic_moveline(new_s->points);
 }
@@ -941,9 +904,7 @@ elastic_movenewspline()
 /*********** AUXILIARY FUNCTIONS FOR CONSTRAINED MOVES ******************/
 
 void
-adjust_box_pos(curs_x, curs_y, orig_x, orig_y, ret_x, ret_y)
-    int		    curs_x, curs_y, orig_x, orig_y;
-    int		   *ret_x, *ret_y;
+adjust_box_pos(int curs_x, int curs_y, int orig_x, int orig_y, int *ret_x, int *ret_y)
 {
     int		    xx, sgn_csr2fix_x, yy, sgn_csr2fix_y;
     double	    mag_csr2fix_x, mag_csr2fix_y;
@@ -998,9 +959,7 @@ adjust_box_pos(curs_x, curs_y, orig_x, orig_y, ret_x, ret_y)
 }
 
 void
-adjust_pos(curs_x, curs_y, orig_x, orig_y, ret_x, ret_y)
-    int		    curs_x, curs_y, orig_x, orig_y;
-    int		   *ret_x, *ret_y;
+adjust_pos(int curs_x, int curs_y, int orig_x, int orig_y, int *ret_x, int *ret_y)
 {
     if (constrained) {
 	if (abs(orig_x - curs_x) > abs(orig_y - curs_y)) {

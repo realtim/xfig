@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -34,17 +34,25 @@
 #include "w_mousefun.h"
 #include "w_msgpanel.h"
 
-static void	create_compoundobject(), cancel_tag_region(),
-		init_tag_region(), tag_region(), tag_object();
-static void	get_arc(), sel_arc();
-static void	get_compound(), sel_compound();
-static void	get_ellipse(), sel_ellipse();
-static void	get_line(), sel_line();
-static void	get_spline(), sel_spline();
-static void	get_text(), sel_text();
+#include "d_box.h"
+#include "u_markers.h"
+#include "w_cursor.h"
+
+static void	create_compoundobject(int x, int y), cancel_tag_region(void),
+		init_tag_region(int x, int y), tag_region(int x, int y), tag_object(F_line *p, int type, int x, int y, int px, int py);
+static void	get_arc(F_arc **list), sel_arc(int xmin, int ymin, int xmax, int ymax);
+static void	get_compound(F_compound **list), sel_compound(int xmin, int ymin, int xmax, int ymax);
+static void	get_ellipse(F_ellipse **list), sel_ellipse(int xmin, int ymin, int xmax, int ymax);
+static void	get_line(F_line **list), sel_line(int xmin, int ymin, int xmax, int ymax);
+static void	get_spline(F_spline **list), sel_spline(int xmin, int ymin, int xmax, int ymax);
+static void	get_text(F_text **list), sel_text(int xmin, int ymin, int xmax, int ymax);
+
+
+void tag_obj_in_region (int xmin, int ymin, int xmax, int ymax);
+int compose_compound (F_compound *c);
 
 void
-compound_selected()
+compound_selected(void)
 {
     set_mousefun("tag object", "tag region", "compound tagged", 
 			LOC_OBJ, "", "");
@@ -60,11 +68,7 @@ compound_selected()
 }
 
 static void
-tag_object(p, type, x, y, px, py)
-    F_line           *p;
-    int             type;
-    int             x, y;
-    int             px, py;
+tag_object(F_line *p, int type, int x, int y, int px, int py)
 {
     switch (type) {
     case O_COMPOUND:
@@ -103,8 +107,7 @@ tag_object(p, type, x, y, px, py)
 }
 
 static void
-init_tag_region(x, y)
-    int		    x, y;
+init_tag_region(int x, int y)
 {
     init_box_drawing(x, y);
     set_mousefun("", "final corner", "cancel", "", "", "");
@@ -115,7 +118,7 @@ init_tag_region(x, y)
 }
 
 static void
-cancel_tag_region()
+cancel_tag_region(void)
 {
     elastic_box(fix_x, fix_y, cur_x, cur_y);
     /* erase last lengths if appres.showlengths is true */
@@ -125,8 +128,7 @@ cancel_tag_region()
 }
 
 static void
-tag_region(x, y)
-    int		    x, y;
+tag_region(int x, int y)
 {
     int		    xmin, ymin, xmax, ymax;
 
@@ -143,8 +145,7 @@ tag_region(x, y)
 }
 
 static void
-create_compoundobject(x, y)
-    int		    x, y;
+create_compoundobject(int x, int y)
 {
     F_compound	   *c;
 
@@ -169,13 +170,13 @@ create_compoundobject(x, y)
     if (c->nwcorner.x == c->secorner.x) {
 	if (cur_pointposn != P_ANY) {
 	    c->secorner.x += posn_rnd[cur_gridunit][cur_pointposn];
-	    c->secorner.x = ceil_coords(c->secorner.x);
+	    c->secorner.x = ceil_coords_x(c->secorner.x,c->secorner.y);
 	}
     }
     if (c->nwcorner.y == c->secorner.y) {
 	if (cur_pointposn != P_ANY) {
 	    c->secorner.y += posn_rnd[cur_gridunit][cur_pointposn];
-	    c->secorner.y = ceil_coords(c->secorner.y);
+	    c->secorner.y = ceil_coords_y(c->secorner.x,c->secorner.y);
 	}
     }
     c->next = NULL;
@@ -190,8 +191,7 @@ create_compoundobject(x, y)
     draw_mousefun_canvas();
 }
 
-tag_obj_in_region(xmin, ymin, xmax, ymax)
-    int		    xmin, ymin, xmax, ymax;
+void tag_obj_in_region(int xmin, int ymin, int xmax, int ymax)
 {
     sel_ellipse(xmin, ymin, xmax, ymax);
     sel_line(xmin, ymin, xmax, ymax);
@@ -202,8 +202,7 @@ tag_obj_in_region(xmin, ymin, xmax, ymax)
 }
 
 
-compose_compound(c)
-    F_compound	   *c;
+int compose_compound(F_compound *c)
 {
     c->ellipses = NULL;
     c->lines = NULL;
@@ -239,8 +238,7 @@ compose_compound(c)
 }
 
 static void
-sel_ellipse(xmin, ymin, xmax, ymax)
-    int		    xmin, ymin, xmax, ymax;
+sel_ellipse(int xmin, int ymin, int xmax, int ymax)
 {
     F_ellipse	   *e;
 
@@ -261,8 +259,7 @@ sel_ellipse(xmin, ymin, xmax, ymax)
 }
 
 static void
-get_ellipse(list)
-    F_ellipse	  **list;
+get_ellipse(F_ellipse **list)
 {
     F_ellipse	   *e, *ee, *ellipse;
 
@@ -288,8 +285,7 @@ get_ellipse(list)
 }
 
 static void
-sel_arc(xmin, ymin, xmax, ymax)
-    int		    xmin, ymin, xmax, ymax;
+sel_arc(int xmin, int ymin, int xmax, int ymax)
 {
     F_arc	   *a;
     int		    urx, ury, llx, lly;
@@ -312,8 +308,7 @@ sel_arc(xmin, ymin, xmax, ymax)
 }
 
 static void
-get_arc(list)
-    F_arc	  **list;
+get_arc(F_arc **list)
 {
     F_arc	   *a, *arc, *aa;
 
@@ -338,8 +333,7 @@ get_arc(list)
 }
 
 static void
-sel_line(xmin, ymin, xmax, ymax)
-    int		    xmin, ymin, xmax, ymax;
+sel_line(int xmin, int ymin, int xmax, int ymax)
 {
     F_line	   *l;
     F_point	   *p;
@@ -369,8 +363,7 @@ sel_line(xmin, ymin, xmax, ymax)
 }
 
 static void
-get_line(list)
-    F_line	  **list;
+get_line(F_line **list)
 {
     F_line	   *line, *l, *ll;
 
@@ -395,8 +388,7 @@ get_line(list)
 }
 
 static void
-sel_spline(xmin, ymin, xmax, ymax)
-    int		    xmin, ymin, xmax, ymax;
+sel_spline(int xmin, int ymin, int xmax, int ymax)
 {
     F_spline	   *s;
     int		    urx, ury, llx, lly;
@@ -419,8 +411,7 @@ sel_spline(xmin, ymin, xmax, ymax)
 }
 
 static void
-get_spline(list)
-    F_spline	  **list;
+get_spline(F_spline **list)
 {
     F_spline	   *spline, *s, *ss;
 
@@ -445,8 +436,7 @@ get_spline(list)
 }
 
 static void
-sel_text(xmin, ymin, xmax, ymax)
-    int		    xmin, ymin, xmax, ymax;
+sel_text(int xmin, int ymin, int xmax, int ymax)
 {
     F_text	   *t;
     int		    txmin, txmax, tymin, tymax;
@@ -466,8 +456,7 @@ sel_text(xmin, ymin, xmax, ymax)
 }
 
 static void
-get_text(list)
-    F_text	  **list;
+get_text(F_text **list)
 {
     F_text	   *text, *t, *tt;
 
@@ -492,8 +481,7 @@ get_text(list)
 }
 
 static void
-sel_compound(xmin, ymin, xmax, ymax)
-    int		    xmin, ymin, xmax, ymax;
+sel_compound(int xmin, int ymin, int xmax, int ymax)
 {
     F_compound	   *c;
 
@@ -514,8 +502,7 @@ sel_compound(xmin, ymin, xmax, ymax)
 }
 
 static void
-get_compound(list)
-    F_compound	  **list;
+get_compound(F_compound **list)
 {
     F_compound	   *compd, *c, *cc;
 

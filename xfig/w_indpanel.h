@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1991 by Paul King
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -18,21 +18,6 @@
 #define W_INDPANEL_H
 
 #include "w_icons.h"
-
-/* EXPORTS */
-
-extern void	init_ind_panel();
-extern void	add_ind_actions();
-extern Boolean	update_buts_managed;
-extern Widget	choice_popup;
-extern void	show_depth(), show_zoom();
-extern void	show_fillstyle();
-extern void	fontpane_popup();
-extern void	make_pulldown_menu_images();
-extern void	tog_selective_update();
-extern unsigned long cur_indmask;	/* mask showing which indicator buttons are mapped */
-extern void	inc_zoom(), dec_zoom(), fit_zoom();
-extern void	wheel_inc_zoom(), wheel_dec_zoom();
 
 /* size of buttons in indicator panel */
 #define		DEF_IND_SW_HT		34
@@ -111,6 +96,7 @@ extern Dimension UPD_CTRL_WD;		/* actual width is det. in setup_ind_panel */
 #define I_ELLIPSE	(I_MIN2 | I_LINE0 | I_DEPTH | I_ELLTEXTANGLE)
 #define I_ARC		(I_BOX | I_ARROWMODE | I_ARROWTYPE | I_ARROWSIZE | \
 				I_CAPSTYLE | I_ARCTYPE)
+#define I_CHOP		(I_ARCTYPE)
 #define I_REGPOLY	(I_BOX | I_NUMSIDES)
 #define I_CLOSED	(I_BOX | I_ANGLEGEOM)
 #define I_OPEN		(I_CLOSED | I_ARROWMODE | I_ARROWTYPE | I_ARROWSIZE | I_CAPSTYLE)
@@ -168,5 +154,36 @@ extern ind_sw_info *fill_style_sw;
 extern ind_sw_info *pen_color_button, *fill_color_button, *depth_button;
 
 #define ZOOM_SWITCH_INDEX	0	/* used by w_zoom.c */
+
+/* EXPORTS */
+
+extern void	init_ind_panel(Widget tool);
+extern void	add_ind_actions(void);
+extern Boolean	update_buts_managed;
+extern Widget	choice_popup;
+extern void	show_depth(ind_sw_info *sw), show_zoom(ind_sw_info *sw);
+extern void	show_fillstyle(ind_sw_info *sw);
+extern void	fontpane_popup(int *psfont_adr, int *latexfont_adr, int *psflag_adr, void (*showfont_fn) (/* ??? */), Widget show_widget);
+extern void	make_pulldown_menu_images(choice_info *entries, Cardinal nent, Pixmap *images, char **texts, Widget parent, XtCallbackProc callback);
+extern void	tog_selective_update(long unsigned int mask);
+extern unsigned long cur_indmask;	/* mask showing which indicator buttons are mapped */
+extern void	inc_zoom(ind_sw_info *sw), dec_zoom(ind_sw_info *sw), fit_zoom(ind_sw_info *sw);
+extern void	wheel_inc_zoom(), wheel_dec_zoom();
+extern void update_current_settings(void);
+extern void setup_ind_panel(void);
+extern void manage_update_buts (void);
+extern void recolor_fillstyles (void);
+extern void unmanage_update_buts (void);
+extern void update_indpanel (long unsigned int mask);
+extern void choice_panel_dismiss (void);
+extern void set_and_show_rotnangle (float value);
+extern void generate_choice_pixmaps(ind_sw_info *isw);
+extern void draw_cur_dimline(void);
+extern void get_dimline_values(void);
+extern void popup_arrowsize_panel(ind_sw_info *isw);
+extern void popup_flags_panel(ind_sw_info *isw);
+extern void popup_nval_panel(ind_sw_info *isw);
+extern void popup_dimline_panel(ind_sw_info *isw);
+extern void popup_choice_panel(ind_sw_info *isw);
 
 #endif /* W_INDPANEL_H */

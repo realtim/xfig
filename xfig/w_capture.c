@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1995 Jim Daley (jdaley@cix.compulink.co.uk)
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -25,10 +25,15 @@
 #include "w_capture.h"
 #include "w_msgpanel.h"
 
-static Boolean	getImageData();	  	/* returns zero on failure */
-static Boolean	selectedRootArea();	/* returns zero on failure */
-static void	drawRect();
-static int	getCurrentColors();	/* returns number of colors in map */
+#include "f_util.h"
+#include "f_wrpng.h"
+#include "w_drawprim.h"
+#include "w_util.h"
+
+static Boolean	getImageData(int *w, int *h, int *type, int *nc, unsigned char *Red, unsigned char *Green, unsigned char *Blue);	  	/* returns zero on failure */
+static Boolean	selectedRootArea(int *x_r, int *y_r, unsigned int *w_r, unsigned int *h_r, Window *cw);	/* returns zero on failure */
+static void	drawRect(int x, int y, int w, int h, int draw);
+static int	getCurrentColors(Window w, XColor *colors);	/* returns number of colors in map */
 
 static unsigned char *data;		/* pointer to captured & converted data */
 
@@ -40,10 +45,12 @@ static unsigned char *data;		/* pointer to captured & converted data */
 static Window   rectWindow;
 static GC       rectGC;
 
+
+
 Boolean
-captureImage(window, filename)  	/* returns True on success */
-Widget window;
-char *filename;
+captureImage(Widget window, char *filename)  	/* returns True on success */
+              
+               
 {
     unsigned char	Red[MAX_COLORMAP_SIZE],
 			Green[MAX_COLORMAP_SIZE],
@@ -115,8 +122,7 @@ char *filename;
 /* count how many bits to shift mask to the right to end up with a "1" in the lsb */
 
 int
-rshift(mask)
-    int		mask;
+rshift(int mask)
 {
     register int i;
 
@@ -129,9 +135,7 @@ rshift(mask)
 }
 
 static Boolean
-getImageData(w, h, type, nc, Red, Green, Blue) 
-  int *w, *h, *type, *nc;
-  unsigned char Red[], Green[], Blue[];
+getImageData(int *w, int *h, int *type, int *nc, unsigned char *Red, unsigned char *Green, unsigned char *Blue)
 {
     XColor	colors[MAX_COLORMAP_SIZE];
     int		colused[MAX_COLORMAP_SIZE];
@@ -377,10 +381,7 @@ getImageData(w, h, type, nc, Red, Green, Blue)
 */
 
 static Boolean 
-selectedRootArea( x_r, y_r, w_r, h_r, cw )
-    int *x_r, *y_r;
-    unsigned int *w_r, *h_r;
-    Window *cw;
+selectedRootArea(int *x_r, int *y_r, unsigned int *w_r, unsigned int *h_r, Window *cw)
 {
     int		x1, y1;			/* start point of user rect */
     int		x, y, width, height;	/* current values for rect */
@@ -497,8 +498,7 @@ selectedRootArea( x_r, y_r, w_r, h_r, cw )
 */
 
 static void
-drawRect( x, y, w, h, draw )
-  int x, y, w, h, draw;
+drawRect(int x, int y, int w, int h, int draw)
 {
 static int onscreen = False;
 
@@ -555,9 +555,7 @@ if ( onscreen != draw )
 #define lowbit(x) ((x) & (~(x) + 1))
 
 static int
-getCurrentColors(w, colors)
-     Window w;
-     XColor colors[];
+getCurrentColors(Window w, XColor *colors)
 {
   XWindowAttributes xwa;
   int i, ncolors;
@@ -633,8 +631,7 @@ getCurrentColors(w, colors)
 */
 
 Boolean
-canHandleCapture( d )
-  Display *d;
+canHandleCapture(Display *d)
 {
     XWindowAttributes xwa;
  

@@ -1,6 +1,6 @@
 \" FIG : Facility for Interactive Generation of figures
 .\" Copyright (c) 1985 by Supoj Sutanthavibul
-.\" Parts Copyright (c) 1994 by Brian V. Smith
+.\" Parts Copyright (c) 1994-2007 by Brian V. Smith
 .\" Parts Copyright (c) 1991 by Paul King
 .\" The X Consortium, and any party obtaining a copy of these files from
 .\" the X Consortium, directly or indirectly, is granted, free of charge, a
@@ -437,7 +437,7 @@ adds another point to the object being drawn.
 .BR \-geom [ etry ]
 .RI [ WxH ] [+X+Y]
 .Ap
-You may use the -geometry option or resource to
+You may use the \-geometry option or resource to
 .I size and/or position the xfig window,
 or you may use 
 .B -pwidth 
@@ -595,7 +595,7 @@ This is the default; however as the orientation is stored with Fig files,
 when you load a Fig file the orientation will change as required.
 This is only true for files of version 3.0 or higher.
 .br
-See also -portrait.
+See also \-portrait.
 .\"-------
 .At
 .BR \-lat [ exfonts ]
@@ -967,7 +967,7 @@ This is the default.  See also
 .Ap
 Enable smoothing when exporting to the bitmap formats (e.g. GIF, PNG, etc.). The allowed
 values are 0 (no smoothing), 2 or 4 (most smoothing).  This parameter is passed 
-to ghostscript in the -dTextAlphaBits -dGraphicsAlphaBits options to smooth the figure.
+to ghostscript in the \-dTextAlphaBits \-dGraphicsAlphaBits options to smooth the figure.
 .\"-------
 .At
 .BR \-spec [ ialtext ]
@@ -1018,7 +1018,7 @@ when the up- or down-arrow is pressed.
 .BR \-startfi [ llstyle ]
 .I stylenumber
 .Ap
-Set the starting fill style for area fill (-1 to 21).
+Set the starting fill style for area fill (\-1 to 21).
 .\"-------
 .At
 .BR \-startfo [ ntsize ]
@@ -1206,7 +1206,7 @@ Name	Type	Default	Command-line equivalent
 .\"-------
 .\" BODY
 .\"-------
-.if n \l'\nnu-'
+.if n \l'\nnu\&-'
 .if t \l'\nnu'
 allownegcoords	boolean	true	\-allownegcoords (true),
 			\-dontallownegcoords (false)
@@ -1242,7 +1242,7 @@ inches	boolean	true	\-inches (true),
 			\-metric (false)
 installowncmap	boolean	false	\-installowncmap
 internalborderwidth	integer	1	\-internalBW
-international	International	boolean	false	-international
+international	International	boolean	false	\-international
 jpeg_quality	integer	75	\-jpeg_quality
 justify	boolean	false	\-left (false),
 			\-right (true)
@@ -1267,6 +1267,7 @@ pheight	float	8.5 (landscape)	\-pheight
 		9.5 (portrait)
 pwidth	float	11 (landscape)	\-pwidth
 		8.5 (portrait)
+rigidtext	boolean	false	\-rigid (true)
 rulerthick	integer	24	\-rulerthick
 scalablefonts	boolean	true	\-scalablefonts (true),
 			\-noscalablefonts (false)
@@ -1303,7 +1304,7 @@ starttextstep	float	1.2	\-starttextstep
 tablet	boolean	false	\-track,
 trackCursor	boolean	true	\-track (true),
 			\-notrack (false)
-transparent_color	integer	-2 (none)	\-transparent_color
+transparent_color	integer	\-2 (none)	\-transparent_color
 userscale	float	1.0	\-userscale
 userunit	string	in (inches)	\-userunit
 		cm (metric)

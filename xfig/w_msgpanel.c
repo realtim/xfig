@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -39,6 +39,9 @@
 #include "w_setup.h"
 #include "w_zoom.h"
 
+#include "u_geom.h"
+#include "w_color.h"
+
 /********************* EXPORTS *******************/
 
 Boolean		popup_up = False;
@@ -68,7 +71,7 @@ static String	file_msg2_translations =
 	"<Key>Return: DismissFileMsg()\n\
 	<Key>Escape: DismissFileMsg()";
 
-static void file_msg_panel_dismiss();
+static void file_msg_panel_dismiss(Widget w, XButtonEvent *ev);
 static XtActionsRec	file_msg_actions[] =
 {
     {"DismissFileMsg", (XtActionProc) file_msg_panel_dismiss},
@@ -77,17 +80,18 @@ static XtActionsRec	file_msg_actions[] =
 /* message window code begins */
 
 void
-init_msg(tool, name)
-    Widget	    tool;
+init_msg(Widget tool)
 {
     /* now the message panel */
     FirstArg(XtNfont, roman_font);
-    FirstArg(XtNwidth, MSGPANEL_WD);
+    NextArg(XtNwidth, MSGPANEL_WD);
     NextArg(XtNheight, MSGPANEL_HT);
     NextArg(XtNstring, "\0");
     NextArg(XtNfromVert, cmd_form);
     NextArg(XtNvertDistance, -INTERNAL_BW);
     NextArg(XtNborderWidth, INTERNAL_BW);
+    NextArg(XtNtopMargin, 1);
+    NextArg(XtNbottomMargin, 1);
     NextArg(XtNdisplayCaret, False);
     NextArg(XtNtop, XtChainTop);
     NextArg(XtNbottom, XtChainTop);
@@ -97,7 +101,7 @@ init_msg(tool, name)
 
 /* at this point the widget has been realized so we can do more */
 
-setup_msg()
+void setup_msg(void)
 {
     if (msg_win == 0)
 	msg_win = XtWindow(msg_panel);
@@ -138,8 +142,7 @@ static int	  ox = 0,
 static char	bufx[20], bufy[20], bufhyp[20];
 
 void
-boxsize_msg(fact)
-    int fact;
+boxsize_msg(int fact)
 {
     float	dx, dy;
     int		sdx, sdy;
@@ -225,8 +228,7 @@ boxsize_msg(fact)
     }
 }
 
-boxsize_scale_msg(fact)
-    int fact;
+void boxsize_scale_msg(int fact)
 {
     float	dx, dy;
     float	sc_fact, old_dx, old_dy, new_dx, new_dy;
@@ -250,7 +252,7 @@ boxsize_scale_msg(fact)
     put_msg("Width = %s, Length = %s, Factor = %.3f", dxstr, dystr, sc_fact);
 }
 
-erase_box_lengths()
+void erase_box_lengths(void)
 {
     if (!first_lenmsg && appres.showlengths && !freehand_line) {
 	/* erase old text */
@@ -262,7 +264,7 @@ erase_box_lengths()
     first_lenmsg = False;
 }
 
-erase_lengths()
+void erase_lengths(void)
 {
     if (!first_lenmsg && appres.showlengths && !freehand_line) {
 	/* erase old lines first */
@@ -281,8 +283,7 @@ erase_lengths()
 }
 
 void
-length_msg(type)
-    int type;
+length_msg(int type)
 {
     altlength_msg(type, fix_x, fix_y);
 }
@@ -293,8 +294,7 @@ length_msg(type)
 */
 
 void
-altlength_msg(type, fx, fy)
-    int type;
+altlength_msg(int type, int fx, int fy)
 {
   double	dx,dy;
   float		len, ulen;
@@ -471,8 +471,7 @@ altlength_msg(type, fx, fy)
  */
 
 void
-length_msg2(x1,y1,x2,y2,x3,y3)
-    int x1, y1, x2, y2, x3, y3;
+length_msg2(int x1, int y1, int x2, int y2, int x3, int y3)
 {
     float	len1, len2;
     double	dx1, dy1, dx2, dy2;
@@ -503,8 +502,7 @@ length_msg2(x1,y1,x2,y2,x3,y3)
 /* x2,y2 moving middle point */
 
 void 
-arc_msg(x1, y1, x2, y2, x3, y3) 
-   int x1, y1, x2, y2, x3, y3;
+arc_msg(int x1, int y1, int x2, int y2, int x3, int y3)
 {
     float	len1, len2, r;
     double	dx1, dy1, dx2, dy2;
@@ -533,9 +531,7 @@ arc_msg(x1, y1, x2, y2, x3, y3)
 }
 
 void
-lenmeas_msg(msgtext, len, totlen)
-   char* msgtext;
-   float len, totlen;
+lenmeas_msg(char *msgtext, float len, float totlen)
 {
     char	lenstr[80],totlenstr[80];
 
@@ -551,10 +547,7 @@ lenmeas_msg(msgtext, len, totlen)
 }
 
 void
-areameas_msg(msgtext, area, totarea, flag)
-   char* msgtext;
-   float area, totarea;
-   int flag;
+areameas_msg(char *msgtext, float area, float totarea, int flag)
 {
     char	areastr[80],totareastr[80];
 
@@ -617,9 +610,7 @@ file_msg(char *format,...)
 }
 
 static void
-clear_file_message(w, ev)
-    Widget	    w;
-    XButtonEvent   *ev;
+clear_file_message(Widget w, XButtonEvent *ev)
 {
     XawTextBlock	block;
     int			replcode;
@@ -652,16 +643,14 @@ clear_file_message(w, ev)
 }
 
 static void
-file_msg_panel_dismiss(w, ev)
-    Widget	    w;
-    XButtonEvent   *ev;
+file_msg_panel_dismiss(Widget w, XButtonEvent *ev)
 {
 	XtPopdown(file_msg_popup);
 	file_msg_is_popped=False;
 }
 
 void
-popup_file_msg()
+popup_file_msg(void)
 {
 	if (file_msg_popup) {
 	    if (!file_msg_is_popped) {
@@ -698,6 +687,8 @@ popup_file_msg()
 	NextArg(XtNborderWidth, INTERNAL_BW);
 	NextArg(XtNscrollHorizontal, XawtextScrollWhenNeeded);
 	NextArg(XtNscrollVertical, XawtextScrollAlways);
+	NextArg(XtNright, XtChainRight);
+	NextArg(XtNbottom, XtChainBottom);
 	file_msg_win = XtCreateManagedWidget("file_msg_win", asciiTextWidgetClass,
 					     file_msg_panel, Args, ArgCount);
 	XtOverrideTranslations(file_msg_win,
@@ -707,6 +698,10 @@ popup_file_msg()
 	NextArg(XtNheight, 25);
 	NextArg(XtNborderWidth, INTERNAL_BW);
 	NextArg(XtNfromVert, file_msg_win);
+	NextArg(XtNtop, XtChainBottom);
+	NextArg(XtNbottom, XtChainBottom);
+	NextArg(XtNleft, XtChainLeft);
+	NextArg(XtNright, XtChainLeft);
 	file_msg_dismiss = XtCreateManagedWidget("dismiss", commandWidgetClass,
 				       file_msg_panel, Args, ArgCount);
 	XtAddEventHandler(file_msg_dismiss, ButtonReleaseMask, False,
@@ -717,6 +712,10 @@ popup_file_msg()
 	NextArg(XtNborderWidth, INTERNAL_BW);
 	NextArg(XtNfromVert, file_msg_win);
 	NextArg(XtNfromHoriz, file_msg_dismiss);
+	NextArg(XtNtop, XtChainBottom);
+	NextArg(XtNbottom, XtChainBottom);
+	NextArg(XtNleft, XtChainLeft);
+	NextArg(XtNright, XtChainLeft);
 	file_msg_dismiss = XtCreateManagedWidget("clear", commandWidgetClass,
 				       file_msg_panel, Args, ArgCount);
 	XtAddEventHandler(file_msg_dismiss, ButtonReleaseMask, False,
@@ -736,10 +735,7 @@ popup_file_msg()
 */
 
 void
-make_dimension_string(length, str, square)
-    float	 length;
-    char	*str;
-    Boolean	 square;
+make_dimension_string(float length, char *str, Boolean square)
 {
     float	 ulen;
     int		 ilen, ifeet, ifract, iexp;
@@ -753,8 +749,11 @@ make_dimension_string(length, str, square)
 	    sprintf(str, "%.3f square %s", length / 
 			(float)(PIX_PER_CM*PIX_PER_CM)*appres.userscale*appres.userscale,
 			cur_fig_units);
-	else
-	    sprintf(str, "%.3f %s", length / PIX_PER_CM*appres.userscale, cur_fig_units);
+	else {
+	    /* make a %.xf format where x is the precision the user wants */
+          sprintf(format, "%%.%df %%s", cur_dimline_prec);
+          sprintf(str, format, length / PIX_PER_CM*appres.userscale, cur_fig_units);
+	}
 
     /* Inches */
     } else if (!square && (!display_fractions || (cur_gridunit != FRACT_UNIT))) {

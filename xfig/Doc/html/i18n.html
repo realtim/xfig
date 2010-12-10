@@ -75,12 +75,12 @@ These facilities may be implemented as a single program.
 <h3><a name="install-xfig">Install <b>xfig</b></a></h3>
 
 <ol>
-<li>Get <a href="installation.html"><b>xfig.3.2.5-alpha3.tar.gz</b></a> 
+<li>Get <a href="installation.html"><b>xfig.3.2.5b.tar.gz</b></a> 
 and <i>gunzip</i> and <i>untar</i> it.
 
 <p>
 <li>Uncomment &quot;<tt>#define I18N</tt>&quot;
-in <tt>xfig.3.2.5-alpha3/Imakefile</tt> (remove the <tt>XCOMM</tt> comment).
+in <tt>xfig.3.2.5b/Imakefile</tt> (remove the <tt>XCOMM</tt> comment).
 
 <p>
 <li>If your C library supports the required locale,
@@ -97,12 +97,12 @@ make sure that <tt>-DSETLOCALE</tt> is specified.
 <h3><a name="install-fig2dev">Install <b>fig2dev</b></a></h3>
 
 <ol>
-<li>Get <a href="installation.html"><b>transfig.3.2.5-alpha4.tar.gz</b></a> 
+<li>Get <a href="installation.html"><b>transfig.3.2.5a.tar.gz</b></a> 
 and <i>gunzip</i> and <i>untar</i> it.
 
 <p>
 <li>Uncomment &quot;<tt>#define I18N</tt>&quot;
-in <tt>transfig.3.2.5-alpha3/fig2dev/Imakefile</tt> (remove the <tt>XCOMM</tt> comment).
+in <tt>transfig.3.2.5/fig2dev/Imakefile</tt> (remove the <tt>XCOMM</tt> comment).
 
 <p>
 <li>If you want to install files like <tt>japanese.ps</tt> 
@@ -141,6 +141,9 @@ Without the <tt>-international</tt> option,
 If you put &quot;<tt>Fig.international: true</tt>&quot; 
 into your <a href="#resource">resource file</a>,
 <tt>-international</tt> option may omitted.
+<p>
+<b>N.B.</b> If you run <b>fig2dev</b> standalone you must use the <tt>-j</tt> option
+to enable internationalization.
 </ol>
 
 

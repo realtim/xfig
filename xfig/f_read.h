@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -31,10 +31,6 @@ extern int	 line_no;
 extern int	 num_object;
 extern char	*read_file_name;
 
-extern Boolean	 uncompress_file();
-extern int	 read_figc();
-extern int	 read_fig();
-
 /* structure which is filled by readfp_fig */
 
 typedef struct {
@@ -47,3 +43,10 @@ typedef struct {
     Boolean	multiple;
     int		transparent;
     } fig_settings;
+
+extern Boolean	 uncompress_file(char *name);
+extern int	 read_figc(char *file_name, F_compound *obj, Boolean merge, Boolean remapimages, int xoff, int yoff, fig_settings *settings);
+extern int	 read_fig(char *file_name, F_compound *obj, Boolean merge, int xoff, int yoff, fig_settings *settings);
+extern int parse_papersize(char *size);
+extern void fix_angle (float *angle);
+extern void swap_colors (void);

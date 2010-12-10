@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1992 by James Tough
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1995 by C. Blanc and C. Schlick
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -23,20 +23,19 @@
 #include "u_draw.h"
 #include "u_list.h"
 
+#include "u_free.h"
+
 /*************************** local declarations *********************/
 
 #define MIN_NUMPOINTS_FOR_QUICK_REDRAW     2
 
-static INLINE Boolean  add_subspline_point();
-static F_spline       *extract_subspline();
+static INLINE Boolean  add_subspline_point(F_spline *spline, F_point **last_point, F_sfactor **last_sfactor, F_point *point);
+static F_spline       *extract_subspline(F_spline *spline, F_point *point);
+
+
 
 F_spline     *
-create_subspline(num_pts, spline, point, sfactor, sub_sfactor)
-     int        *num_pts;
-     F_spline   *spline;
-     F_point    *point;
-     F_sfactor  **sfactor;
-     F_sfactor  **sub_sfactor;
+create_subspline(int *num_pts, F_spline *spline, F_point *point, F_sfactor **sfactor, F_sfactor **sub_sfactor)
 {
   F_spline *sub_spline;
   *sub_sfactor = NULL;
@@ -59,19 +58,14 @@ create_subspline(num_pts, spline, point, sfactor, sub_sfactor)
 }
 
 
-free_subspline(num_pts, spline)
-     int        num_pts;
-     F_spline   **spline;
+void free_subspline(int num_pts, F_spline **spline)
 {
   if (num_pts > MIN_NUMPOINTS_FOR_QUICK_REDRAW)
       free_spline(spline);
 }
 
 void
-draw_subspline(num_pts, spline, op)
-     int           num_pts;
-     F_spline      *spline;
-     int           op;
+draw_subspline(int num_pts, F_spline *spline, int op)
 {
   if (num_pts > MIN_NUMPOINTS_FOR_QUICK_REDRAW)
     quick_draw_spline(spline, op);
@@ -81,11 +75,7 @@ draw_subspline(num_pts, spline, op)
 
 
 static INLINE Boolean
-add_subspline_point(spline, last_point, last_sfactor, point)
-     F_spline  *spline;
-     F_point   **last_point;
-     F_sfactor **last_sfactor;
-     F_point   *point;
+add_subspline_point(F_spline *spline, F_point **last_point, F_sfactor **last_sfactor, F_point *point)
 {
   Boolean point_ok, sfactor_ok;
 
@@ -102,9 +92,7 @@ add_subspline_point(spline, last_point, last_sfactor, point)
 
 
 static F_spline     *
-extract_subspline(spline, point)
-     F_spline     *spline;
-     F_point      *point;
+extract_subspline(F_spline *spline, F_point *point)
 {
   F_spline  *subspline;
   F_point   *cursor, *last_point;

@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1995 Jim Daley (jdaley@cix.compulink.co.uk)
- * Parts Copyright (c) 1995-2002 by Brian V. Smith
+ * Parts Copyright (c) 1995-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -27,6 +27,10 @@
 #include "w_msgpanel.h"
 #include "w_util.h"
 #include "w_setup.h"
+
+#include "f_util.h"
+#include "w_color.h"
+#include "w_cursor.h"
 
 /* EXPORTS */
 
@@ -55,8 +59,8 @@ static String	file_list_translations =
 
 static String	file_name_translations =
 	"<Key>Return: ApplyBrowseAndClose()\n";
-static void	browse_panel_close();
-void		got_browse();
+static void	browse_panel_close(Widget w, XButtonEvent *ev);
+void		got_browse(Widget w, XButtonEvent *ev);
 
 static XtActionsRec	file_name_actions[] =
 {
@@ -79,8 +83,11 @@ static char local_dir[PATH_MAX];
 
 static char file_viewed[PATH_MAX];	/* name of file already previewed */
 
+
+void create_browse_panel (Widget w);
+
 static void
-browse_panel_dismiss()
+browse_panel_dismiss(void)
 {
     char	   *fval;
 
@@ -98,9 +105,7 @@ browse_panel_dismiss()
 }
 
 void
-got_browse(w, ev)
-    Widget	    w;
-    XButtonEvent   *ev;
+got_browse(Widget w, XButtonEvent *ev)
 {
     char	   *fval, *dval, *path;
 
@@ -130,15 +135,12 @@ got_browse(w, ev)
 }
 
 static void
-browse_panel_close(w, ev)
-    Widget	    w;
-    XButtonEvent   *ev;
+browse_panel_close(Widget w, XButtonEvent *ev)
 {
     browse_panel_dismiss();
 }
 
-popup_browse_panel(w)
-    Widget	    w;
+void popup_browse_panel(Widget w)
 {
     char *fval, *pval;
 
@@ -187,8 +189,7 @@ popup_browse_panel(w)
     reset_cursor();
 }
 
-create_browse_panel(w)
-	Widget		   w;
+void create_browse_panel(Widget w)
 {
 	Widget		   file, beside, below;
 	XFontStruct	  *temp_font;

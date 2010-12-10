@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * This file Copyright (c) 2002 Stephane Mancini
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -16,9 +16,13 @@
 
 extern void	init_manage_style_panel(void);
 extern void	setup_manage_style_panel(void);
-extern void	add_style_actions();
+extern void	add_style_actions(void);
 extern void	popup_manage_style_panel(void);
-extern int	confirm_close_style();
+extern int	confirm_close_style(void);
+extern void add_style_actions(void);
+extern void init_manage_style_panel (void);
+extern void setup_manage_style_panel (void);
+
 
 extern Boolean	style_dirty_flag;
 

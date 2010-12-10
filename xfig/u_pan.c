@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1991 by Henning Spruth
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -20,8 +20,13 @@
 #include "mode.h"
 #include "w_zoom.h"
 
-pan_left(shift)
-int	shift;
+#include "w_canvas.h"
+#include "w_grid.h"
+#include "w_rulers.h"
+
+
+
+void pan_left(int shift)
 {
     zoomxoff += (posn_rnd[cur_gridunit][P_GRID3]/display_zoomscale*(shift?5.0:1.0));
     reset_topruler();
@@ -29,8 +34,7 @@ int	shift;
     setup_grid();
 }
 
-pan_right(shift)
-int	shift;
+void pan_right(int shift)
 {
     zoomxoff -= (posn_rnd[cur_gridunit][P_GRID3]/display_zoomscale*(shift?5.0:1.0));
     if (!appres.allownegcoords && (zoomxoff < 0))
@@ -40,8 +44,7 @@ int	shift;
     setup_grid();
 }
 
-pan_up(shift)
-int	shift;
+void pan_up(int shift)
 {
     zoomyoff += (posn_rnd[cur_gridunit][P_GRID3]/display_zoomscale*(shift?5.0:1.0));
     reset_sideruler();
@@ -49,8 +52,7 @@ int	shift;
     setup_grid();
 }
 
-pan_down(shift)
-int	shift;
+void pan_down(int shift)
 {
     zoomyoff -= (posn_rnd[cur_gridunit][P_GRID3]/display_zoomscale*(shift?5.0:1.0));
     if (!appres.allownegcoords && (zoomyoff < 0))
@@ -61,7 +63,7 @@ int	shift;
 }
 
 void
-pan_origin()
+pan_origin(void)
 {
     /* turn off Compose key LED */
     setCompLED(0);

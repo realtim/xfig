@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1991 by Paul King
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -36,7 +36,7 @@
 #define MOUSEFUN_MAX		       20
 
 /* Function Prototypes */
-static void	reset_mousefun();
+static void	reset_mousefun(void);
 
 DeclareStaticArgs(18);
 static char	mousefun_l[MOUSEFUN_MAX];
@@ -56,13 +56,15 @@ static Pixmap	keybd_pm;
 
 #ifndef XAW3D1_5E
 /* popup message over button when mouse enters it */
-static void     mouse_balloon_trigger();
-static void     mouse_unballoon();
+static void     mouse_balloon_trigger(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch);
+static void     mouse_unballoon(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch);
 #endif /* XAW3D1_5E */
 
+
+void mouse_title (void);
+
 void
-init_mousefun(tool)
-    Widget	    tool;
+init_mousefun(Widget tool)
 {
     /* start with nominal height and adjust later */
     FirstArg(XtNheight, MSGPANEL_HT);
@@ -97,7 +99,7 @@ init_mousefun(tool)
 /* widgets are realized and windows exist at this point */
 
 void
-setup_mousefun()
+setup_mousefun(void)
 {
     XDefineCursor(tool_d, XtWindow(mousefun), arrow_cursor);
     /* now that the message panel has the real height it needs (because of
@@ -112,7 +114,7 @@ setup_mousefun()
 }
 
 #ifdef XAW3D1_5E
-update_mousepanel()
+void update_mousepanel()
 {
     if (mousefun)
 	if (appres.showballoons)
@@ -129,14 +131,10 @@ static	Widget mouse_balloon_popup = (Widget) 0;
 static	XtIntervalId balloon_id = (XtIntervalId) 0;
 static	Widget balloon_w;
 
-static void mouse_balloon();
+static void mouse_balloon(void);
 
 static void
-mouse_balloon_trigger(widget, closure, event, continue_to_dispatch)
-    Widget        widget;
-    XtPointer	  closure;
-    XEvent*	  event;
-    Boolean*	  continue_to_dispatch;
+mouse_balloon_trigger(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch)
 {
 	if (!appres.showballoons)
 		return;
@@ -146,7 +144,7 @@ mouse_balloon_trigger(widget, closure, event, continue_to_dispatch)
 }
 
 static void
-mouse_balloon()
+mouse_balloon(void)
 {
 	Position  x, y;
 	XtWidgetGeometry xtgeom,comp;
@@ -187,11 +185,7 @@ mouse_balloon()
 /* come here when the mouse leaves a button in the mouse panel */
 
 static void
-mouse_unballoon(widget, closure, event, continue_to_dispatch)
-    Widget          widget;
-    XtPointer	    closure;
-    XEvent*	    event;
-    Boolean*	    continue_to_dispatch;
+mouse_unballoon(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch)
 {
     if (balloon_id) 
 	XtRemoveTimeOut(balloon_id);
@@ -204,7 +198,7 @@ mouse_unballoon(widget, closure, event, continue_to_dispatch)
 #endif /* XAW3D1_5E */
 
 static void
-reset_mousefun()
+reset_mousefun(void)
 {
     /* get the foreground and background from the mousefun widget */
     /* and create a gc with those values */
@@ -266,7 +260,7 @@ reset_mousefun()
 
 static char *title = "Mouse Buttons";
 
-mouse_title()
+void mouse_title(void)
 {
     /* put a title in the window */
     XDrawImageString(tool_d, mousefun_pm, mouse_button_gc,
@@ -278,16 +272,14 @@ mouse_title()
 }
 
 void
-resize_mousefun()
+resize_mousefun(void)
 {
     XFreePixmap(tool_d, mousefun_pm);
     reset_mousefun();
 }
 
 void
-set_mousefun(left, middle, right, sh_left, sh_middle, sh_right)
-    char   *left, *middle, *right;
-    char   *sh_left, *sh_middle, *sh_right;
+set_mousefun(char *left, char *middle, char *right, char *sh_left, char *sh_middle, char *sh_right)
 {
     strcpy(mousefun_l, left);
     strcpy(mousefun_m, middle);
@@ -301,7 +293,7 @@ set_mousefun(left, middle, right, sh_left, sh_middle, sh_right)
 #define KBD_POS_Y 1
 
 void
-draw_mousefun_kbd()
+draw_mousefun_kbd(void)
 {
     if (keybd_pm == 0) {
 	keybd_pm = XCreatePixmapFromBitmapData(tool_d, canvas_win, 
@@ -319,7 +311,7 @@ draw_mousefun_kbd()
 }
 
 void
-clear_mousefun_kbd()
+clear_mousefun_kbd(void)
 {
     XFillRectangle(tool_d, mousefun_pm, mouse_blank_gc,
               MOUSEFUN_WD-10-kbd_ic.width, KBD_POS_Y, 
@@ -331,29 +323,25 @@ clear_mousefun_kbd()
 }
 
 void
-draw_mousefun_mode()
+draw_mousefun_mode(void)
 {
     draw_mousefun("Change Mode", "", "");
 }
 
 void
-draw_mousefun_ind()
+draw_mousefun_ind(void)
 {
     draw_mousefun("Menu", "Dec/Prev", "Inc/Next");
 }
 
 void
-draw_mousefun_unitbox()
+draw_mousefun_unitbox(void)
 {
     draw_mousefun("Pan to Origin", "", "Set Units/Scale");
 }
 
 void
-draw_mousefun_topruler(w, event, params, num_params)
-Widget w;
-XEvent *event;
-String *params;
-Cardinal *num_params;
+draw_mousefun_topruler(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     if (event->type == KeyPress) {
 	KeySym	    key;
@@ -366,11 +354,7 @@ Cardinal *num_params;
 }
 
 void
-draw_mousefun_sideruler(w, event, params, num_params)
-Widget w;
-XEvent *event;
-String *params;
-Cardinal *num_params;
+draw_mousefun_sideruler(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     if (event->type == KeyPress) {
 	KeySym	    key;
@@ -383,14 +367,13 @@ Cardinal *num_params;
 }
 
 void
-draw_shift_mousefun_canvas()
+draw_shift_mousefun_canvas(void)
 {
     draw_mousefun(mousefun_sh_l, mousefun_sh_m, mousefun_sh_r);
 }
 
 void
-draw_shift_mousefun_canvas2(tl, tm, tr)
-    char *tl, *tm, *tr;
+draw_shift_mousefun_canvas2(char *tl, char *tm, char *tr)
 {
     if (!tl)
       tl = mousefun_sh_l;
@@ -402,15 +385,13 @@ draw_shift_mousefun_canvas2(tl, tm, tr)
 }
 
 void
-draw_mousefun_canvas()
+draw_mousefun_canvas(void)
 {
     draw_mousefun(mousefun_l, mousefun_m, mousefun_r);
 }
 
 static void
-draw_mousefun_msg(s, xctr, ypos)
-    char	   *s;
-    int		    xctr, ypos;
+draw_mousefun_msg(char *s, int xctr, int ypos)
 {
     int		    width;
 
@@ -424,8 +405,7 @@ static char	mousefun_cur_m[MOUSEFUN_MAX];
 static char	mousefun_cur_r[MOUSEFUN_MAX];
 
 void
-draw_mousefun(left, middle, right)
-    char     *left, *middle, *right;
+draw_mousefun(char *left, char *middle, char *right)
 {
   if (strcmp(left, mousefun_cur_l)
       || strcmp(middle, mousefun_cur_m)
@@ -438,8 +418,7 @@ draw_mousefun(left, middle, right)
 #define MOUSE_LR_Y 32
 #define MOUSE_MID_Y 10
 void
-draw_mousefn2(left, middle, right)
-    char     *left, *middle, *right;
+draw_mousefn2(char *left, char *middle, char *right)
 {
   if (strcmp(left, mousefun_cur_l)
       || strcmp(middle, mousefun_cur_m)
@@ -458,7 +437,7 @@ draw_mousefn2(left, middle, right)
 }
 
 void
-notused_middle()
+notused_middle(void)
 {
     draw_mousefun_msg("Not Used", MOUSE_MID_CTR, MOUSE_MID_Y);
     FirstArg(XtNbackgroundPixmap, 0);
@@ -468,7 +447,7 @@ notused_middle()
 }
 
 void
-clear_middle()
+clear_middle(void)
 {
     draw_mousefun_msg(mid_blank, MOUSE_MID_CTR, MOUSE_MID_Y);
     FirstArg(XtNbackgroundPixmap, 0);
@@ -478,7 +457,7 @@ clear_middle()
 }
 
 void
-notused_right()
+notused_right(void)
 {
     draw_mousefun_msg("Not Used", MOUSE_RIGHT, MOUSE_LR_Y);
     FirstArg(XtNbackgroundPixmap, 0);
@@ -488,7 +467,7 @@ notused_right()
 }
 
 void
-clear_right()
+clear_right(void)
 {
     draw_mousefun_msg(mid_blank, MOUSE_RIGHT, MOUSE_LR_Y);
     FirstArg(XtNbackgroundPixmap, 0);
@@ -498,7 +477,7 @@ clear_right()
 }
 
 void
-clear_mousefun()
+clear_mousefun(void)
 {
     draw_mousefn2(lr_blank, mid_blank, lr_blank);
     /* redraw the title in case the blanks overwrite it */
@@ -518,7 +497,7 @@ String          kbd_translations =
 static Boolean	actions_added=False;
 
 void
-init_kbd_actions()
+init_kbd_actions(void)
 {
     if (!actions_added) {
 	actions_added = True;

@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -30,26 +30,33 @@
 #include "w_mousefun.h"
 #include "w_setup.h"
 
-extern int	latex_endpoint();
+#include "u_free.h"
+#include "u_redraw.h"
+#include "w_cursor.h"
+#include "w_drawprim.h"
+#include "w_msgpanel.h"
+
 Boolean	freehand_line;
 Boolean	dimension_line;
 
 
 /* LOCAL */
 
-static void	    init_line_drawing();
-static void	    init_line_freehand_drawing();
+static void	    init_line_drawing(int x, int y, int shift);
+static void	    init_line_freehand_drawing(int x, int y);
 
 /**********************	 polyline and polygon section  **********************/
 
+
+
 void
-line_drawing_selected()
+line_drawing_selected(void)
 {
     canvas_kbd_proc = null_proc;
     canvas_locmove_proc = null_proc;
     canvas_leftbut_proc = init_line_drawing;
     canvas_middlebut_proc = init_line_freehand_drawing;
-    set_cursor(arrow_cursor);
+    set_cursor(crosshair_cursor);
     reset_action_on();
     if (cur_mode == F_POLYGON) {
 	set_mousefun("first point", "freehand", "", "", "", "");
@@ -65,8 +72,7 @@ line_drawing_selected()
 }
 
 static void
-init_line_freehand_drawing(x, y)
-    int		    x, y;
+init_line_freehand_drawing(int x, int y)
 {
     freehand_line = True;
     /* not a dimension line */
@@ -75,9 +81,7 @@ init_line_freehand_drawing(x, y)
 }
 
 static void
-init_line_drawing(x, y, shift)
-    int		    x, y;
-    int		    shift;
+init_line_drawing(int x, int y, int shift)
 {
     freehand_line = False;
     /* if the user pressed shift then make a dimension line */
@@ -90,7 +94,7 @@ init_line_drawing(x, y, shift)
 }
 
 void
-cancel_line_drawing()
+cancel_line_drawing(void)
 {
     elastic_line();
     /* erase last lengths if appres.showlengths is true */
@@ -106,8 +110,7 @@ cancel_line_drawing()
 }
 
 void
-init_trace_drawing(x, y)
-    int		    x, y;
+init_trace_drawing(int x, int y)
 {
     if ((first_point = create_point()) == NULL)
 	return;
@@ -156,8 +159,7 @@ init_trace_drawing(x, y)
 */
 
 void
-freehand_get_intermediatepoint(x, y)
-    int		    x, y;
+freehand_get_intermediatepoint(int x, int y)
 {
     /* if shift key is pressed user wants to delete points with
        left button press, return now */
@@ -169,9 +171,7 @@ freehand_get_intermediatepoint(x, y)
 }
     
 void
-get_intermediatepoint(x, y, shift)
-    int		    x, y;
-    int		    shift;
+get_intermediatepoint(int x, int y, int shift)
 {
     /* in freehand mode call unconstrained_line explicitely to move the mouse */
     if (freehand_line) {
@@ -232,8 +232,7 @@ get_intermediatepoint(x, y, shift)
 /* or the second point of a dimension line */
 
 void
-create_lineobject(x, y)
-    int		    x, y;
+create_lineobject(int x, int y)
 {
     F_line	   *line;
     F_compound	   *comp;

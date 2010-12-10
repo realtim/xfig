@@ -1,6 +1,6 @@
 /*
  * FIG : Facility for Interactive Generation of figures
- * Parts Copyright (c) 1994-2002 by Brian V. Smith
+ * Parts Copyright (c) 1994-2007 by Brian V. Smith
  * Parts Copyright 1990,1992 Richard Hesketh
  *          Computing Lab. University of Kent at Canterbury, UK
  *
@@ -61,12 +61,14 @@
 #include "resources.h"
 #include "mode.h"
 #include "object.h"
-#include "w_color.h"
 #include "w_drawprim.h"
 #include "w_indpanel.h"
+#include "w_color.h"
 #include "w_msgpanel.h"
 #include "w_setup.h"
 #include "w_util.h"
+
+#include "f_util.h"
 
 /* EXPORTS */
 
@@ -77,38 +79,40 @@ Widget	delunusedColors;
 DeclareStaticArgs(30);
 
 /* callback routines */
-static void cancel_color_popup();
-static void Thumbed();
-static void Scrolled();
-static void Update_HSV();
-static void switch_edit();
+static void cancel_color_popup(Widget w, XtPointer closure, XtPointer call_data);
+static void Thumbed(Widget w, XtPointer closure, XtPointer call_data);
+static void Scrolled(Widget w, XtPointer closure, XtPointer call_data);
+static void Update_HSV(Widget w, XtPointer closure, XtPointer call_data);
+static void switch_edit(Widget w, XtPointer client_data, XtPointer call_data);
 
 /* action routines */
-static void lock_toggle();
-static void _pick_memory();
-static void pick_memory();
-static void update_triple();
-static void update_scrl_triple();
-static void update_from_triple();
-static void move_scroll();
-static void set_color_ok();
-static void _set_std_color();
-static void set_std_color();
-static void add_color();
-static void del_color();
-static void undel_color();
-static void lookup_color();
-static void del_unused_user_colors();
+static void lock_toggle(Widget w, XEvent *event, String *params, Cardinal *num_params);
+static void _pick_memory(Widget w, XEvent *event, String *params, Cardinal *num_params);
+static void pick_memory(int which);
+static void update_triple(void);
+static void update_scrl_triple(Widget w, XEvent *event, String *params, Cardinal *num_params);
+static void update_from_triple(Widget w, XEvent *event, String *params, Cardinal *num_params);
+static void move_scroll(Widget w, XEvent *event, String *params, Cardinal *num_params);
+static void set_color_ok(Widget w, char *dum, XButtonEvent *ev, Boolean disp);
+static void _set_std_color(Widget w, choice_info *sel_choice, XButtonEvent *ev);
+static void set_std_color(int color);
+static void add_color(Widget w, XtPointer closure, XtPointer call_data);
+static void del_color(Widget w, XtPointer closure, XtPointer call_data);
+static void undel_color(Widget w, XtPointer closure, XtPointer call_data);
+static void lookup_color(Widget w, XtPointer closure, XtPointer call_data);
+static void del_unused_user_colors(void);
 
 /* some local procedures */
 
-static int WhichButton();
-static Boolean color_used();
-static void DoGrabPixel();
-static void doGrab();
-static void xyToWindowCmap();
-static void draw_boxed();
-static void erase_boxed();
+static int WhichButton(String name);
+static Boolean color_used(int color, F_compound *list);
+static void DoGrabPixel(Widget w, Pixel *p, Colormap *cmap);
+static void doGrab(Widget w, int width, int height, int *x, int *y);
+static void xyToWindowCmap(Display *dpy, int x, int y, Window base, int *nx, int *ny, Window *window, Colormap *cmap);
+static void draw_boxed(int which);
+static void erase_boxed(int which);
+static void c_user_colors(F_compound *obj);
+static void set_mixed_name(int i, int col);
 
 #define S_RED    1
 #define S_GREEN  2
@@ -140,13 +144,13 @@ static void erase_boxed();
 			mixed_color[color_el+2].rgb/256: user_colors[color_el].rgb/256)
 #define CHANGE_RED(element) \
 		pass_value = 1.0 - (float)(COLOR(element,red)/255.0); \
-		Thumbed(redScroll, S_RED, (XtPointer)(&pass_value))
+		Thumbed(redScroll, (XtPointer)S_RED, (XtPointer)(&pass_value))
 #define CHANGE_GREEN(element) \
 		pass_value = 1.0 - (float)(COLOR(element,green)/255.0); \
-		Thumbed(greenScroll, S_GREEN, (XtPointer)(&pass_value))
+		Thumbed(greenScroll, (XtPointer)S_GREEN, (XtPointer)(&pass_value))
 #define CHANGE_BLUE(element) \
 		pass_value = 1.0 - (float)(COLOR(element,blue)/255.0); \
-		Thumbed(blueScroll, S_BLUE, (XtPointer)(&pass_value))
+		Thumbed(blueScroll, (XtPointer)S_BLUE, (XtPointer)(&pass_value))
 
 static RGB	rgb_values[2];
 static HSV	hsv_values;
@@ -188,8 +192,8 @@ static XtActionsRec actionTable[] = {
 	{"pick_memory", _pick_memory},
 	{"update_scrl_triple", update_scrl_triple},
 	{"update_from_triple", update_from_triple},
-	{"set_std_color", _set_std_color},
-	{"set_color_ok", set_color_ok},
+	{"set_std_color", (XtActionProc)_set_std_color},
+	{"set_color_ok", (XtActionProc)set_color_ok},
 };
 
 static String set_panel_translations =
@@ -218,9 +222,19 @@ static String user_color_translations =
 static String triple_translations =
 	"<Key>Return: update_from_triple()\n";
 
-YStoreColor(colormap,color)
-Colormap colormap;
-XColor *color;
+
+void create_cell (int indx, XColor color);
+void set_cmap (Window window);
+void set_slider_sensitivity (void);
+void set_mixed_color (int which);
+void pick_contrast (XColor color, Widget widget);
+int add_color_cell (Boolean use_exist, int indx, int r, int g, int b);
+void count_one (int color);
+void move_lock (void);
+void StoreMix_and_Mem (void);
+void ThumbHSV (Widget w, float top);
+
+void YStoreColor(Colormap colormap, XColor *color)
 {
 	switch( tool_vclass ){
 	    case GrayScale:
@@ -238,10 +252,7 @@ XColor *color;
 	}
 }
 
-YStoreColors(colormap,color,ncolors)
-    Colormap colormap;
-    XColor color[];
-    int ncolors;
+void YStoreColors(Colormap colormap, XColor *color, int ncolors)
 {
 	int		 i;
 
@@ -249,9 +260,7 @@ YStoreColors(colormap,color,ncolors)
 	    YStoreColor(colormap,&color[i]);
 }
 
-create_color_panel(form,label,cancel,isw)
-    Widget		 form, label, cancel;
-    ind_sw_info		*isw;
+void create_color_panel(Widget form, Widget label, Widget cancel, ind_sw_info *isw)
 {
 	int		 i;
 	choice_info	*choice;
@@ -790,8 +799,7 @@ create_color_panel(form,label,cancel,isw)
 	set_slider_sensitivity();
 }
 
-pen_fill_activate(func)
-int	func;
+void pen_fill_activate(int func)
 {
 	/* make sliders insensitive if the selected color (fill or pen)
 	   is not a user color */
@@ -802,7 +810,7 @@ int	func;
 	XawToggleSetCurrent(mixedEdit[0],(XtPointer) (func==I_PEN_COLOR? 1:2));
 }
 
-restore_mixed_colors()
+void restore_mixed_colors(void)
 {
 	int	save0,save1,save_edit;
 
@@ -866,8 +874,7 @@ restore_mixed_colors()
    allocated pixel when we called YStoreColor().
 */
 
-set_mixed_color(which)
-int	which;
+void set_mixed_color(int which)
 {
 	if (!all_colors_available)
 	    return;
@@ -890,8 +897,7 @@ int	which;
 
 /* This is similar to set_mixed_color() except it is for the user colors */
 
-set_user_color(which)
-int	which;
+void set_user_color(int which)
 {
 	if (!all_colors_available)
 	    return;
@@ -916,9 +922,7 @@ int	which;
 	}
 }
 
-pick_contrast(color,widget)
-    XColor	color;
-    Widget	widget;
+void pick_contrast(XColor color, Widget widget)
 {
     Pixel cell_fg;
     if ((0.30 * color.red +
@@ -934,11 +938,10 @@ pick_contrast(color,widget)
 /* change the label of the mixedColor widget[i] to the name of the color */
 /* also set the foreground color to contrast the background */
 
-set_mixed_name(i,col)
-    int	i,col;
+void set_mixed_name(int i, int col)
 {
     int	fore;
-    char	buf[10];
+    char	buf[20];
 
     if (col < NUM_STD_COLS) {
 	FirstArg(XtNlabel, colorNames[col+1].name)
@@ -960,9 +963,7 @@ set_mixed_name(i,col)
    cancel callback routine that gets called in w_indpanel.c */
 
 static void
-cancel_color_popup(w, closure, call_data)
-    Widget	w;
-    XtPointer closure, call_data;
+cancel_color_popup(Widget w, XtPointer closure, XtPointer call_data)
 {
 	/* restore the mixed color panels */
 	restore_mixed_colors();
@@ -971,9 +972,7 @@ cancel_color_popup(w, closure, call_data)
 /* add a color memory cell to the user colors */
 
 static void
-add_color(w, closure, call_data)
-    Widget w;
-    XtPointer closure, call_data;
+add_color(Widget w, XtPointer closure, XtPointer call_data)
 {
 	/* allow user to delete unused colors */
 	XtSetSensitive(delunusedColors, True);
@@ -991,9 +990,7 @@ add_color(w, closure, call_data)
 /* delete a color memory (current_memory) from the user colors */
 
 static void
-del_color(w, closure, call_data)
-    Widget w;
-    XtPointer closure, call_data;
+del_color(Widget w, XtPointer closure, XtPointer call_data)
 {
 	int save_mem, save_edit;
 	int i;
@@ -1032,9 +1029,7 @@ del_color(w, closure, call_data)
 /* undelete the last user color deleted */
 
 static void
-undel_color(w, closure, call_data)
-    Widget w;
-    XtPointer closure, call_data;
+undel_color(Widget w, XtPointer closure, XtPointer call_data)
 {
 	int	    indx;
 
@@ -1053,11 +1048,11 @@ undel_color(w, closure, call_data)
 /* this is called when the user pops up the color panel */
 
 void
-count_user_colors()
+count_user_colors(void)
 {
     F_compound  *c;
     int		 i, count;
-    char	 buf[10];
+    char	 buf[20];
 
     /* keep array of counts of each color */
     for (i=0; i<num_usr_cols; i++)
@@ -1080,8 +1075,7 @@ count_user_colors()
     SetValues(colorCount);
 }
 
-c_user_colors(obj)
-    F_compound	   *obj;
+void c_user_colors(F_compound *obj)
 {
     F_arc	   *a;
     F_ellipse	   *e;
@@ -1116,8 +1110,7 @@ c_user_colors(obj)
     }
 }
 
-count_one(color)
-    int		    color;
+void count_one(int color)
 {
    if (color >= NUM_STD_COLS)
 	colors_used[color-NUM_STD_COLS] = 1;
@@ -1126,9 +1119,9 @@ count_one(color)
 /* delete unused user colors */
 
 static void
-del_unused_user_colors()
+del_unused_user_colors(void)
 {
-    int		 i, count, save_mem;
+    int		 i, save_mem;
     Boolean	 deleted = False;
 
     save_mem = -1;
@@ -1175,9 +1168,7 @@ del_unused_user_colors()
    on a color and a new cell is created with that color */
 
 static void
-lookup_color(w, closure, call_data)
-    Widget w;
-    XtPointer closure, call_data;
+lookup_color(Widget w, XtPointer closure, XtPointer call_data)
 {
     Colormap	cmap;
     Pixel	p;
@@ -1209,10 +1200,7 @@ lookup_color(w, closure, call_data)
 /* return -1 if MAX_USR_COLS already used */
 
 int
-add_color_cell(use_exist, indx, r, g, b)
-    Boolean	use_exist;
-    int		indx;
-    int		r,g,b;
+add_color_cell(Boolean use_exist, int indx, int r, int g, int b)
 {
 	int	i;
 	Boolean	new;
@@ -1304,8 +1292,7 @@ add_color_cell(use_exist, indx, r, g, b)
 	 array is probably not correct, but the color_borders() proc
 	 is called after this anyway. */
 
-create_cell(indx, color)
-    int		indx;
+void create_cell(int indx, XColor color)
 {
     char	labl[5];
 
@@ -1336,9 +1323,7 @@ create_cell(indx, color)
 */
 
 Boolean
-alloc_color_cells(pixels,n)
-    Pixel	pixels[];
-    int		n;
+alloc_color_cells(Pixel *pixels, int n)
 {
     int	i;
 
@@ -1383,7 +1368,7 @@ alloc_color_cells(pixels,n)
 /* Return False if already switched or if can't allocate new colormap */
 
 Boolean
-switch_colormap()
+switch_colormap(void)
 {
 	if (swapped_cmap || appres.dontswitchcmap) {
 	    return False;
@@ -1408,8 +1393,7 @@ switch_colormap()
 
 /* delete a color memory cell (indx) from the widgets and arrays */
 
-del_color_cell(indx)
-    int		indx;
+void del_color_cell(int indx)
 {
 	unsigned long   pixels[MAX_USR_COLS];
 
@@ -1433,9 +1417,7 @@ del_color_cell(indx)
 /* if any object in the figure uses the user color "color" return True */
 
 static Boolean
-color_used(color,list)
-    int		    color;
-    F_compound	   *list;
+color_used(int color, F_compound *list)
 {
     F_arc	   *a;
     F_text	   *t;
@@ -1467,9 +1449,7 @@ color_used(color,list)
 
 /* come here when either the edit pen or edit fill button is pressed */
 static void 
-switch_edit(w, client_data, call_data)
-    Widget	w;
-    XtPointer	client_data, call_data;
+switch_edit(Widget w, XtPointer client_data, XtPointer call_data)
 {
 	edit_fill = (int) XawToggleGetCurrent(mixedEdit[0]) - 1;
 	/* sometimes XawToggleGetCurrent() returns 0 if the
@@ -1499,7 +1479,7 @@ switch_edit(w, client_data, call_data)
 /* if the color for the current mode (fill or pen) is a user-defined color then
    make the color sliders sensitive, otherwise make them insensitive */
 
-set_slider_sensitivity()
+void set_slider_sensitivity(void)
 {
 	if (mixed_color_indx[edit_fill] < NUM_STD_COLS)
 		XtSetSensitive(mixingForm, False);
@@ -1510,11 +1490,7 @@ set_slider_sensitivity()
 /* ok button */
 
 static void
-set_color_ok(w, dum, ev, disp)
-    Widget		 w;
-    char		*dum;
-    XButtonEvent	*ev;
-    Boolean		 disp;
+set_color_ok(Widget w, char *dum, XButtonEvent *ev, Boolean disp)
 {
 	int	i,indx;
 
@@ -1544,17 +1520,13 @@ set_color_ok(w, dum, ev, disp)
 /* set standard color in mixedColor */
 
 static void
-_set_std_color(w, sel_choice, ev)
-    Widget		 w;
-    choice_info	*sel_choice;
-    XButtonEvent	*ev;
+_set_std_color(Widget w, choice_info *sel_choice, XButtonEvent *ev)
 {
 	set_std_color(sel_choice->value);
 }
 
 static void
-set_std_color(color)
-    int			 color;
+set_std_color(int color)
 {
 	Pixel	save;
 
@@ -1623,11 +1595,7 @@ set_std_color(color)
 /* make a user color cell active */
 
 static void
-_pick_memory(w, event, params, num_params)
-    Widget w;
-    XEvent *event;
-    String *params;
-    Cardinal *num_params;
+_pick_memory(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
 	int	i;
 
@@ -1639,8 +1607,7 @@ _pick_memory(w, event, params, num_params)
 }
 
 static void
-pick_memory(which)
-    int	   which;
+pick_memory(int which)
 {
 	/* make sliders sensitive */
 	XtSetSensitive(mixingForm, True);
@@ -1688,11 +1655,7 @@ pick_memory(which)
 }
 
 static void
-lock_toggle(w, event, params, num_params)
-    Widget w;
-    XEvent *event;
-    String *params;
-    Cardinal *num_params;
+lock_toggle(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
 	Arg args[1];
 	int button = WhichButton(params[0]);
@@ -1732,8 +1695,7 @@ lock_toggle(w, event, params, num_params)
 /* change the border for a color button to red and set thickness = 2 */
 
 static void
-draw_boxed(which)
-    int		which;
+draw_boxed(int which)
 {
 	if (which < 0)
 		return;
@@ -1745,8 +1707,7 @@ draw_boxed(which)
    and set thickness = 1 */
 
 static void
-erase_boxed(which)
-    int		which;
+erase_boxed(int which)
 {
 	if (which < 0)
 		return;
@@ -1760,7 +1721,7 @@ erase_boxed(which)
 
 /* color their borders green if in use, black if not */
 
-color_borders()
+void color_borders(void)
 {
 	int i;
 
@@ -1771,8 +1732,7 @@ color_borders()
 }
 
 static int
-WhichButton(name)
-    String name;
+WhichButton(String name)
 {
 	if (strcmp(name, "red") == 0)
 		return S_RED;
@@ -1785,11 +1745,7 @@ WhichButton(name)
 
 
 static void
-update_from_triple(w, event, params, num_params)
-    Widget w;
-    XEvent *event;
-    String *params;
-    Cardinal *num_params;
+update_from_triple(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
 	char *hexvalue, tmphex[10];
 	int red,green,blue;
@@ -1829,18 +1785,14 @@ update_from_triple(w, event, params, num_params)
    call update_triple only if current_memory is not -1 (user color IS selected) */
 
 static void
-update_scrl_triple(w, event, params, num_params)
-    Widget w;
-    XEvent *event;
-    String *params;
-    Cardinal *num_params;
+update_scrl_triple(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
 	if (current_memory >= 0)
 		update_triple();
 }
 
 static void
-update_triple()
+update_triple(void)
 {
 	char hexvalue[10];
 
@@ -1866,11 +1818,7 @@ update_triple()
 }
 
 static void
-move_scroll(w, event, params, num_params)
-    Widget w;
-    XEvent *event;
-    String *params;
-    Cardinal *num_params;
+move_scroll(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
 #define ADJUST_CHANGE(color) if (change < 0) { \
 					if (color + change < 0) \
@@ -1916,17 +1864,17 @@ move_scroll(w, event, params, num_params)
 
 	if (buttons_down & S_RED)	{
 		pass_value = 1.0 - (float) red_pos/255;
-		Thumbed(redScroll, S_RED, (XtPointer)(&pass_value));
+		Thumbed(redScroll, (XtPointer)S_RED, (XtPointer)(&pass_value));
 	}
 
 	if (buttons_down & S_GREEN)	{
 		pass_value = 1.0 - (float) green_pos/255;
-		Thumbed(greenScroll, S_GREEN, (XtPointer)(&pass_value));
+		Thumbed(greenScroll, (XtPointer)S_GREEN, (XtPointer)(&pass_value));
 	}
 
 	if (buttons_down & S_BLUE)	{
 		pass_value = 1.0 - (float) blue_pos/255;
-		Thumbed(blueScroll, S_BLUE, (XtPointer)(&pass_value));
+		Thumbed(blueScroll, (XtPointer)S_BLUE, (XtPointer)(&pass_value));
 	}
 
 	do_change = True;
@@ -1939,7 +1887,7 @@ move_scroll(w, event, params, num_params)
 			(String *)NULL, (Cardinal *)NULL);
 }
 
-StoreMix_and_Mem()
+void StoreMix_and_Mem(void)
 {
 	set_mixed_color(edit_fill);
 	set_mixed_color(edit_fill);
@@ -1950,9 +1898,7 @@ StoreMix_and_Mem()
 }
 
 static void
-Scrolled(w, closure, call_data)
-    Widget w;
-    XtPointer closure, call_data;
+Scrolled(Widget w, XtPointer closure, XtPointer call_data)
 {
 	Boolean going_up = (int) call_data < 0;
 	int which = (int) closure;
@@ -2004,9 +1950,7 @@ Scrolled(w, closure, call_data)
 	
 
 static void
-Update_HSV(w, closure, call_data)
-    Widget w;
-    XtPointer closure, call_data;
+Update_HSV(Widget w, XtPointer closure, XtPointer call_data)
 {
 	int which = (int) closure;
 	float top = *(float*) call_data;
@@ -2026,9 +1970,7 @@ Update_HSV(w, closure, call_data)
 	ThumbHSV(w, top);
 }
 
-ThumbHSV(w, top)
-    Widget w;
-    float top;
+void ThumbHSV(Widget w, float top)
 {
 	moving_hsv = True;
 
@@ -2051,9 +1993,7 @@ ThumbHSV(w, top)
 
 
 static void
-Thumbed(w, closure, call_data)
-    Widget w;
-    XtPointer closure, call_data;
+Thumbed(Widget w, XtPointer closure, XtPointer call_data)
 {
 	int which = (int) closure;
 	int mix;
@@ -2099,7 +2039,7 @@ Thumbed(w, closure, call_data)
 }
 
 
-move_lock()
+void move_lock(void)
 {
 	locked_top = 1.0;
 	if (bars_locked & S_RED)
@@ -2112,8 +2052,7 @@ move_lock()
 }
 
 void
-next_pencolor(sw)
-    ind_sw_info	   *sw;
+next_pencolor(ind_sw_info *sw)
 {
     while ((++cur_pencolor < NUM_STD_COLS+num_usr_cols) && 
 	   (cur_pencolor >= NUM_STD_COLS && colorFree[cur_pencolor-NUM_STD_COLS]))
@@ -2124,8 +2063,7 @@ next_pencolor(sw)
 }
 
 void
-prev_pencolor(sw)
-    ind_sw_info	   *sw;
+prev_pencolor(ind_sw_info *sw)
 {
     if (cur_pencolor <= DEFAULT)
 	cur_pencolor = NUM_STD_COLS+num_usr_cols;
@@ -2137,7 +2075,7 @@ prev_pencolor(sw)
 /* Update the Pen COLOR in the indicator button */
 
 void
-show_pencolor()
+show_pencolor(void)
 {
     int		    color;
     char	    colorname[10];
@@ -2186,8 +2124,7 @@ show_pencolor()
 }
 
 void
-next_fillcolor(sw)
-    ind_sw_info	   *sw;
+next_fillcolor(ind_sw_info *sw)
 {
     while ((++cur_fillcolor < NUM_STD_COLS+num_usr_cols) && 
 	   (cur_fillcolor >= NUM_STD_COLS && colorFree[cur_fillcolor-NUM_STD_COLS]))
@@ -2198,8 +2135,7 @@ next_fillcolor(sw)
 }
 
 void
-prev_fillcolor(sw)
-    ind_sw_info	   *sw;
+prev_fillcolor(ind_sw_info *sw)
 {
     if (cur_fillcolor <= DEFAULT)
 	cur_fillcolor = NUM_STD_COLS+num_usr_cols;
@@ -2211,7 +2147,7 @@ prev_fillcolor(sw)
 /* Update the Fill COLOR in the indicator button */
 
 void
-show_fillcolor()
+show_fillcolor(void)
 {
     int		    color;
     char	    colorname[10];
@@ -2261,8 +2197,7 @@ show_fillcolor()
 
 /* inform the window manager that we have a (possibly) new colormap */
 
-set_cmap(window)
-    Window window;
+void set_cmap(Window window)
 {
     XSetWindowColormap(tool_d, window, tool_cm);
 }
@@ -2313,8 +2248,7 @@ RGB	RGBBlack = { 0, 0, 0 };
  */
 
 RGB
-HSVToRGB(hsv)
-HSV	hsv;
+HSVToRGB(HSV hsv)
 {
 	RGB	rgb;
 	float	p, q, t, f;
@@ -2358,9 +2292,7 @@ HSV	hsv;
  */
 
 HSV
-RGBToHSV(rgb)
-RGB	rgb;
-
+RGBToHSV(RGB rgb)
 {
 	HSV	hsv;
 	float	rr, gg, bb;
@@ -2403,8 +2335,7 @@ RGB	rgb;
  */
 
 RGB
-PctToRGB(rr, gg, bb)
-float	rr, gg, bb;
+PctToRGB(float rr, float gg, float bb)
 {
 	RGB	rgb;
 	
@@ -2449,10 +2380,7 @@ float	rr, gg, bb;
 **     Query the pixel value
  */
 static void 
-DoGrabPixel(w, p, cmap)
-    Widget	 w;
-    Pixel	*p;
-    Colormap	*cmap;
+DoGrabPixel(Widget w, Pixel *p, Colormap *cmap)
 {
     int x, y, nx, ny;
     XImage *xim;
@@ -2497,10 +2425,7 @@ typedef struct {
 } GrabInfo;
 
 static void 
-doGrab(w, width, height, x, y)
-    Widget	 w;
-    int		 width, height;
-    int		*x, *y;
+doGrab(Widget w, int width, int height, int *x, int *y)
 {
     XtAppContext app = XtWidgetToApplicationContext(w);
     Window root = DefaultRootWindow(tool_d);
@@ -2560,13 +2485,7 @@ doGrab(w, width, height, x, y)
  * the default colormap for the display.
  */
 static void 
-xyToWindowCmap(dpy, x, y, base, nx, ny, window, cmap)
-    Display	*dpy;
-    int		 x, y;
-    Window	 base;
-    int		*nx, *ny;
-    Window	*window;
-    Colormap	*cmap;
+xyToWindowCmap(Display *dpy, int x, int y, Window base, int *nx, int *ny, Window *window, Colormap *cmap)
 {
     Window twin;
     Colormap tmap;

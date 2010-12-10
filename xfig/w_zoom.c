@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1991 by Henning Spruth
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -32,12 +32,14 @@
 #include "w_util.h"
 #include "w_zoom.h"
 
+#include "w_cursor.h"
+
 /* global for w_canvas.c */
 
 Boolean	zoom_in_progress = False;
 
-static void	do_zoom(), cancel_zoom();
-static void	init_zoombox_drawing();
+static void	do_zoom(int x, int y), cancel_zoom(void);
+static void	init_zoombox_drawing(int x, int y);
 
 static void	(*save_kbd_proc) ();
 static void	(*save_locmove_proc) ();
@@ -56,10 +58,10 @@ Boolean		integral_zoom = False;	/* integral zoom flag for area zoom (mouse) */
 static int	my_fix_x, my_fix_y;
 static int	my_cur_x, my_cur_y;
 
+
+
 void
-zoom_selected(x, y, button)
-    int		    x, y;
-    unsigned int    button;
+zoom_selected(int x, int y, unsigned int button)
 {
     /* if trying to zoom while drawing an object, don't allow it */
     if ((button != Button2) && check_action_on()) /* panning is ok */
@@ -94,15 +96,14 @@ zoom_selected(x, y, button)
 }
 
 void
-unzoom()
+unzoom(void)
 {
     display_zoomscale = 1.0;
     show_zoom(&ind_switches[ZOOM_SWITCH_INDEX]);
 }
 
 static void
-my_box(x, y)
-    int		    x, y;
+my_box(int x, int y)
 {
     elastic_box(my_fix_x, my_fix_y, my_cur_x, my_cur_y);
     my_cur_x = x;
@@ -111,14 +112,13 @@ my_box(x, y)
 }
 
 static void
-elastic_mybox()
+elastic_mybox(void)
 {
     elastic_box(my_fix_x, my_fix_y, my_cur_x, my_cur_y);
 }
 
 static void
-init_zoombox_drawing(x, y)
-    int		    x, y;
+init_zoombox_drawing(int x, int y)
 {
     if (check_action_on())
 	return;
@@ -145,8 +145,7 @@ init_zoombox_drawing(x, y)
 }
 
 static void
-do_zoom(x, y)
-    int		    x, y;
+do_zoom(int x, int y)
 {
     int		    dimx, dimy;
     float	    scalex, scaley;
@@ -191,7 +190,7 @@ do_zoom(x, y)
 }
 
 static void
-cancel_zoom()
+cancel_zoom(void)
 {
     elastic_box(my_fix_x, my_fix_y, my_cur_x, my_cur_y);
     /* restore state */

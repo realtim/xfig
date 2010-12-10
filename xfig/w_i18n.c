@@ -703,7 +703,6 @@ void i18n_draw_text(dpy, drawable, gc, x, y, str, len, drawbg)
 }
 
 #ifdef SETLOCALE
-#include <locale.h>
 
 char *setlocale(category, locale)
      int category;

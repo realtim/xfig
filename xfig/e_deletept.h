@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -15,5 +15,6 @@
  *
  */
 
-extern void	splinepoint_deleting();
-extern void	linepoint_deleting();
+extern void	splinepoint_deleting(F_spline *spline, F_point *previous_point, F_point *selected_point);
+extern void	linepoint_deleting(F_line *line, F_point *prev_point, F_point *selected_point);
+extern void delete_point_selected (void);

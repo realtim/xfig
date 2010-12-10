@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -33,13 +33,21 @@
 #include "w_mousefun.h"
 #include "w_msgpanel.h"
 #include "w_setup.h"
+#include "d_box.h"
+#include "e_compound.h"
+#include "e_glue.h"
+#include "f_save.h"
+#include "u_markers.h"
+#include "w_cursor.h"
 
-static void	init_delete();
-static void	init_delete_region(), delete_region(), cancel_delete_region();
-static void	init_delete_to_scrap();
+static void	init_delete(F_line *p, int type, int x, int y, int px, int py);
+static void	init_delete_region(int x, int y), delete_region(int x, int y), cancel_delete_region(void);
+static void	init_delete_to_scrap(F_line *p, int type, int x, int y, int px, int py);
+
+
 
 void
-delete_selected()
+delete_selected(void)
 {
     set_mousefun("delete object", "delete region", "del to cut buf",
 			LOC_OBJ, "", LOC_OBJ);
@@ -56,11 +64,7 @@ delete_selected()
 }
 
 static void
-init_delete(p, type, x, y, px, py)
-    F_line	   *p;
-    int		    type;
-    int		    x, y;
-    int		    px, py;
+init_delete(F_line *p, int type, int x, int y, int px, int py)
 {
     switch (type) {
     case O_COMPOUND:
@@ -99,8 +103,7 @@ init_delete(p, type, x, y, px, py)
 }
 
 static void
-init_delete_region(x, y)
-    int		    x, y;
+init_delete_region(int x, int y)
 {
     init_box_drawing(x, y);
     set_mousefun("", "final corner", "cancel", "", "", "");
@@ -111,7 +114,7 @@ init_delete_region(x, y)
 }
 
 static void
-cancel_delete_region()
+cancel_delete_region(void)
 {
     elastic_box(fix_x, fix_y, cur_x, cur_y);
     /* erase last lengths if appres.showlengths is true */
@@ -121,8 +124,7 @@ cancel_delete_region()
 }
 
 static void
-delete_region(x, y)
-    int		    x, y;
+delete_region(int x, int y)
 {
     F_compound	   *c;
 
@@ -160,17 +162,17 @@ delete_region(x, y)
 }
 
 static void
-init_delete_to_scrap(p, type, x, y, px, py)
-    F_line	   *p;
-    int		    type;
-    int		    x, y;
-    int		    px, py;
+init_delete_to_scrap(F_line *p, int type, int x, int y, int px, int py)
 {
     FILE	   *fp;
-    FILE	   *open_cut_file();
+    FILE	   *open_cut_file(void);
 
     if ((fp=open_cut_file())==NULL)
 	return;
+#ifdef I18N
+    /* set the numeric locale to C so we get decimal points for numbers */
+    setlocale(LC_NUMERIC, "C");
+#endif  /* I18N */
     write_fig_header(fp);
 
     switch (type) {
@@ -212,14 +214,22 @@ init_delete_to_scrap(p, type, x, y, px, py)
 	break;
     default:
 	fclose(fp);
+#ifdef I18N
+	/* reset to original locale */
+	setlocale(LC_NUMERIC, "");
+#endif  /* I18N */
 	return;
     }
+#ifdef I18N
+    /* reset to original locale */
+    setlocale(LC_NUMERIC, "");
+#endif  /* I18N */
     put_msg("Object deleted to scrapfile %s",cut_buf_name);
     fclose(fp);
 }
 
 FILE *
-open_cut_file()
+open_cut_file(void)
 {
     FILE	   *fp;
     struct stat	    file_status;
@@ -249,7 +259,7 @@ open_cut_file()
     return fp;
 }
 
-delete_all()
+void delete_all(void)
 {
     clean_up();
     set_action_object(F_DELETE, O_ALL_OBJECT);

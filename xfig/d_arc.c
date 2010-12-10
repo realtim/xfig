@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -34,6 +34,12 @@
 #include "w_mousefun.h"
 #include "u_geom.h"
 
+#include "f_util.h"
+#include "u_draw.h"
+#include "u_free.h"
+#include "u_markers.h"
+#include "u_redraw.h"
+
 /* EXPORT */
 
 F_pos		point[3];
@@ -42,20 +48,22 @@ Boolean		center_marked;
 
 /* LOCAL */
 
-static void	create_arcobject();
-static void	get_arcpoint();
-static void	init_arc_drawing();
-static void	cancel_arc();
-static void	init_arc_c_drawing();
-static void	resizing_arc();
+static void	create_arcobject(int lx, int ly);
+static void	get_arcpoint(int x, int y);
+static void	init_arc_drawing(int x, int y);
+static void	cancel_arc(void);
+static void	init_arc_c_drawing(int x, int y);
+static void	resizing_arc(int x, int y);
 
 static F_arc	*tmparc = 0;
 static F_pos	tpoint[3];
 
 static Boolean save_shownums;
 
+
+
 void
-arc_drawing_selected()
+arc_drawing_selected(void)
 {
     center_marked = FALSE;
     set_mousefun("first point", "center point", "", "", "", "");
@@ -64,13 +72,12 @@ arc_drawing_selected()
     canvas_leftbut_proc = init_arc_drawing;
     canvas_middlebut_proc = init_arc_c_drawing;
     canvas_rightbut_proc = null_proc;
-    set_cursor(arrow_cursor);
+    set_cursor(crosshair_cursor);
     reset_action_on();
 }
 
 static void
-init_arc_drawing(x, y)
-    int		x, y;
+init_arc_drawing(int x, int y)
 {
     int		i;
     if (center_marked) {
@@ -111,8 +118,7 @@ init_arc_drawing(x, y)
 }
 
 static void
-init_arc_c_drawing(x, y)
-    int		    x, y;
+init_arc_c_drawing(int x, int y)
 {
     set_mousefun("first point", "", "cancel", "", "", "");
     draw_mousefun_canvas();
@@ -128,7 +134,7 @@ init_arc_c_drawing(x, y)
 }
 
 static void
-cancel_arc()
+cancel_arc(void)
 {
     if (center_marked) {
 	/* erase circle */
@@ -138,7 +144,7 @@ cancel_arc()
 	    elastic_arc();
 	/* free the temporary arc */
 	if (tmparc) {
-	    free_arc(tmparc);
+	    free_arc(&tmparc);
 	    tmparc = (F_arc *) 0;
 	}
 	center_marked = FALSE;
@@ -161,8 +167,7 @@ cancel_arc()
 }
 
 static void
-get_arcpoint(x, y)
-    int		    x, y;
+get_arcpoint(int x, int y)
 {
     if (x == fix_x && y == fix_y)
 	return;
@@ -189,11 +194,10 @@ get_arcpoint(x, y)
 }
 
 static void
-create_arcobject(lx, ly)
-    int		    lx, ly;
+create_arcobject(int lx, int ly)
 {
     F_arc	   *arc;
-    int		    x, y, i;
+    int		    x, y;
     float	    xx, yy;
 
     /* erase last line segment */
@@ -214,7 +218,7 @@ create_arcobject(lx, ly)
 	center_marker(center_point.x, center_point.y);
 
 	/* free the temporary arc */
-	free_arc(tmparc);
+	free_arc(&tmparc);
 
 	/* recompute the second and last points to put them on the arc */
 	r = sqrt((double)(point[0].x - center_point.x) * (point[0].x - center_point.x)
@@ -291,8 +295,7 @@ create_arcobject(lx, ly)
 }
 
 static void
-resizing_arc(x, y)
-	int x, y;
+resizing_arc(int x, int y)
 {
     F_point	p3;
     double	alpha;
@@ -305,14 +308,14 @@ resizing_arc(x, y)
     if (num_point == 0)
 	length_msg(MSG_RADIUS);
     else {
-	compute_3p_angle(&tpoint[0], &center_point, &p3, &alpha);
+	compute_3p_angle((F_point *)&tpoint[0], (F_point *)&center_point, &p3, &alpha);
 	put_msg("1st angle = %.2f degrees", (float) alpha*180.0/M_PI);
     }
     elastic_arc();
 }
 
 void
-elastic_arc()
+elastic_arc(void)
 {
 	register int i;
 	register double	r, theta1, theta2;

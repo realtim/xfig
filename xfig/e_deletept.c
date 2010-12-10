@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -29,10 +29,17 @@
 #include "w_msgpanel.h"
 #include "d_spline.h"
 
-static void	init_delete_point();
+#include "f_util.h"
+#include "u_redraw.h"
+#include "u_undo.h"
+#include "w_cursor.h"
+
+static void	init_delete_point(F_line *obj, int type, int x, int y, F_point *p, F_point *q);
+
+
 
 void
-delete_point_selected()
+delete_point_selected(void)
 {
     set_mousefun("delete point", "", "", LOC_OBJ, LOC_OBJ, LOC_OBJ);
     canvas_kbd_proc = null_proc;
@@ -47,10 +54,7 @@ delete_point_selected()
 }
 
 static void
-init_delete_point(obj, type, x, y, p, q)
-    F_line	   *obj;
-    int		    type, x, y;
-    F_point	   *p, *q;
+init_delete_point(F_line *obj, int type, int x, int y, F_point *p, F_point *q)
 {
     int		    n;
 
@@ -99,9 +103,7 @@ init_delete_point(obj, type, x, y, p, q)
 /**************************  spline  *******************************/
 
 void
-splinepoint_deleting(spline, previous_point, selected_point)
-    F_spline	   *spline;
-    F_point	   *previous_point, *selected_point;
+splinepoint_deleting(F_spline *spline, F_point *previous_point, F_point *selected_point)
 {
     F_point	   *next_point;
     F_sfactor      *s_prev_point, *selected_sfactor;
@@ -157,9 +159,7 @@ splinepoint_deleting(spline, previous_point, selected_point)
  */
 
 void
-linepoint_deleting(line, prev_point, selected_point)
-    F_line	   *line;
-    F_point	   *prev_point, *selected_point;
+linepoint_deleting(F_line *line, F_point *prev_point, F_point *selected_point)
 {
     F_point	   *p, *next_point;
 

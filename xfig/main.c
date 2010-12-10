@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -32,11 +32,14 @@
 #include "u_redraw.h"
 #include "u_undo.h"
 #include "w_canvas.h"
+#include "w_indpanel.h"
 #include "w_color.h"
+#include "w_cursor.h"
 #include "w_cmdpanel.h"
 #include "w_digitize.h"
 #include "w_drawprim.h"
 #include "w_file.h"
+#include "w_fontpanel.h"
 #include "w_export.h"
 #include "w_help.h"
 #include "w_icons.h"
@@ -44,13 +47,17 @@
 #include "w_layers.h"
 #include "w_library.h"
 #include "w_msgpanel.h"
+#include "w_modepanel.h"
 #include "w_mousefun.h"
 #include "w_print.h"
 #include "w_rulers.h"
 #include "w_srchrepl.h"
 #include "w_setup.h"
+#include "w_style.h"
 #include "w_util.h"
 #include "w_zoom.h"
+#include "w_snap.h"
+#include "f_load.h"
 
 /* input extensions for an input tablet */
 #ifdef USE_TAB
@@ -59,8 +66,9 @@
 
 #ifdef I18N
 #include <X11/keysym.h>
-#include <locale.h>
 #endif  /* I18N */
+
+#include <X11/IntrinsicP.h>
 
 /* EXPORTS */
 
@@ -70,14 +78,14 @@ Boolean	    geomspec;
 
 int		update_fig_files();
 static int	screen_res;
-static void	make_cut_buf_name();
-static void	check_resource_ranges();
-static void	set_icon_geom();
-static void	set_max_image_colors();
-static void	parse_canvas_colors();
-static void	set_xpm_icon();
-static void	resize_canvas();
-static XtTimerCallbackProc check_refresh();
+static void	make_cut_buf_name(void);
+static void	check_resource_ranges(void);
+static void	set_icon_geom(void);
+static void	set_max_image_colors(void);
+static void	parse_canvas_colors(void);
+static void	set_xpm_icon(void);
+static void	resize_canvas(void);
+static void check_refresh(XtPointer client_data, XtIntervalId *id);
 
 /************** FIG options ******************/
 
@@ -89,6 +97,8 @@ static Boolean	false = False;
 static float	Fzero = 0.0;
 static float	Fone = 1.0;
 static float	F100 = 100.0;
+static float	FDef_arrow_wd = DEF_ARROW_WID;
+static float	FDef_arrow_ht = DEF_ARROW_HT;
 
 /* actions so that we may install accelerators at the top level */
 static XtActionsRec	main_actions[] =
@@ -160,6 +170,14 @@ static XtResource application_resources[] = {
       XtOffset(appresPtr, normalFont), XtRString, (caddr_t) NULL},
     {"buttonFont", "Font",   XtRString, sizeof(char *),
       XtOffset(appresPtr, buttonFont), XtRString, (caddr_t) NULL},
+    {"startarrowtype", "StartArrowType",   XtRInt, sizeof(int),
+      XtOffset(appresPtr, startarrowtype), XtRImmediate, (caddr_t) 0},
+    {"startarrowthick", "StartArrowThick",   XtRFloat, sizeof(float),
+      XtOffset(appresPtr, startarrowthick), XtRFloat, (caddr_t) & Fone},
+    {"startarrowwidth", "StartArrowWidth",   XtRFloat, sizeof(float),
+      XtOffset(appresPtr, startarrowwidth), XtRFloat, (caddr_t) & FDef_arrow_wd},
+    {"startarrowlength", "StartArrowLength",   XtRFloat, sizeof(float),
+      XtOffset(appresPtr, startarrowlength), XtRFloat, (caddr_t) & FDef_arrow_ht},
     {"startlatexFont", "StartlatexFont",   XtRString, sizeof(char *),
       XtOffset(appresPtr, startlatexFont), XtRString, (caddr_t) NULL},
     {"startpsFont", "StartpsFont",   XtRString, sizeof(char *),
@@ -180,6 +198,8 @@ static XtResource application_resources[] = {
       XtOffset(appresPtr, tgrid_unit), XtRImmediate, (caddr_t) "default"},
     {"startgridmode", "StartGridMode",   XtRInt, sizeof(int),
       XtOffset(appresPtr, startgridmode), XtRImmediate, (caddr_t) 0},
+    {"startgridtype", "StartGridType",   XtRInt, sizeof(int),			// isometric grid
+      XtOffset(appresPtr, startgridtype), XtRImmediate, (caddr_t) 0},
     {"startposnmode", "StartPosnMode",   XtRInt, sizeof(int),
       XtOffset(appresPtr, startposnmode), XtRImmediate, (caddr_t) 1 },
     {"latexfonts", "Latexfonts",   XtRBoolean, sizeof(Boolean),
@@ -251,7 +271,7 @@ static XtResource application_resources[] = {
     {"pageborder", "Color",   XtRString, sizeof(char *),
       XtOffset(appresPtr, pageborder), XtRString, (caddr_t) "lightblue"},
     {"browser", "Browser", XtRString, sizeof(char *),
-      XtOffset(appresPtr, browser), XtRString, (caddr_t) "netscape"},
+      XtOffset(appresPtr, browser), XtRString, (caddr_t) "firefox"},
     {"pdfviewer", "Viewer", XtRString, sizeof(char *),
       XtOffset(appresPtr, pdf_viewer), XtRString, (caddr_t) "acroread"},
     {"spinner_delay", "spinnerDelay",   XtRInt, sizeof(int),
@@ -358,6 +378,7 @@ XrmOptionDescRec options[] =
     {"-exportLanguage", ".exportLanguage", XrmoptionSepArg, 0},
     {"-export_margin", ".export_margin", XrmoptionSepArg, 0},
     {"-flipvisualhints", ".flipvisualhints", XrmoptionNoArg, "True"},
+    {"-noflipvisualhints", ".flipvisualhints", XrmoptionNoArg, "False"},
     {"-flushleft", ".flushleft", XrmoptionNoArg, "True"},
     {"-freehand_resolution", ".freehand_resolution", XrmoptionSepArg, 0},
     {"-ghostscript", ".ghostscript", XrmoptionSepArg, "gs"},
@@ -418,9 +439,14 @@ XrmOptionDescRec options[] =
     {"-spinner_rate", ".spinner_rate", XrmoptionSepArg, 0},
     {"-splash", ".splash", XrmoptionNoArg, "True"},
     {"-startfillstyle", ".startfillstyle", XrmoptionSepArg, 0},
+    {"-startarrowtype", ".startarrowtype",  XrmoptionSepArg, 0},
+    {"-startarrowthick", ".startarrowthick", XrmoptionSepArg, 0},
+    {"-startarrowwidth", ".startarrowwidth", XrmoptionSepArg, 0},
+    {"-startarrowlength", ".startarrowlength", XrmoptionSepArg, 0},
     {"-startFontSize", ".startfontsize", XrmoptionSepArg, 0},
     {"-startfontsize", ".startfontsize", XrmoptionSepArg, 0},
     {"-startgridmode", ".startgridmode",  XrmoptionSepArg, 0},
+    {"-startgridtype", ".startgridtype",  XrmoptionSepArg, 0},			// isometric grid
     {"-startlatexFont", ".startlatexFont", XrmoptionSepArg, 0},
     {"-startlinewidth", ".startlinewidth", XrmoptionSepArg, 0},
     {"-startposnmode", ".startposnmode",  XrmoptionSepArg, 0},
@@ -525,6 +551,7 @@ char *help_list[] = {
 	"[-startfillstyle <style>] ",
 	"[-startfontsize <size>] ",
 	"[-startgridmode <number>] ",
+	"[-startgridtype <number>] ",			// isometric grid
 	"[-startlatexFont <font>] ",
 	"[-startlinewidth <width>] ",
 	"[-startposnmode <number>] ",
@@ -598,9 +625,11 @@ char  **xargv;
 int	xpm_icon_status; /* status from reading the xpm icon */
 struct  geom   geom;
 
-main(argc, argv)
-    int		    argc;
-    char	   *argv[];
+
+int setup_visual (int *argc_p, char **argv, Arg *args);
+void get_pointer_mapping (void);
+
+void main(int argc, char **argv)
 {
     Widget	    children[NCHILDREN];
     XEvent	    event;
@@ -608,7 +637,6 @@ main(argc, argv)
     int		    init_canv_wd, init_canv_ht;
     XWMHints	   *wmhints;
     int		    i,j;
-    XGCValues	    gcv;
     XColor	    dumcolor;
     char	    version[30];
     char	   *dval;
@@ -631,8 +659,10 @@ main(argc, argv)
     update_figs = False;
 
     /* get the TMPDIR environment variable for temporary files */
-    if ((TMPDIR = getenv("XFIGTMPDIR"))==NULL)
-	TMPDIR = "/tmp";
+    if ((TMPDIR = getenv("XFIGTMPDIR"))==NULL) {
+		if ((TMPDIR = getenv("TMPDIR")) == NULL)
+			TMPDIR = "/tmp";
+	}
 
     /* first check args to see if user wants to scale the figure as it is
 	read in and make sure it is a resonable (positive) number */
@@ -681,9 +711,9 @@ main(argc, argv)
 			col += len;
 		    }
 	 	    fprintf(stderr,"\n  Note: all options may be abbreviated to minimum unique string.\n");
-		    /* exit after -h or -v */
-		    exit(0);
 		}
+		/* exit after -h or -v */
+		exit(0);
 	    }
 
 	/*********************************************************************************/
@@ -768,14 +798,14 @@ main(argc, argv)
     /* add "string to float" and "integer to float" converters */
     fix_converters();
 
+    /* flip the mouse hints if the pointer mapping is reversed */
+    get_pointer_mapping();
+
     /***********************************************************************/
     /* get the application resources again now that we have the new visual */
     /***********************************************************************/
     XtGetApplicationResources(tool, &appres, application_resources,
 			      XtNumber(application_resources), NULL, 0);
-
-    /* flip the mouse hints if the pointer mapping is reversed */
-    get_pointer_mapping();
 
     /* start dimension line fonts same as user's request */
     cur_dimline_psflag = appres.latexfonts? 0:1;
@@ -1036,6 +1066,7 @@ main(argc, argv)
     init_unitbox(tool_form);	/* units box where rulers meet */
     init_sideruler(tool_form);	/* side ruler */
     init_ind_panel(tool_form);	/* bottom indicator panel */
+    init_snap_panel(tool_form);	/* snap mode -- must precede the depth panel */
     init_depth_panel(tool_form);/* active layer panel to the right of the side ruler */
     init_manage_style_panel();	/* the named style panel */
 
@@ -1180,7 +1211,7 @@ main(argc, argv)
     resize_canvas();
 
     /*********************************************************************/
-    /* get the current directory for both file and export operations     *
+    /* get the current directory for both file and export operations     */
     /* and library_dir if the user has specified that as a relative path */
     /*********************************************************************/
     get_directory(cur_file_dir);
@@ -1364,7 +1395,7 @@ main(argc, argv)
 
 	/* Open the tablet device and select the event types */
 	for (i = 0, devPtr = devInfo; i < numDevs; i++, devPtr++)
-	  if (! strcmp(devPtr->name, XI_TABLET))
+	  if (! strcmp(devPtr->name, XI_TABLET)) {
 	    if ((tablet = XOpenDevice(tool_d, devPtr->id)) == NULL)
 	      printf("Unable to open tablet\n");
 
@@ -1377,6 +1408,7 @@ main(argc, argv)
 	             XtWindow(canvas_sw), eventList, 3))
 	        printf("Bad status on XSelectExtensionEvent\n");
 	    }
+	  }
 
 	XFreeDeviceList(devInfo);
 
@@ -1402,7 +1434,7 @@ main(argc, argv)
 	        tablet_res = 12.0;
 
               if (appres.DEBUG)
-	        printf("TABLET: Res: %f %d %d %d %d\n", tablet_res,
+	        printf("TABLET: Res: %f %d %d %ld %ld\n", tablet_res,
 	          valState->valuators[8], valState->valuators[10],
 	          minval, maxval);
 	    }
@@ -1491,7 +1523,7 @@ notablet:
 	    if (XK_F1 <= key && key <= XK_F35) {
 	      XtDispatchEvent(&event);
 	    } else {
-	      canvas_selected(canvas_sw, &event, NULL, NULL);
+	      canvas_selected(canvas_sw, (XButtonEvent *)&event, NULL, NULL);
 	    }
 	  } else {
 	    XtDispatchEvent(&event);
@@ -1523,10 +1555,7 @@ notablet:
 /* setup all the visual and depth stuff */
 
 int
-setup_visual(argc_p, argv, args)
-	int	      *argc_p;
-	char	      *argv[];
-	Arg	       args[];
+setup_visual(int *argc_p, char **argv, Arg *args)
 {
 	int	       i, n, cnt;
 	int	       count;		/* number of matches (only 1?) */
@@ -1639,7 +1668,7 @@ setup_visual(argc_p, argv, args)
 /************************************************************************/
 
 static void
-make_cut_buf_name()
+make_cut_buf_name(void)
 {
     userhome = getenv("HOME");
     if ((userhome == NULL) || (*userhome == '\0')) {
@@ -1648,7 +1677,14 @@ make_cut_buf_name()
     if (userhome != NULL && *strcpy(cut_buf_name, userhome) != '\0') {
 	strcat(cut_buf_name, "/.xfig");
     } else {
-	sprintf(cut_buf_name, "%s/xfig%06d", TMPDIR, getpid());
+		int fd;
+		sprintf(cut_buf_name, "%s/xfig.XXXXXX", TMPDIR);
+		if ((fd = mkstemp(cut_buf_name)) == -1) {
+			fprintf(stderr, "Can't create temporary file for cut_buff: %s\n",
+					strerror(errno));
+			exit(0);
+		}
+		close(fd);
     }
 }
 
@@ -1657,7 +1693,7 @@ make_cut_buf_name()
 /*****************************************/
 
 static void
-check_resource_ranges()
+check_resource_ranges(void)
 {
     /* make sure smooth_factor is 0, 2 or 4 */
     switch (appres.smooth_factor) {
@@ -1685,7 +1721,7 @@ check_resource_ranges()
 /* set the icon geometry */
 
 static void
-set_icon_geom()
+set_icon_geom(void)
 {
     int scr, x, y, junk;
 
@@ -1705,7 +1741,7 @@ set_icon_geom()
 /* set maximum number of colors for imported images */
 
 static void
-set_max_image_colors()
+set_max_image_colors(void)
 {
     /* for any of these visual classes, allow total number of cmap entries for image colors */
     switch (tool_vclass) {
@@ -1733,10 +1769,9 @@ set_max_image_colors()
  */
 
 static void
-parse_canvas_colors()
+parse_canvas_colors(void)
 {
     Pixel	pix;
-    XColor	col;
 
     /* we had to wait until the canvas was created to get any color the
        user set through resources */
@@ -1778,7 +1813,7 @@ parse_canvas_colors()
 /*************************************************/
 
 static void
-set_xpm_icon()
+set_xpm_icon(void)
 {
     xpm_icon_status = -1;
 
@@ -1832,7 +1867,7 @@ set_xpm_icon()
 /* if the user specified a geometry, change canvas size to fit */
 
 static void
-resize_canvas()
+resize_canvas(void)
 {
     Dimension	    w, h, w1, h1;
 
@@ -1882,7 +1917,7 @@ resize_canvas()
 
 /* flip the mouse hints if the pointer mapping is reversed */
 
-get_pointer_mapping()
+void get_pointer_mapping(void)
 {
 	unsigned char mapping[3];
 	int	      nmap;
@@ -1907,10 +1942,9 @@ static	Dimension	new_msg_width;
  */
 
 void
-set_autorefresh()
+set_autorefresh(void)
 {
 	DeclareArgs(10);
-	Dimension	width;
 
 	/* get the initial timestamp */
 	figure_timestamp = file_timestamp(cur_filename);
@@ -1945,7 +1979,7 @@ set_autorefresh()
  */
 
 void
-cancel_autorefresh()
+cancel_autorefresh(void)
 {
 	DeclareArgs(4);
 
@@ -1962,7 +1996,7 @@ cancel_autorefresh()
 }
 
 void
-toggle_refresh_mode()
+toggle_refresh_mode(void)
 {
 	appres.autorefresh = !appres.autorefresh;
 	if (appres.autorefresh) {
@@ -1977,10 +2011,8 @@ toggle_refresh_mode()
 /* check if the file timestamp has changed since last displayed and redisplay it */
 /* This is called by XtAppAddTimeOut */
 
-static XtTimerCallbackProc
-check_refresh(client_data, id)
-    XtPointer	    client_data;
-    XtIntervalId   *id;
+static void
+check_refresh(XtPointer client_data, XtIntervalId *id)
 {
 	time_t	    cur_timestamp;
 

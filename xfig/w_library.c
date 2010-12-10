@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1998 by Stephane Mancini
- * Parts Copyright (c) 1999-2002 by Brian V. Smith
+ * Parts Copyright (c) 1999-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -40,6 +40,16 @@
 #include "w_setup.h"
 #include "w_icons.h"
 #include "w_zoom.h"
+
+#include "f_util.h"
+#include "u_free.h"
+#include "u_list.h"
+#include "u_markers.h"
+#include "u_translate.h"
+#include "w_color.h"
+#include "w_cursor.h"
+#include "w_mousefun.h"
+
 #ifndef XAW3D1_5E
 #include "SmeCascade.h"
 #endif /* XAW3D1_5E */
@@ -60,15 +70,15 @@
 #define LIB_FILE_WIDTH	  MAIN_WIDTH-LIB_PREVIEW_SIZE-20 /* size of object list panel */
 
 /* STATICS */
-static void	library_cancel(), load_library(), library_stop();
-static void	create_library_panel(), libraryStatus(char *format,...);
-static void	put_object_sel(), set_cur_obj_name(), erase_pixmap();
-static void	sel_item_icon();
-static void	sel_icon(), unsel_icon();
-static void	sel_view(), change_icon_size();
-static void	set_preview_name(), update_preview();
-static Boolean	preview_libobj();
-static void	copy_icon_to_preview();
+static void	library_cancel(Widget w, XButtonEvent *ev), load_library(Widget w, XtPointer new_library, XtPointer garbage), library_stop(Widget w, XButtonEvent *ev);
+static void	create_library_panel(void), libraryStatus(char *format,...);
+static void	put_object_sel(Widget w, XButtonEvent *ev), set_cur_obj_name(int obj), erase_pixmap(Pixmap pixmap);
+static void	sel_item_icon(Widget w, XButtonEvent *ev);
+static void	sel_icon(int object), unsel_icon(int object);
+static void	sel_view(Widget w, XtPointer new_view, XtPointer garbage), change_icon_size(Widget w, XtPointer menu_entry, XtPointer garbage);
+static void	set_preview_name(int obj), update_preview(void);
+static Boolean	preview_libobj(int objnum, Pixmap pixmap, int pixsize, int margin);
+static void	copy_icon_to_preview(int object);
 
 DeclareStaticArgs(15);
 
@@ -89,14 +99,6 @@ static Widget	lib_preview_label, preview_lib_widget;
 static Widget	comment_label, object_comments;
 static Widget	cancel, selobj, stop;
 static Widget	lib_buttons[N_LIB_OBJECT_MAX];
-
-static Boolean	MakeObjectLibrary(),MakeLibraryFileList();
-static int	MakeLibrary();
-static Boolean	ScanLibraryDirectory();
-static Boolean	PutLibraryEntry();
-static Boolean	lib_just_loaded, icons_made;
-static Boolean	load_lib_obj();
-static Widget	make_library_menu();
 
 static Pixmap	preview_lib_pixmap, cur_obj_preview;
 static Pixmap	lib_icons[N_LIB_OBJECT_MAX];
@@ -159,9 +161,18 @@ static Position xposn, yposn;
 
 /* comparison function for filename sorting using qsort() */
 
+
+static Boolean	MakeObjectLibrary(char *library_dir, char **objects_names, F_libobject **libobjects),MakeLibraryFileList(char *dir_name, char **obj_list);
+static int	MakeLibrary(void);
+static Boolean	ScanLibraryDirectory(Boolean at_top, struct lib_rec **librec, char *path, char *longname, char *name, Boolean *figs_at_top, int *nentries);
+static Boolean	PutLibraryEntry(struct lib_rec *librec, char *path, char *lname, char *name);
+static Boolean	lib_just_loaded, icons_made;
+static Boolean	load_lib_obj(int obj);
+static Widget	make_library_menu(Widget parent, char *name, struct lib_rec **librec, int num);
+
+
 static int
-SPComp(s1, s2)
-     char	  **s1, **s2;
+SPComp(char **s1, char **s2)
 {
   return (strcasecmp(*s1, *s2));
 }
@@ -169,8 +180,7 @@ SPComp(s1, s2)
 /* comparison function for librec sorting using qsort() */
 
 static int
-LRComp(r1, r2)
-    struct lib_rec **r1, **r2;
+LRComp(struct lib_rec **r1, struct lib_rec **r2)
 {
     struct lib_rec *name1, *name2;
     name1 = *r1;
@@ -180,7 +190,7 @@ LRComp(r1, r2)
 
 Boolean	put_select_requested = False;
 
-put_selected_request()
+void put_selected_request(void)
 {
     if (preview_in_progress == True) {
 	put_select_requested = True;
@@ -194,25 +204,21 @@ put_selected_request()
 /* request to stop loading library */
 
 static void
-library_stop(w, ev)
-     Widget	    w;
-     XButtonEvent   *ev;
+library_stop(Widget w, XButtonEvent *ev)
 {
      library_stop_request = True;
      XtSetSensitive(stop, False);
 }
 
 static void
-library_dismiss()
+library_dismiss(void)
 {
   XtPopdown(library_popup);
   put_selected_request();
 }
 
 static void
-library_cancel(w, ev)
-     Widget	    w;
-     XButtonEvent   *ev;
+library_cancel(Widget w, XButtonEvent *ev)
 {
     /* unhighlight the selected item */
     if (appres.icon_view)
@@ -236,8 +242,10 @@ library_cancel(w, ev)
 	/* restore old label in preview label */
 	set_preview_name(cur_library_object);
 
-	/* restore old comments /
+	/* restore old comments */
+#if 0  /* wrong argument to set_comments() ::  cur_library_object is type "int" !!! */
 	set_comments(cur_library_object->comments);
+#endif
 
 	/* copy current object preview back to main preview pixmap */
 	XCopyArea(tool_d, cur_obj_preview, preview_lib_pixmap, gccache[PAINT], 0, 0,
@@ -267,9 +275,7 @@ library_cancel(w, ev)
 /* user has selected a library from the pulldown menu - load the objects */
 
 static void
-load_library(w, new_library, garbage)
-     Widget	    w;
-     XtPointer	    new_library, garbage;
+load_library(Widget w, XtPointer new_library, XtPointer garbage)
 {
     struct lib_rec *librec = (struct lib_rec *) new_library;
     Dimension	    vwidth, vheight;
@@ -362,9 +368,7 @@ load_library(w, new_library, garbage)
    clicks Select Object button */
 
 static void
-put_object_sel(w, ev)
-    Widget	    w;
-    XButtonEvent   *ev;
+put_object_sel(Widget w, XButtonEvent *ev)
 { 	
     int	    obj;
 
@@ -390,8 +394,7 @@ put_object_sel(w, ev)
 /* read the library object file and put into a compound */
 
 static Boolean
-load_lib_obj(obj)
-    int		obj;
+load_lib_obj(int obj)
 {
 	fig_settings     settings;
 	char		 fname[PATH_MAX];
@@ -473,10 +476,7 @@ load_lib_obj(obj)
 /* come here when user clicks on library object name */
 
 static void
-NewObjectSel(w, closure, call_data)
-    Widget	    w;
-    XtPointer	    closure;
-    XtPointer	    call_data;
+NewObjectSel(Widget w, XtPointer closure, XtPointer call_data)
 {
     int		    new_obj;
     XawListReturnStruct *ret_struct = (XawListReturnStruct *) call_data;
@@ -515,7 +515,7 @@ NewObjectSel(w, closure, call_data)
 }
 
 void
-popup_library_panel()
+popup_library_panel(void)
 {
     set_temp_cursor(wait_cursor);
     if (!library_popup)
@@ -559,16 +559,16 @@ popup_library_panel()
 }
 
 static void
-create_library_panel()
+create_library_panel(void)
 {
     Widget	 status_label;
     int		 i;
-
     XFontStruct	*temp_font;
     static Boolean actions_added=False;
     Widget	 beside;
-    char		*library_names[N_LIB_MAX + 1];
     char		 buf[20];
+
+    app_flush();
 
     /* make sure user doesn't request an icon size too small or large */
     if (appres.library_icon_size < atoi(icon_sizes[0]))
@@ -604,7 +604,7 @@ create_library_panel()
 
     library_form = XtCreateManagedWidget("library_form", formWidgetClass,
 					library_popup, NULL, ZERO);
-    XtAugmentTranslations(library_form,
+    XtAugmentTranslations(library_popup,
 			 XtParseTranslationTable(library_translations));
 	
     FirstArg(XtNlabel, "Load a Library");
@@ -643,7 +643,7 @@ create_library_panel()
     NextArg(XtNtop, XtChainTop);
     NextArg(XtNbottom, XtChainTop);
     NextArg(XtNleft, XtChainLeft);
-    NextArg(XtNright, XtChainLeft);
+    NextArg(XtNright, XtChainRight);
     NextArg(XtNleftBitmap, menu_arrow);	/* use menu arrow for pull-down */
     library_menu_button = XtCreateManagedWidget("library_menu_button",
 					    menuButtonWidgetClass,
@@ -1020,22 +1020,16 @@ create_library_panel()
     XtInstallAccelerators(library_form, cancel);
 }
 
-#ifndef XAW3D1_5E
-extern void popdown_subs();
-#endif /* XAW3D1_5E */
-
 static Widget
-make_library_menu(parent, name, librec, num)
-    Widget	     parent;
-    char	    *name;
-    struct lib_rec  *librec[];
-    int		     num;
+make_library_menu(Widget parent, char *name, struct lib_rec **librec, int num)
 {
     Widget	     menu, entry;
 #ifndef XAW3D1_5E
     Widget	     submenu;
+#else
+    char	     submenu_name[200];
 #endif /* XAW3D1_5E */
-    char	     menu_name[200], submenu_name[200];
+    char	     menu_name[200];
     int		     i;
 
     menu = XtCreatePopupShell(name, simpleMenuWidgetClass, 
@@ -1046,7 +1040,7 @@ make_library_menu(parent, name, librec, num)
     if (XtIsSubclass(parent, menuButtonWidgetClass)) {
 	/* also keep handle for load_library() to make sure it's popped down */
 	library_menu = menu;
-	XtAddCallback(menu, XtNpopdownCallback, popdown_subs, (XtPointer) NULL);
+	XtAddCallback(menu, XtNpopdownCallback, (XtCallbackProc) popdown_subs, (XtPointer) NULL);
     }
 #endif /* XAW3D1_5E */
     
@@ -1112,9 +1106,7 @@ make_library_menu(parent, name, librec, num)
 /* user has chosen view from pulldown menu */
 
 static void
-sel_view(w, new_view, garbage)
-     Widget	    w;
-     XtPointer	    new_view, garbage;
+sel_view(Widget w, XtPointer new_view, XtPointer garbage)
 {
     if (appres.icon_view == (int) new_view)
 	return;
@@ -1122,7 +1114,7 @@ sel_view(w, new_view, garbage)
     appres.icon_view = (int) new_view;
 
     /* change the label in the menu button */
-    FirstArg(XtNlabel, viewtypes[appres.icon_view]);
+    FirstArg(XtNlabel, viewtypes[(int) appres.icon_view]);
     SetValues(sel_view_button);
 
     if (appres.icon_view) {
@@ -1162,9 +1154,7 @@ sel_view(w, new_view, garbage)
 /* user has changed the icon size */
 
 static void
-change_icon_size(w, menu_entry, garbage)
-    Widget	    w;
-    XtPointer	    menu_entry, garbage;
+change_icon_size(Widget w, XtPointer menu_entry, XtPointer garbage)
 {
     char	   *new_size = (char*) icon_sizes[(int) menu_entry];
     int		    i;
@@ -1189,8 +1179,7 @@ change_icon_size(w, menu_entry, garbage)
 /* if obj = -1 the name will be erased */
 
 static void
-set_preview_name(obj)
-    int   obj;
+set_preview_name(int obj)
 {
     FirstArg(XtNlabel,(obj<0)? "": library_objects_texts[obj]);
     NextArg(XtNwidth, LIB_PREVIEW_SIZE+2);
@@ -1198,25 +1187,21 @@ set_preview_name(obj)
 }
 
 static void
-set_cur_obj_name(obj)
-    int   obj;
+set_cur_obj_name(int obj)
 {
     FirstArg(XtNlabel,(obj<0)? "": library_objects_texts[obj]);
     SetValues(put_cur_obj);
 }
 
 static void
-erase_pixmap(pixmap)
-    Pixmap	pixmap;
+erase_pixmap(Pixmap pixmap)
 {
     XFillRectangle(tool_d, pixmap, gccache[ERASE], 0, 0,
 			LIB_PREVIEW_SIZE, LIB_PREVIEW_SIZE);
 }
 
 static Boolean
-PutLibraryEntry(librec, path, lname, name)
-    struct lib_rec *librec;		
-    char	*path, *lname, *name;
+PutLibraryEntry(struct lib_rec *librec, char *path, char *lname, char *name)
 {
     int i;
 
@@ -1256,12 +1241,7 @@ PutLibraryEntry(librec, path, lname, name)
 */
 
 static Boolean
-ScanLibraryDirectory(at_top, librec, path, longname, name, figs_at_top, nentries)
-    Boolean	 at_top;
-    struct lib_rec *librec[];		
-    char	*path, *longname, *name;
-    Boolean	*figs_at_top;
-    int		*nentries;
+ScanLibraryDirectory(Boolean at_top, struct lib_rec **librec, char *path, char *longname, char *name, Boolean *figs_at_top, int *nentries)
 {
     DIR		*dirp;
     DIRSTRUCT	*dp;
@@ -1269,7 +1249,6 @@ ScanLibraryDirectory(at_top, librec, path, longname, name, figs_at_top, nentries
     struct stat	 st;
     char	 path2[PATH_MAX], lname[N_LIB_NAME_MAX];
     int		 recnum, i;
-    Boolean	 toplevel_figs;
 
     dirp = opendir(path);
     if (dirp == NULL) {
@@ -1374,11 +1353,11 @@ ScanLibraryDirectory(at_top, librec, path, longname, name, figs_at_top, nentries
  */
 
 static int
-MakeLibrary()
+MakeLibrary(void)
 {
     FILE	*file;
     struct stat	 st;
-    char	*base, *path;
+    char	*path;
     char	 *c, s[N_LIB_LINE_MAX], name[N_LIB_NAME_MAX],path2[N_LIB_NAME_MAX];
     int		 num, numlibs;
     Boolean	 dum;
@@ -1390,12 +1369,12 @@ MakeLibrary()
 	return 0;
     } else if (S_ISDIR(st.st_mode)) {
 	/* if it is directory, scan the sub-directories and search libraries */
-	(void) ScanLibraryDirectory(True, &library_rec, path, "", "", &dum, &numlibs);
+	(void) ScanLibraryDirectory(True, library_rec, path, "", "", &dum, &numlibs);
 	return numlibs;
     } else {
 	/* if it is a file, it must contain list of libraries */
 	if ((file = fopen(path, "r")) == NULL) {
-            file_msg("Can't find %s, no libraries available", path);
+            file_msg("Can't open %s, no libraries available", path);
             return 0;
 	}
 	numlibs = 0;
@@ -1437,12 +1416,9 @@ MakeLibrary()
  */
 
 static Boolean
-MakeObjectLibrary(library_dir, objects_names, libobjects)
-     char *library_dir;
-     char **objects_names;
-     F_libobject **libobjects;
+MakeObjectLibrary(char *library_dir, char **objects_names, F_libobject **libobjects)
 {
-    int		i, j;
+    int		itm, j;
     int		num_old_items;
     Boolean	flag, status;
 
@@ -1450,18 +1426,19 @@ MakeObjectLibrary(library_dir, objects_names, libobjects)
     /* we don't yet have the new icons */
     icons_made = False;
 
+    itm = 0;
     num_old_items = num_list_items;
     if (appres.icon_view) {
 	/* unmanage the box so we don't see each button dissappear */
 	XtUnmanageChild(icon_box);
 	process_pending();
 	/* unmanage old library buttons */
-	for (i=0; i<num_old_items; i++) {
-	    if (lib_buttons[i]) {
-		XtUnmanageChild(lib_buttons[i]);
+	for (itm=0; itm<num_old_items; itm++) {
+	    if (lib_buttons[itm]) {
+		XtUnmanageChild(lib_buttons[itm]);
 	    }
 	    /* unhighlight any that might be highlighted */
-	    unsel_icon(i);
+	    unsel_icon(itm);
 	}
 	/* make sure they're unmanaged before we delete any pixmaps */
 	process_pending();
@@ -1494,46 +1471,46 @@ MakeObjectLibrary(library_dir, objects_names, libobjects)
 	    SetValues(library_menu_button);
 	    SetValues(icon_size_button);
 	}
-        i = 0;
-        while ((objects_names[i]!=NULL) && (flag==True)) {
+        itm = 0;
+        while ((objects_names[itm]!=NULL) && (flag==True)) {
 	    /* free any previous compound objects */
-	    if (libobjects[i]->compound != NULL) {
-		free_compound(&libobjects[i]->compound);
+	    if (libobjects[itm]->compound != NULL) {
+		free_compound(&libobjects[itm]->compound);
 	    }
-	    libobjects[i]->compound = (F_compound *) 0;
+	    libobjects[itm]->compound = (F_compound *) 0;
 	    /* make a new pixmap if one doesn't exist */
-	    if (!lib_icons[i])
-		lib_icons[i] = XCreatePixmap(tool_d, canvas_win,
+	    if (!lib_icons[itm])
+		lib_icons[itm] = XCreatePixmap(tool_d, canvas_win,
 					appres.library_icon_size, appres.library_icon_size, 
 					tool_dpth);
 	    /* preview the object into this pixmap */
-	    status = preview_libobj(i, lib_icons[i], appres.library_icon_size, 4);
+	    status = preview_libobj(itm, lib_icons[itm], appres.library_icon_size, 4);
 	    /* finally, make the "button" */
-	    if (!lib_buttons[i]) {
+	    if (!lib_buttons[itm]) {
 		FirstArg(XtNborderWidth, 1);
 		NextArg(XtNborderColor, unsel_color); /* border color same as box bg */
-		NextArg(XtNbitmap, status? lib_icons[i]: (Pixmap) 0);
+		NextArg(XtNbitmap, status? lib_icons[itm]: (Pixmap) 0);
 		NextArg(XtNinternalHeight, 0);
 		NextArg(XtNinternalWidth, 0);
-		lib_buttons[i]=XtCreateManagedWidget(objects_names[i], labelWidgetClass,
+		lib_buttons[itm]=XtCreateManagedWidget(objects_names[itm], labelWidgetClass,
 					      icon_box, Args, ArgCount);
 		/* translations for user to click on label as a button */
 		/* but only if the object was read successfully */
 		if (status)
-		    XtAugmentTranslations(lib_buttons[i],
+		    XtAugmentTranslations(lib_buttons[itm],
 				XtParseTranslationTable(object_icon_translations));
 	    } else {
 		/* button exists from previous load, set the pixmap and manage it */
-		FirstArg(XtNbitmap, status? lib_icons[i]: (Pixmap) 0);
-		SetValues(lib_buttons[i]);
+		FirstArg(XtNbitmap, status? lib_icons[itm]: (Pixmap) 0);
+		SetValues(lib_buttons[itm]);
 		if (status)
-		    XtAugmentTranslations(lib_buttons[i],
+		    XtAugmentTranslations(lib_buttons[itm],
 				XtParseTranslationTable(object_icon_translations));
-		XtManageChild(lib_buttons[i]);
+		XtManageChild(lib_buttons[itm]);
 	    }
 	    /* let the user see it right away */
 	    process_pending();
-	    i++;
+	    itm++;
 	    /* if user has requested to stop loading */
 	    if (library_stop_request) {
 		/* make stop button insensitive */
@@ -1546,7 +1523,7 @@ MakeObjectLibrary(library_dir, objects_names, libobjects)
 	    icons_made = True;
 	}
 	/* destroy any old buttons not being used and their pixmaps */
-	for (j=i; j<num_old_items; j++) {
+	for (j=itm; j<num_old_items; j++) {
 	    if (lib_buttons[j] == 0)
 		break;
 	    XtDestroyWidget(lib_buttons[j]);
@@ -1561,13 +1538,13 @@ MakeObjectLibrary(library_dir, objects_names, libobjects)
 	SetValues(icon_size_button);
 
 	if (library_stop_request)
-            libraryStatus("aborted - %d objects loaded out of %d in library",i,num_list_items);
+            libraryStatus("aborted - %d objects loaded out of %d in library",itm,num_list_items);
 	else
             libraryStatus("%d library objects in library",num_list_items);
     } else {
 	flag = False;
     }
-    if (i==0)
+    if (itm==0)
 	flag = False;
 
     return flag;
@@ -1576,9 +1553,7 @@ MakeObjectLibrary(library_dir, objects_names, libobjects)
 /* get the list of files in the library dir_name and put in obj_list[] */
 
 static Boolean
-MakeLibraryFileList(dir_name, obj_list)
-     char	   *dir_name;
-     char	   **obj_list;
+MakeLibraryFileList(char *dir_name, char **obj_list)
 {
   DIR		  *dirp;
   DIRSTRUCT	  *dp;
@@ -1642,11 +1617,7 @@ libraryStatus(char *format,...)
 }
 
 static Boolean
-preview_libobj(objnum, pixmap, pixsize, margin)
-    int		 objnum;
-    Pixmap	 pixmap;
-    int		 pixsize;
-    int		 margin;
+preview_libobj(int objnum, Pixmap pixmap, int pixsize, int margin)
 {
     int		 xmin, xmax, ymin, ymax;
     float	 width, height, size;
@@ -1762,7 +1733,7 @@ preview_libobj(objnum, pixmap, pixsize, margin)
 /* fool the toolkit into drawing the new pixmap */
 
 static void
-update_preview()
+update_preview(void)
 {
     FirstArg(XtNbackgroundPixmap, (Pixmap)0);
     SetValues(preview_lib_widget);
@@ -1770,8 +1741,7 @@ update_preview()
     SetValues(preview_lib_widget);
 }
 
-set_comments(comments)
-    char	 *comments;
+void set_comments(char *comments)
 {
 	FirstArg(XtNstring, comments);
 	SetValues(object_comments);
@@ -1784,9 +1754,7 @@ static	char	   *which_name;
 static	int	    old_item = -1;
 
 static void
-sel_item_icon(w, ev)
-    Widget	    w;
-    XButtonEvent   *ev;
+sel_item_icon(Widget w, XButtonEvent *ev)
 { 	
     int		    i;
     F_compound	   *compound;
@@ -1824,8 +1792,7 @@ sel_item_icon(w, ev)
 }
 
 static void
-unsel_icon(object)
-    int     object;
+unsel_icon(int object)
 {
     if (object != -1 && lib_buttons[object]) {
 	FirstArg(XtNborderColor, unsel_color);
@@ -1834,8 +1801,7 @@ unsel_icon(object)
 }
 
 static void
-sel_icon(object)
-    int     object;
+sel_icon(int object)
 {
     /* color the border of the icon black to show it is selected */
     if (object != -1 && lib_buttons[object]) {
@@ -1850,8 +1816,7 @@ sel_icon(object)
    the user switches to list view */
 
 static void
-copy_icon_to_preview(object)
-    int     object;
+copy_icon_to_preview(int object)
 {
     XCopyArea(tool_d, lib_icons[object], preview_lib_pixmap,
 		gccache[PAINT], 0, 0,

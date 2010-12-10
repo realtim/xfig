@@ -1,14 +1,18 @@
-<HTML><HEAD><TITLE>Manpage of </TITLE>
-</HEAD><BODY BGCOLOR="#FFFFFF">
-Name: <B>XFIG</B><BR>
-Section: User Commands  (1)
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML><HEAD><TITLE>Man page of XFIG</TITLE>
+</HEAD><BODY>
+<H1>XFIG</H1>
+Section: User Commands  (1)<BR>Updated: Xfig 3.2.4 (Dec 2002)<BR><A HREF="#index">Index</A>
 <HR>
 
-<A NAME="NAME" id="NAME">&nbsp;</A><A NAME="lbAB" id="lbAB">&nbsp;</A>
+<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 xfig - Facility for Interactive Generation of figures under X11
-<A NAME="SYNOPSIS" id="SYNOPSIS">&nbsp;</A><A NAME="lbAC" id="lbAC">&nbsp;</A>
+<BR>
+
+Version 3.2.4
+<A NAME="lbAC">&nbsp;</A>
 <H2>SYNOPSIS</H2>
 
 <B>xfig</B>
@@ -17,7 +21,7 @@ xfig - Facility for Interactive Generation of figures under X11
 
 [<I>file</I>]
 
-<A NAME="DESCRIPTION" id="DESCRIPTION">&nbsp;</A><A NAME="lbAD" id="lbAD">&nbsp;</A>
+<A NAME="lbAD">&nbsp;</A>
 <H2>DESCRIPTION</H2>
 
 <I>Xfig</I>
@@ -67,8 +71,7 @@ the action of the middle button.
 <I>Xfig</I>
 
 is available from
-<A HREF="http://www.xfig.org">http://www.xfig.org</A>
-and usually from <A HREF="ftp://ftp.x.org/contrib/applications/drawing_tools/xfig">ftp://ftp.x.org/contrib/applications/drawing_tools/xfig</A> .
+<A HREF="http://www.xfig.org">http://www.xfig.org</A> .
 <P>
 
 The
@@ -103,9 +106,8 @@ The
 <I>TransFig</I>
 
 package is available from
-<A HREF="http://www.xfig.org">http://www.xfig.org</A> and
-<A HREF="ftp://ftp.x.org/contrib/applications/drawing_tools/transfig">ftp://ftp.x.org/contrib/applications/drawing_tools/transfig</A> .
-<A NAME="OPTIONS" id="OPTIONS">&nbsp;</A><A NAME="lbAE" id="lbAE">&nbsp;</A>
+<A HREF="http://www.xfig.org">http://www.xfig.org</A> .
+<A NAME="lbAE">&nbsp;</A>
 <H2>OPTIONS</H2>
 
 
@@ -299,6 +301,31 @@ If you want to set the foreground of everything in xfig
 <B>-fg</B>
 
 option.
+
+
+</DL>
+<P>
+
+
+<B>-correct_font_size</B>
+
+
+
+<DL COMPACT>
+<DT><DD>
+
+
+Normally, 
+<I>fig2dev</I>
+
+uses 1/80 inch for font size increments (for historical reasons),
+instead of the more proper ``points'' (1/72 inch) that
+<I>xfig</I>
+
+uses.  This option makes xfig call fig2dev with the 
+<B>-F</B>
+
+option to make it use points (1/72 inch).
 
 
 </DL>
@@ -848,19 +875,25 @@ between all buttons and panels (default = 1).
 </DL>
 <P>
 
+
 <B>-international</B>
+
+
 
 <DL COMPACT>
 <DT><DD>
-Switch on international support (mainly Japanese
-and Korean), users of  ISO  Latin  1  (ISO-8859-1)
-probably should not use this, therefore the international
-support is switched off by default for locales using ISO-8859-1*
-codesets. For all other locales this option is already used
-by default.
-</DL>
 
+
+Switch on international support (mainly Japanese and Korean),
+users of ISO Latin 1 (ISO-8859-1) probably should not use this,
+therefore the international support is switched off by default
+for locales using ISO-8859-1* codesets. For all other locales this
+option is already used by default.
+
+
+</DL>
 <P>
+
 
 <B>-jpeg</B>[<B>_quality</B>]
 
@@ -2168,7 +2201,7 @@ Set the starting zoom scale.
 </DL>
 <P>
 
-<A NAME="X_RESOURCES_and_DEFAULTS" id="X_RESOURCES_and_DEFAULTS">&nbsp;</A><A NAME="lbAF" id="lbAF">&nbsp;</A>
+<A NAME="lbAF">&nbsp;</A>
 <H2>X RESOURCES and DEFAULTS</H2>
 
 The overall widget name(Class) is xfig(Fig).
@@ -2190,6 +2223,7 @@ These resources correspond to the command line arguments:
 Name                Type    Default         Command-line equivalent
 <HR>allownegcoords      boolean true            -allownegcoords (true),
                                             -dontallownegcoords (false)
+axislines           string  pink            -axislines
 balloon_delay       integer 500 (ms)        -balloon_delay
 boldFont            string  8x13bold        -bold
 but_per_row         integer 2               -but_per_row
@@ -2221,7 +2255,7 @@ inches              boolean true            -inches (true),
                                             -metric (false)
 installowncmap      boolean false           -installowncmap
 internalborderwidth integer 1               -internalBW
-international       boolean false           -international
+international       International           booleanfalse-international
 jpeg_quality        integer 75              -jpeg_quality
 justify             boolean false           -left (false),
                                             -right (true)
@@ -2246,11 +2280,14 @@ pheight             float   8.5 (landscape) -pheight
                             9.5 (portrait)
 pwidth              float   11 (landscape)  -pwidth
                             8.5 (portrait)
+rigidtext           boolean false           -rigid (true)
 rulerthick          integer 24              -rulerthick
 scalablefonts       boolean true            -scalablefonts (true),
                                             -noscalablefonts (false)
 scale_factor        float   1.0             -scale_factor
 showallbuttons      boolean false           -showallbuttons
+showaxislines       boolean true            -showaxislines (true),
+                                            -dontshowaxislines (false)
 showballoons        boolean true            -showballoons (true),
                                             -dontshowballoons (false)
 showdepthmanager    boolean true            -showdepthmanager (true),
@@ -2261,8 +2298,6 @@ shownums            boolean false           -shownums (true),
                                             -dontshownums (false)
 showpageborder      boolean true            -showpageborder (true),
                                             -dontshowpageborder (false)
-showzerolines       boolean true            -showzerolines (true),
-                                            -dontshowzerolines (false)
 single              boolean true            -single
 smooth_factor       integer 0               -smooth_factor
 specialtext         boolean false           -specialtext
@@ -2300,7 +2335,7 @@ and depths are supported.
 <P>
 <P>
 
-<A NAME="BUGS_and_RESTRICTIONS" id="BUGS_and_RESTRICTIONS">&nbsp;</A><A NAME="lbAG" id="lbAG">&nbsp;</A>
+<A NAME="lbAG">&nbsp;</A>
 <H2>BUGS and RESTRICTIONS</H2>
 
 Please send bug reports, fixes, new features etc. to:
@@ -2391,7 +2426,7 @@ See the
 <B>README</B>
 
 file for troubleshooting.
-<A NAME="SEE_ALSO" id="SEE_ALSO">&nbsp;</A><A NAME="lbAH" id="lbAH">&nbsp;</A>
+<A NAME="lbAH">&nbsp;</A>
 <H2>SEE ALSO</H2>
 
 <P>
@@ -2406,7 +2441,7 @@ gs(1)
 (<I>Ghostscript</I>
 
 PostScript previewer)
-<A NAME="ACKNOWLEDGEMENT" id="ACKNOWLEDGEMENT">&nbsp;</A><A NAME="lbAI" id="lbAI">&nbsp;</A>
+<A NAME="lbAI">&nbsp;</A>
 <H2>ACKNOWLEDGEMENT</H2>
 
 (From the original author, Supoj Sutanthavibul):
@@ -2418,7 +2453,7 @@ creation of this tool.
 Thanks to all the users who have contributed to xfig, especially
 Paul King who, besides adding many features,
 revamped the look and feel which became version 2.1.
-<A NAME="COPYRIGHT" id="COPYRIGHT">&nbsp;</A><A NAME="lbAJ" id="lbAJ">&nbsp;</A>
+<A NAME="lbAJ">&nbsp;</A>
 <H2>COPYRIGHT</H2>
 
 <PRE>
@@ -2483,7 +2518,7 @@ express or implied warranty.
 
 <BR>
 
-<A NAME="FILES" id="FILES">&nbsp;</A><A NAME="lbAK" id="lbAK">&nbsp;</A>
+<A NAME="lbAK">&nbsp;</A>
 <H2>FILES</H2>
 
 <B>
@@ -2530,7 +2565,7 @@ Installation instructions and troubleshooting.
 Description of bug fixes/new features.
 <P>
 </DL>
-<A NAME="AUTHORS" id="AUTHORS">&nbsp;</A><A NAME="lbAL" id="lbAL">&nbsp;</A>
+<A NAME="lbAL">&nbsp;</A>
 <H2>AUTHORS</H2>
 
 Many people have contributed to
@@ -2857,7 +2892,7 @@ Bill Chimiak (<A HREF="mailto:chim@bgsm.edu">chim@bgsm.edu</A>)
 
 Please see the CHANGES file for credits for newer releases.
 
-<A NAME="NOTES" id="NOTES">&nbsp;</A><A NAME="lbAM" id="lbAM">&nbsp;</A>
+<A NAME="lbAM">&nbsp;</A>
 <H2>NOTES</H2>
 
 Many bug fixes/cleanups etc. by a host of faithful users
@@ -2874,20 +2909,25 @@ package was written by Micah Beck and is maintained by Brian Smith
 <P>
 
 <HR>
-<A NAME="index">&nbsp;</A><H2>Table of Contents</H2>
-<OL>
-<LI><A HREF="#lbAB">Name</A>
-<LI><A HREF="#lbAC">Synopsis</A>
-<LI><A HREF="#lbAD">Description</A>
-<LI><A HREF="#lbAE">Options</A>
-<LI><A HREF="#lbAF">X resources and defaults</A>
-<LI><A HREF="#lbAG">Bugs and restrictions</A>
-<LI><A HREF="#lbAH">See also</A>
-<LI><A HREF="#lbAI">Acknowledgement</A>
-<LI><A HREF="#lbAJ">Copyright</A>
-<LI><A HREF="#lbAK">Files</A>
-<LI><A HREF="#lbAL">Authors</A>
-<LI><A HREF="#lbAM">Notes</A>
-</OL>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAD">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAE">OPTIONS</A><DD>
+<DT><A HREF="#lbAF">X RESOURCES and DEFAULTS</A><DD>
+<DT><A HREF="#lbAG">BUGS and RESTRICTIONS</A><DD>
+<DT><A HREF="#lbAH">SEE ALSO</A><DD>
+<DT><A HREF="#lbAI">ACKNOWLEDGEMENT</A><DD>
+<DT><A HREF="#lbAJ">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAK">FILES</A><DD>
+<DT><A HREF="#lbAL">AUTHORS</A><DD>
+<DT><A HREF="#lbAM">NOTES</A><DD>
+</DL>
+<HR>
+This document was created by
+man2html,
+using the manual pages.<BR>
+Time: 16:26:41 GMT, March 22, 2008
 </BODY>
 </HTML>

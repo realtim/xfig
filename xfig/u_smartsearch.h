@@ -15,14 +15,14 @@
  *
  */
 
-void		init_smart_searchproc_left();
-void		init_smart_searchproc_middle();
-void		init_smart_searchproc_right();
+void		init_smart_searchproc_left(void (*handlerproc) (/* ??? */));
+void		init_smart_searchproc_middle(void (*handlerproc) (/* ??? */));
+void		init_smart_searchproc_right(void (*handlerproc) (/* ??? */));
 
-void		smart_object_search_left();
-void		smart_object_search_middle();
-void		smart_object_search_right();
-void		smart_null_proc();
+void		smart_object_search_left(int x, int y, unsigned int shift);
+void		smart_object_search_middle(int x, int y, unsigned int shift);
+void		smart_object_search_right(int x, int y, unsigned int shift);
+void		smart_null_proc(void);
 
 extern F_point  smart_point1, smart_point2;
 

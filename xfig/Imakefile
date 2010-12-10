@@ -4,7 +4,7 @@
 
 XCOMM FIG : Facility for Interactive Generation of figures
 XCOMM Copyright (c) 1985-1988 by Supoj Sutanthavibul
-XCOMM Parts Copyright (c) 1989-2002 by Brian V. Smith
+XCOMM Parts Copyright (c) 1989-2007 by Brian V. Smith
 XCOMM Parts Copyright (c) 1991 by Paul King
 XCOMM
 XCOMM Any party obtaining a copy of these files is granted, free of charge, a
@@ -30,8 +30,9 @@ XCOMM to the full path of the directory where you want xfig to be installed.
 XCOMM Also, you may have to uncomment and redefine MKDIRHIER because "make" looks
 XCOMM for it relative to the BINDIR variable.
 XCOMM
-XCOMM BINDIR = /usr/bin/X11
+XCOMM BINDIR = /usr/bin
 XCOMM MKDIRHIER = /bin/sh /usr/bin/X11/mkdirhier -p
+MKDIRHIER = mkdirhier 
 
 XCOMM Uncomment and change XAPPLOADDIR to the directory where you want the
 XCOMM app-defaults resource files to go.  You will have to use the environment
@@ -46,25 +47,28 @@ XCOMM purpose of DESTDIR is to test an install process by installing in a benign
 
 XCOMM XAPPLOADDIR = /home/user/xfig
 
-XCOMM Uncomment the following definition for XAW3D if you want to use
-XCOMM the 3d Athena Widget Set (highly recommended!)
+XCOMM Comment out the following definition for XAW3D if you don't to want to use
+XCOMM the 3d Athena Widget Set
 
-XCOMM #define XAW3D
+#define XAW3D
+
+#ifdef XAW3D
+XAWLIB = -lXaw3d
+#endif
 
 XCOMM Uncomment the following if you have David Hawkey's Xaw3D version 1.5E which has
 XCOMM some new features, including "Tips", which replace xfig's "help balloons"
+XCOMM NOTE: This is the default for many X systems now.
 
 XCOMM #define XAW3D1_5E
 
 #ifdef XAW3D1_5E
     DUSEXAW3D = -DXAW3D -DXAW3D1_5E
-    XAWLIB = -lXaw3d15e
 #else
     XAW_SRC = w_menuentry.c SmeCascade.c SmeBSB.c SimpleMenu.c
     XAW_OBJ = w_menuentry.o SmeCascade.o SmeBSB.o SimpleMenu.o
 #   ifdef XAW3D
 	DUSEXAW3D = -DXAW3D
-	XAWLIB = -lXaw3d
 #   endif /* XAW3D */
 #endif /* XAW3D1_5E */
 
@@ -91,13 +95,13 @@ XCOMM You must have version 5b or newer of the jpeg library.
 #define USEINSTALLEDJPEG
 
 #ifdef USEJPEG
-#ifdef USEINSTALLEDJPEG
-JPEGLIBDIR = /usr/local/lib
-JPEGINC = -I/usr/include/X11
-#else
-JPEGLIBDIR = ../jpeg
-JPEGINC = -I$(JPEGLIBDIR)
-#endif /* USEINSTALLEDJPEG */
+    #ifdef USEINSTALLEDJPEG
+	JPEGLIBDIR = /usr/local/lib
+	JPEGINC = -I/usr/include/X11
+    #else
+	JPEGLIBDIR = ../jpeg
+	JPEGINC = -I$(JPEGLIBDIR)
+    #endif /* USEINSTALLEDJPEG */
 #endif /* USEJPEG */
 
 XCOMM Uncomment the #define for USEXPM if you want to use the XPM
@@ -115,8 +119,8 @@ XCOMM Change XPMINC if necessary to point to the include file for xpm (xpm.h)
 #define USEXPM_ICON
 
 #ifdef USEXPM
-XPMLIBDIR = $(USRLIBDIR)
-XPMINC = -I/usr/include/X11
+XPMLIBDIR = /usr/local/lib
+XPMINC = -I/usr/local/include/X11
 #endif
 
 XCOMM Uncomment the following definiton if you want to use the small icons
@@ -146,7 +150,7 @@ XCOMM Comment out the next line if you have any problems with the locale.
 XCOMM If your setlocale() doesn't support the locale, you should
 XCOMM add -DSETLOCALE to I18N_DEFS.
 
-#define I18N
+XCOMM #define I18N
 
 XCOMM If using an input tablet uncomment the following
 
@@ -162,18 +166,19 @@ XCOMM USEINLINE = -DUSE_INLINE
 XCOMM use (and change) the following if you want the multi-key data base file
 XCOMM somewhere other than the standard X11 library directory
 XCOMM be sure to comment out the second copy of XFIGLIBDIR if you use this one
-XCOMM XFIGLIBDIR = /usr/local/lib/xfig
+XCOMM XFIGLIBDIR = $(LIBDIR)
 
 XCOMM use this if you want the multi-key data base file in the standard X11 tree
 XFIGLIBDIR = $(LIBDIR)/xfig
 
 XCOMM XFIGDOCDIR tells where the html and pdf documentation should go
 XCOMM XFIGDOCDIR = $(DOCDIR)/xfig
-XFIGDOCDIR = /usr/share/doc/xfig
+XFIGDOCDIR = /usr/local/xfig/doc
 
 XCOMM MANDIR tells where the standard man pages should go (no need to change it
 XCOMM if you want the man pages installed in the standard place on your system
-XCOMM MANDIR = $(MANSOURCEPATH)$(MANSUFFIX)
+MANDIR = $(MANSOURCEPATH)$(MANSUFFIX)
+XCOMM MANDIR = /usr/local/xfig/man
 
 XCOMM If your system doesn't have strstr undefine the following definition
 XCOMM HAVE_NO_NOSTRSTR = -DNOSTRSTR
@@ -217,6 +222,13 @@ XCOMM number of vertices.
 XCOMM If you want a compiler other than "cc", define it here
 
 XCOMM CC = /opt/SUNWspro/bin/cc
+
+XCOMM Shorten unnecessary dependencies:
+XCOMM #define XawClientLibs $(XAWLIB) $(XMULIBONLY) $(XTOOLLIB) $(XPMLIB) $(EXTRAXAWCLIENTLIBS) $(XLIB)
+#ifdef XawClientLibs
+# undef XawClientLibs
+# define XawClientLibs $(XAWLIB) $(XMULIBONLY) $(XTOOLLIB) $(XTOOLONLYLIIB) $(XPMLIB) $(EXTRAXAWCLIENTLIBS) $(XONLYLIB)
+#endif
 
 XCOMM *****************************************************
 XCOMM *****************************************************
@@ -285,7 +297,7 @@ DUSEXPMICON = -DUSE_XPM_ICON
 #endif /* USEXPM */
 
 DEFINES =             $(STRDEFINES) $(USEINLINE) $(DUSEXPM) $(DUSEXAW3D) \
-			$(DUSEJPEG) $(I18N_DEFS) $(HAVE_NO_DIRENT)
+			$(DUSEJPEG) $(I18N_DEFS) $(HAVE_NO_DIRENT) -DNEWARROWTYPES
 
 
 XFIGSRC =	d_arc.c d_arcbox.c d_box.c d_ellipse.c d_picobj.c \
@@ -308,6 +320,7 @@ XFIGSRC =	d_arc.c d_arcbox.c d_box.c d_ellipse.c d_picobj.c \
 		w_export.c w_file.c w_fontbits.c w_fontpanel.c w_grid.c w_icons.c \
 		w_indpanel.c w_library.c w_modepanel.c w_mousefun.c w_msgpanel.c \
 		w_print.c w_rottext.c w_rulers.c w_setup.c w_style.c w_util.c w_zoom.c \
+		e_chop.c u_quartic.c w_snap.c w_keyboard.c w_intersect.c \
 		$(I18N_SRC) $(XAW_SRC)
 
 XFIGOBJ =	d_arc.o d_arcbox.o d_box.o d_ellipse.o d_picobj.o \
@@ -330,6 +343,7 @@ XFIGOBJ =	d_arc.o d_arcbox.o d_box.o d_ellipse.o d_picobj.o \
 		w_export.o w_file.o w_fontbits.o w_fontpanel.o w_grid.o w_icons.o \
 		w_indpanel.o w_library.o w_modepanel.o w_mousefun.o w_msgpanel.o \
 		w_print.o w_rottext.o w_rulers.o w_setup.o w_style.o w_util.o w_zoom.o \
+		e_chop.o u_quartic.o w_snap.o w_keyboard.o w_intersect.o \
 		$(I18N_OBJ) $(XAW_OBJ)
 
 XCOMM Other dependencies should be handled by "make depend"
@@ -339,7 +353,7 @@ MAINDEPFILES =  patchlevel.h version.h
 SRCS = $(XFIGSRC)
 OBJS = $(XFIGOBJ)
 
-EXTRA_INCLUDES = $(JPEGINC) $(PNGINC) $(XPMINC)
+EXTRA_INCLUDES = $(JPEGINC) $(PNGINC) $(XPMINC) -I.
 DEPLIBS = XawClientDepLibs
 
 LOCAL_LIBRARIES = 	$(JPEGLIB)
@@ -369,7 +383,6 @@ AllTarget(xfig)
 ComplexProgramTarget(xfig)
 
 InstallAppDefaults(Fig)
-InstallAppDefaults(Fig-color)
 
 XCOMM Install the compose key database, object libraries and documentation
 XCOMM here with "make install"
@@ -383,10 +396,11 @@ install::
 XCOMM Install program, libraries and documentation with "make install.all"
 install.all::
 	$(MAKE) install
-	$(MAKE) install.libs
 	$(MAKE) install.doc
+	$(MAKE) install.libs
 
 xfig.man: Doc/xfig.man
+	rm -f xfig.man
 	$(LN) Doc/xfig.man xfig.man
 
 XCOMM Install the documentation here with "make install.doc"
@@ -411,22 +425,13 @@ install.html::
 install.rhtml::
 	@(cd Doc ; \
 	echo Copying pdf and html files to $(DESTDIR)$(XFIGDOCDIR) ; \
+	if [ -d $(DESTDIR)$(XFIGDOCDIR)/html ]; then set +x; \
+	   else (set -x; $(MKDIRHIER) $(DESTDIR)$(XFIGDOCDIR)/html ); fi ; \
 	$(INSTALL) -m 644 -c xfig_man.html $(DESTDIR)$(XFIGDOCDIR) ; \
 	$(INSTALL) -m 644 -c xfig_ref_en.pdf $(DESTDIR)$(XFIGDOCDIR) ; \
 	$(INSTALL) -m 644 -c xfig-howto.pdf $(DESTDIR)$(XFIGDOCDIR) ; \
-	if [ -d $(DESTDIR)$(XFIGDOCDIR)/html ]; then set +x; \
-	   else (set -x; $(MKDIRHIER) $(DESTDIR)$(XFIGDOCDIR)/html ); fi ; \
-	(cd html ; \
-	   for f in *.* ; do \
-	      $(INSTALL) -m 644 -c $$f $(DESTDIR)$(XFIGDOCDIR)/html ; \
-	   done) ; \
-	echo "  Copying image files for html" ; \
-	if [ -d $(DESTDIR)$(XFIGDOCDIR)/html/images ]; then set +x; \
-	   else (set -x; $(MKDIRHIER) $(DESTDIR)$(XFIGDOCDIR)/html/images ); fi ; \
-	(cd html/images ; \
-	   for f in * ; do \
-	       $(INSTALL) -m 644 -c $$f $(DESTDIR)$(XFIGDOCDIR)/html/images ; \
-	   done) ; \
+	if [ -d html ]; then \
+	( cd html ; tar cf - *.* images ) | ( cd $(DESTDIR)$(XFIGDOCDIR)/html ; tar xf - ) ; fi ; \
 	) ;
 
 #ifdef I18N
@@ -435,9 +440,8 @@ install.jhtml::
 	@(cd Doc/html/japanese ; \
 	if [ -d $(DESTDIR)$(XFIGDOCDIR)/html/japanese ]; then set +x; \
 	   else (set -x; $(MKDIRHIER) $(DESTDIR)$(XFIGDOCDIR)/html/japanese ); fi ; \
-	for f in * ; do \
-	      $(INSTALL) -m 644 -c $$f $(DESTDIR)$(XFIGDOCDIR)/html/japanese ; \
-	done) ;
+	tar cf - * | ( cd $(DESTDIR)$(XFIGDOCDIR)/html/japanese ; tar xf - ) ; \
+	) ;
 #endif
 
 XCOMM Install the object libraries here with "make install.libs"
@@ -446,38 +450,7 @@ install.libs::
 	@if [ -d $(DESTDIR)$(OBJLIBDIR) ]; then set +x; \
 		else (set -x; $(MKDIRHIER) $(DESTDIR)$(OBJLIBDIR) ; set +x; ); fi
 	@if [ -d Libraries ]; then \
-	(cd Libraries ; \
-	for d in * ;  do \
-	    if [ ! -d $$d ]; then continue; fi ; \
-	    (cd $$d ; \
-	    if [ -d $(DESTDIR)$(OBJLIBDIR)/$$d ]; then set +x; \
-		else (set -x; $(MKDIRHIER) $(DESTDIR)$(OBJLIBDIR)/$$d ); fi ; \
-	    echo "  Copying $$d library files to $(DESTDIR)$(OBJLIBDIR)/$$d" ; \
-	    for f in * ;  do \
-		if [ -d $$f ]; then ( \
-		    if [ -d $(DESTDIR)$(OBJLIBDIR)/$$d/$$f ]; then set +x; \
-			else (set -x; $(MKDIRHIER) $(DESTDIR)$(OBJLIBDIR)/$$d/$$f ); fi ; \
-			(cd $$f ; \
-			for dd in * ; do \
-			    if [ -d $$dd ]; then ( \
-				if [ -d $(DESTDIR)$(OBJLIBDIR)/$$d/$$f/$$dd ]; then set +x; \
-				    else (set -x; $(MKDIRHIER) $(DESTDIR)$(OBJLIBDIR)/$$d/$$f/$$dd ); fi ; \
-				    (cd $$dd ; \
-				    for l in * ; do \
-					if [ -d $$l ]; then ( \
-					    if [ -d $(DESTDIR)$(OBJLIBDIR)/$$d/$$f/$$dd/$$l ]; then set +x; \
-						else (set -x; $(MKDIRHIER) $(DESTDIR)$(OBJLIBDIR)/$$d/$$f/$$dd/$$l ); fi ; \
-					    (cd $$l ; \
-						for m in * ; do \
-						    $(INSTALL) -m 644 -c $$m $(DESTDIR)$(OBJLIBDIR)/$$d/$$f/$$dd/$$l ; \
-						done ) ) ; \
-					else ( $(INSTALL) -m 644 -c $$l $(DESTDIR)$(OBJLIBDIR)/$$d/$$f/$$dd ) ; fi ; \
-				done) ) ; \
-			    else ( $(INSTALL) -m 644 -c $$dd $(DESTDIR)$(OBJLIBDIR)/$$d/$$f ) ; fi ; \
-			done) ); \
-		else ($(INSTALL) -m 644 -c $$f $(DESTDIR)$(OBJLIBDIR)/$$d ) ; fi ; \
-	    done ) ; \
-	done ; ) ; \
+		(cd Libraries ; tar cf - */. ) | ( cd $(DESTDIR)$(OBJLIBDIR) ; tar xf - ) ; \
 	else echo No Object Libraries to install ; \
 	fi;
 

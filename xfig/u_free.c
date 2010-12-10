@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -21,8 +21,18 @@
 #include "u_fonts.h"
 #include "w_drawprim.h"
 
-free_arc(list)
-    F_arc	  **list;
+
+void free_ellipse (F_ellipse **list);
+void free_line (F_line **list);
+void free_spline (F_spline **list);
+void free_text (F_text **list);
+void free_linestorage (F_line *l);
+void free_splinestorage (F_spline *s);
+void free_points (F_point *first_point);
+void free_sfactors (F_sfactor *sf);
+void free_picture_entry (struct _pics *picture);
+
+void free_arc(F_arc **list)
 {
     F_arc	   *a, *arc;
 
@@ -40,8 +50,7 @@ free_arc(list)
     *list = NULL;
 }
 
-free_compound(list)
-    F_compound	  **list;
+void free_compound(F_compound **list)
 {
     F_compound	   *c, *compound;
 
@@ -64,8 +73,7 @@ free_compound(list)
     *list = NULL;
 }
 
-free_ellipse(list)
-    F_ellipse	  **list;
+void free_ellipse(F_ellipse **list)
 {
     F_ellipse	   *e, *ellipse;
 
@@ -79,8 +87,7 @@ free_ellipse(list)
     *list = NULL;
 }
 
-free_line(list)
-    F_line	  **list;
+void free_line(F_line **list)
 {
     F_line	   *l, *line;
 
@@ -92,8 +99,7 @@ free_line(list)
     *list = NULL;
 }
 
-free_text(list)
-    F_text	  **list;
+void free_text(F_text **list)
 {
     F_text	   *t, *text;
 
@@ -108,8 +114,7 @@ free_text(list)
     *list = NULL;
 }
 
-free_spline(list)
-    F_spline	  **list;
+void free_spline(F_spline **list)
 {
     F_spline	   *s, *spline;
 
@@ -121,8 +126,7 @@ free_spline(list)
     *list = NULL;
 }
 
-free_splinestorage(s)
-    F_spline	   *s;
+void free_splinestorage(F_spline *s)
 {
 
     free_points(s->points);
@@ -136,8 +140,7 @@ free_splinestorage(s)
     free((char *) s);
 }
 
-free_linestorage(l)
-    F_line	   *l;
+void free_linestorage(F_line *l)
 {
     free_points(l->points);
     if (l->for_arrow)
@@ -159,21 +162,20 @@ free_linestorage(l)
     free((char *) l);
 }
 
-free_picture_entry(picture)
-    struct _pics   *picture;
+void free_picture_entry(struct _pics *picture)
 {
     if (!picture)
 	return;
 
     if (picture->refcount == 0) {
-	fprintf(stderr, "Error freeing picture %x %s with refcount = 0\n",
+	fprintf(stderr, "Error freeing picture %p %s with refcount = 0\n",
 		picture, picture->file);
 	return;
     }
     picture->refcount--;
     if (picture->refcount == 0) {
 	if (appres.DEBUG)
-	    fprintf(stderr,"Delete picture %x %s, refcount = %d\n",
+	    fprintf(stderr,"Delete picture %p %s, refcount = %d\n",
 				picture, picture->file, picture->refcount);
 	if (picture->bitmap)
 	    free((char *) picture->bitmap);
@@ -191,13 +193,12 @@ free_picture_entry(picture)
 	free(picture);
     } else {
 	if (appres.DEBUG)
-	    fprintf(stderr,"Decrease refcount for picture %x %s, refcount = %d\n",
+	    fprintf(stderr,"Decrease refcount for picture %p %s, refcount = %d\n",
 				picture, picture->file, picture->refcount);
     }
 }
 
-free_points(first_point)
-    F_point	   *first_point;
+void free_points(F_point *first_point)
 {
     F_point	   *p, *q;
 
@@ -207,8 +208,7 @@ free_points(first_point)
     }
 }
 
-free_sfactors(sf)
-    F_sfactor	   *sf;
+void free_sfactors(F_sfactor *sf)
 {
     F_sfactor	   *a, *b;
     for (a = sf; a != NULL; a = b) {
@@ -217,8 +217,7 @@ free_sfactors(sf)
     }
 }
 
-free_linkinfo(list)
-    F_linkinfo	  **list;
+void free_linkinfo(F_linkinfo **list)
 {
     F_linkinfo	   *l, *link;
 
@@ -232,8 +231,8 @@ free_linkinfo(list)
 
 /* free up all the GC's before leaving xfig */
 
-free_GCs()
-	{
+void free_GCs(void)
+{
 #ifdef USE_XPM
 	/* free any colors from the xfig xpm icon (if used) */
 	if (xfig_icon_attr.npixels > 0) {
@@ -260,7 +259,7 @@ free_GCs()
 }
 /* free up all the Fonts before leaving xfig */
 
-free_Fonts()
+void free_Fonts(void)
 {
   int i;
   struct xfont   *nf;

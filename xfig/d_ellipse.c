@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -26,37 +26,42 @@
 #include "w_canvas.h"
 #include "w_mousefun.h"
 
+#include "u_markers.h"
+#include "u_redraw.h"
+#include "w_cursor.h"
+
 /*************************  local procedures  ********************/
 
-static void	init_ellipsebyradius_drawing();
-static void	init_ellipsebydiameter_drawing();
-static void	init_circlebyradius_drawing();
-static void	init_circlebydiameter_drawing();
-static void	create_ellipsebydia();
-static void	create_ellipsebyrad();
-static void	create_circlebyrad();
-static void	create_circlebydia();
-static void	cancel_ellipsebydia();
-static void	cancel_ellipsebyrad();
-static void	cancel_circlebyrad();
-static void	cancel_circlebydia();
+static void	init_ellipsebyradius_drawing(int x, int y);
+static void	init_ellipsebydiameter_drawing(int x, int y);
+static void	init_circlebyradius_drawing(int x, int y);
+static void	init_circlebydiameter_drawing(int x, int y);
+static void	create_ellipsebydia(int x, int y);
+static void	create_ellipsebyrad(int x, int y);
+static void	create_circlebyrad(int x, int y);
+static void	create_circlebydia(int x, int y);
+static void	cancel_ellipsebydia(void);
+static void	cancel_ellipsebyrad(void);
+static void	cancel_circlebyrad(void);
+static void	cancel_circlebydia(void);
+
+
 
 void
-circle_ellipse_byradius_drawing_selected()
+circle_ellipse_byradius_drawing_selected(void)
 {
     canvas_kbd_proc = null_proc;
     canvas_locmove_proc = null_proc;
     canvas_leftbut_proc = init_circlebyradius_drawing;
     canvas_middlebut_proc = init_ellipsebyradius_drawing;
     canvas_rightbut_proc = null_proc;
-    set_cursor(arrow_cursor);
+    set_cursor(crosshair_cursor);
     set_mousefun("Circle center", "Ellipse center", "", "", "", "");
     reset_action_on();
 }
 
 static void
-init_ellipsebyradius_drawing(x, y)
-    int		    x, y;
+init_ellipsebyradius_drawing(int x, int y)
 {
     cur_mode = F_ELLIPSE_BY_RAD;
     cur_x = fix_x = x;
@@ -75,7 +80,7 @@ init_ellipsebyradius_drawing(x, y)
 }
 
 static void
-cancel_ellipsebyrad()
+cancel_ellipsebyrad(void)
 {
     elastic_ebr();
     center_marker(fix_x, fix_y);
@@ -84,8 +89,7 @@ cancel_ellipsebyrad()
 }
 
 static void
-create_ellipsebyrad(x, y)
-    int		    x, y;
+create_ellipsebyrad(int x, int y)
 {
     F_ellipse	   *ellipse;
 
@@ -122,7 +126,7 @@ create_ellipsebyrad(x, y)
     draw_mousefun_canvas();
 }
 
-circle_ellipse_bydiameter_drawing_selected()
+void circle_ellipse_bydiameter_drawing_selected(void)
 {
     set_mousefun("Circle diameter", "Ellipse corner", "", "", "", "");
     canvas_kbd_proc = null_proc;
@@ -130,13 +134,12 @@ circle_ellipse_bydiameter_drawing_selected()
     canvas_leftbut_proc = init_circlebydiameter_drawing;
     canvas_middlebut_proc = init_ellipsebydiameter_drawing;
     canvas_rightbut_proc = null_proc;
-    set_cursor(arrow_cursor);
+    set_cursor(crosshair_cursor);
     reset_action_on();
 }
 
 static void
-init_ellipsebydiameter_drawing(x, y)
-    int		    x, y;
+init_ellipsebydiameter_drawing(int x, int y)
 {
     cur_mode = F_ELLIPSE_BY_DIA;
     cur_x = fix_x = x;
@@ -155,7 +158,7 @@ init_ellipsebydiameter_drawing(x, y)
 }
 
 static void
-cancel_ellipsebydia()
+cancel_ellipsebydia(void)
 {
     elastic_ebd();
     center_marker(fix_x, fix_y);
@@ -164,8 +167,7 @@ cancel_ellipsebydia()
 }
 
 static void
-create_ellipsebydia(x, y)
-    int		    x, y;
+create_ellipsebydia(int x, int y)
 {
     F_ellipse	   *ellipse;
 
@@ -205,8 +207,7 @@ create_ellipsebydia(x, y)
 /***************************  circle  section  ************************/
 
 static void
-init_circlebyradius_drawing(x, y)
-    int		    x, y;
+init_circlebyradius_drawing(int x, int y)
 {
     cur_mode = F_CIRCLE_BY_RAD;
     cur_x = fix_x = x;
@@ -224,7 +225,7 @@ init_circlebyradius_drawing(x, y)
 }
 
 static void
-cancel_circlebyrad()
+cancel_circlebyrad(void)
 {
     elastic_cbr();
     center_marker(fix_x, fix_y);
@@ -233,8 +234,7 @@ cancel_circlebyrad()
 }
 
 static void
-create_circlebyrad(x, y)
-    int		    x, y;
+create_circlebyrad(int x, int y)
 {
     F_ellipse	   *c;
     double	    rx, ry;
@@ -274,8 +274,7 @@ create_circlebyrad(x, y)
 }
 
 static void
-init_circlebydiameter_drawing(x, y)
-    int		    x, y;
+init_circlebydiameter_drawing(int x, int y)
 {
     cur_mode = F_CIRCLE_BY_DIA;
     cur_x = fix_x = x;
@@ -293,7 +292,7 @@ init_circlebydiameter_drawing(x, y)
 }
 
 static void
-cancel_circlebydia()
+cancel_circlebydia(void)
 {
     elastic_cbd();
     center_marker(fix_x, fix_y);
@@ -302,8 +301,7 @@ cancel_circlebydia()
 }
 
 static void
-create_circlebydia(x, y)
-    int		    x, y;
+create_circlebydia(int x, int y)
 {
     F_ellipse	   *c;
     double	    rx, ry;

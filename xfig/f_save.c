@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -30,9 +30,10 @@
 #include "w_setup.h"
 #include "w_util.h"
 #include "w_zoom.h"
-#ifdef I18N
-#include <locale.h>
-#endif  /* I18N */
+
+#include "e_compound.h"
+#include "f_load.h"
+#include "u_bound.h"
 
 static int	write_tmpfile = 0;
 static char	save_cur_dir[PATH_MAX];
@@ -41,7 +42,19 @@ static char	save_cur_dir[PATH_MAX];
 
 static void write_arrows(FILE *fp, F_arrow *f, F_arrow *b);
 
-init_write_tmpfile()
+
+int write_objects (FILE *fp);
+void write_fig_header (FILE *fp);
+void write_arc (FILE *fp, F_arc *a);
+void write_compound (FILE *fp, F_compound *com);
+void write_ellipse (FILE *fp, F_ellipse *e);
+void write_line (FILE *fp, F_line *l);
+void write_spline (FILE *fp, F_spline *s);
+void write_text (FILE *fp, F_text *t);
+void write_comments (FILE *fp, char *com);
+void write_colordefs (FILE *fp);
+
+void init_write_tmpfile(void)
 {
   write_tmpfile=1;
   /* save current file directory */
@@ -50,16 +63,14 @@ init_write_tmpfile()
   strcpy(cur_file_dir, TMPDIR);
 }
 
-end_write_tmpfile()
+void end_write_tmpfile(void)
 {
   write_tmpfile=0;
   /* restore current file directory */
   strcpy(cur_file_dir, save_cur_dir);
 }
 
-write_file(file_name, update_recent)
-    char	   *file_name;
-    Boolean	    update_recent;
+int write_file(char *file_name, Boolean update_recent)
 {
     FILE	   *fp;
 
@@ -93,8 +104,7 @@ write_file(file_name, update_recent)
 
 
 int
-write_objects(fp)
-    FILE	   *fp;
+write_objects(FILE *fp)
 {
     F_arc	   *a;
     F_compound	   *c;
@@ -154,8 +164,7 @@ write_objects(fp)
     return (0);
 }
 
-write_fig_header(fp)
-    FILE	   *fp;
+void write_fig_header(FILE *fp)
 {
     char	    str[40], *com;
     int		    i, len;
@@ -221,8 +230,7 @@ write_fig_header(fp)
 }
 
 /* write the user color definitions (if any) */
-write_colordefs(fp)
-    FILE	   *fp;
+void write_colordefs(FILE *fp)
 {
     int		    i;
 
@@ -243,9 +251,7 @@ write_colordefs(fp)
 	fprintf(fp, "}\n");
 }
 
-write_arc(fp, a)
-    FILE	   *fp;
-    F_arc	   *a;
+void write_arc(FILE *fp, F_arc *a)
 {
     /* any comments first */
     write_comments(fp, a->comments);
@@ -296,9 +302,7 @@ write_arc(fp, a)
     } /* V4.0/3.2 */
 }
 
-write_compound(fp, com)
-    FILE	   *fp;
-    F_compound	   *com;
+void write_compound(FILE *fp, F_compound *com)
 {
     F_arc	   *a;
     F_compound	   *c;
@@ -341,9 +345,7 @@ write_compound(fp, com)
     }
 }
 
-write_ellipse(fp, e)
-    FILE	   *fp;
-    F_ellipse	   *e;
+void write_ellipse(FILE *fp, F_ellipse *e)
 {
     /* get rid of any evil ellipses which have either radius = 0 */
     if (e->radiuses.x == 0 || e->radiuses.y == 0)
@@ -381,9 +383,7 @@ write_ellipse(fp, e)
     } /* V4.0/3.2 */
 }
 
-write_line(fp, l)
-    FILE	   *fp;
-    F_line	   *l;
+void write_line(FILE *fp, F_line *l)
 {
     F_point	   *p;
     int		    npts;
@@ -464,9 +464,7 @@ write_line(fp, l)
     } /* if V4.0 */
 }
 
-write_spline(fp, s)
-    FILE	   *fp;
-    F_spline	   *s;
+void write_spline(FILE *fp, F_spline *s)
 {
     F_sfactor	   *cp;
     F_point	   *p;
@@ -517,9 +515,7 @@ write_spline(fp, s)
 }
 
 
-write_text(fp, t)
-    FILE           *fp;
-    F_text         *t;
+void write_text(FILE *fp, F_text *t)
 {
     int		    l, len;
     unsigned char   c;
@@ -571,9 +567,7 @@ write_arrows(FILE *fp, F_arrow *f, F_arrow *b)
     } /* V4.0/V3.2 */
 }
 
-write_comments(fp, com)
-    FILE	   *fp;
-    char	   *com;
+void write_comments(FILE *fp, char *com)
 {
     char	   last;
 
@@ -592,8 +586,7 @@ write_comments(fp, com)
 	fputc('\n',fp);
 }
 
-emergency_save(file_name)
-    char	   *file_name;
+int emergency_save(char *file_name)
 {
     FILE	   *fp;
 

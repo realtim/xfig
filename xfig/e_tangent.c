@@ -26,16 +26,24 @@
 #include "w_mousefun.h"
 #include "w_setup.h"
 
+#include "f_util.h"
+#include "u_draw.h"
+#include "u_list.h"
+#include "u_markers.h"
+#include "w_cursor.h"
+#include "w_msgpanel.h"
+
 #define ZERO_TOLERANCE 2.0
 
-extern void	force_positioning(), force_nopositioning();
 
-static void	init_tangent_adding();
-static void	init_normal_adding();
-static void	tangent_or_normal();
-static void	tangent_normal_line();
+static void	init_tangent_adding(char *p, int type, int x, int y, int px, int py);
+static void	init_normal_adding(char *p, int type, int x, int y, int px, int py);
+static void	tangent_or_normal(int x, int y, int flag);
+static void	tangent_normal_line(int x, int y, float vx, float vy);
 
-tangent_selected()
+
+
+void tangent_selected(void)
 {
     set_mousefun("add tangent", "add normal", "", LOC_OBJ, LOC_OBJ, LOC_OBJ);
     canvas_kbd_proc = null_proc;
@@ -54,28 +62,19 @@ tangent_selected()
 /*  smart_point1, smart_point2 are two points of the tangent */
 
 static void
-init_tangent_adding(p, type, x, y, px, py)
-    char	   *p;
-    int		    type;
-    int		    x, y;
-    int		    px, py;
+init_tangent_adding(char *p, int type, int x, int y, int px, int py)
 {
     tangent_or_normal(px, py, 0);
 }
 
 static void
-init_normal_adding(p, type, x, y, px, py)
-    char	   *p;
-    int		    type;
-    int		    x, y;
-    int		    px, py;
+init_normal_adding(char *p, int type, int x, int y, int px, int py)
 {
     tangent_or_normal(px, py, 1);
 }
 
 static void
-tangent_or_normal(x, y, flag)
-    int             x, y, flag;
+tangent_or_normal(int x, int y, int flag)
 {
     float dx, dy, length, sx, sy, tanlen;
 
@@ -104,9 +103,7 @@ tangent_or_normal(x, y, flag)
 }
 
 static void
-tangent_normal_line(x, y, vx, vy)
-    int x, y;
-    float vx, vy;
+tangent_normal_line(int x, int y, float vx, float vy)
 {
     int dx, dy, xl, yl, xr, yr;
     F_line	   *line;

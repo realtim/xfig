@@ -1,6 +1,6 @@
 /*
  * FIG : Facility for Interactive Generation of figures
- * Copyright (c) 1989-2002 by Brian V. Smith
+ * Copyright (c) 1989-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -16,9 +16,11 @@
 #include "fig.h"
 #include "resources.h"
 #include "object.h"
+#include "w_indpanel.h"
 #include "w_color.h"
 #include "w_msgpanel.h"
 #include "w_setup.h"
+#include "f_util.h"
 
 /* attempt to read a XPM (color pixmap) file */
 /* the filename is passed since XpmReadFileToXpmImage needs a name 
@@ -29,10 +31,7 @@
 */
 
 int
-read_xpm(file, filetype, pic)
-    char	   *file;
-    int		    filetype;
-    F_pic	   *pic;
+read_xpm(char *file, int filetype, F_pic *pic)
 {
     int		    status;
     XpmImage	    image;

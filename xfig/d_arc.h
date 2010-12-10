@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -18,4 +18,5 @@
 extern F_pos	point[3];
 extern F_pos	center_point;
 extern Boolean	center_marked;
-extern void	elastic_arc();
+extern void	elastic_arc(void);
+extern void arc_drawing_selected (void);

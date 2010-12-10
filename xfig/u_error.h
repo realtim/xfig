@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -15,6 +15,6 @@
  *
  */
 
-extern		X_error_handler();
-extern void	error_handler();
-extern void	my_quit();
+extern int	X_error_handler(Display *d, XErrorEvent *err_ev);
+extern void	error_handler(int err_sig);
+extern void	my_quit(Widget w, XEvent *event, String *params, Cardinal *num_params);

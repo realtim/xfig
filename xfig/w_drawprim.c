@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -35,6 +35,7 @@
 #include "paintop.h"
 #include "mode.h"
 #include "object.h"
+#include "u_create.h"
 #include "u_fonts.h"
 #include "w_canvas.h"
 #include "w_drawprim.h"
@@ -43,6 +44,11 @@
 #include "w_msgpanel.h"
 #include "w_setup.h"
 #include "w_util.h"
+
+#include "u_create.h"
+#include "w_cursor.h"
+#include "w_file.h"
+#include "w_rottext.h"
 
 /* EXPORTS */
 
@@ -60,7 +66,7 @@ static Boolean	inside (XPoint testVertex, int x1, int y1, int x2, int y2);
 static void	setup_next(int npoints, XPoint *in, XPoint *out);
 static Pixel	gc_color[NUMOPS], gc_background[NUMOPS];
 static XRectangle clip[1];
-static int	parsesize();
+static int	parsesize(char *name);
 static Boolean	openwinfonts;
 
 #define MAXNAMES 35
@@ -70,7 +76,14 @@ static struct {
     int		    s;
 }		flist[MAXNAMES];
 
-init_font()
+
+void rescale_pattern (int patnum);
+void zXFillPolygon (Display *d, Window w, GC gc, zXPoint *points, int n, int complex, int coordmode);
+void zXDrawLines (Display *d, Window w, GC gc, zXPoint *points, int n, int coordmode);
+void scale_pattern (int indx);
+int SutherlandHodgmanPolygoClip (XPoint *inVertices, XPoint *outVertices, int inLength, int x1, int y1, int x2, int y2);
+
+void init_font(void)
 {
     struct xfont   *newfont, *nf;
     int		    f, count, i, p, ss;
@@ -129,8 +142,7 @@ init_font()
 		    strcat(template,"ISO8859-*");
 	    else
 		strcat(template,"*-*");
-	    if ((fontlist = XListFonts(tool_d, template, 1, &count))==0)
-		appres.scalablefonts = False;	/* none, turn off request for them */
+	    fontlist = XListFonts(tool_d, template, 1, &count);
 	}
 	XFreeFontNames(fontlist); 
     }
@@ -191,8 +203,7 @@ init_font()
 /* e.g. -adobe-courier-bold-o-normal--10-100-75-75-m-60-ISO8859-1 */
 
 static int
-parsesize(name)
-    char	   *name;
+parsesize(char *name)
 {
     int		    s;
     char	   *np;
@@ -215,8 +226,7 @@ parsesize(name)
  */
 
 XFontStruct *
-lookfont(fnum, size)
-    int		    fnum, size;
+lookfont(int fnum, int size)
 {
 	XFontStruct    *fontst;
 	char		fn[300],back_fn[300];
@@ -428,10 +438,7 @@ pw_text(Window w, int x, int y, int op, int depth, XFontStruct *fstruct,
 }
 
 PR_SIZE
-textsize(fstruct, n, s)
-    XFontStruct	   *fstruct;
-    int		    n;
-    char	   *s;
+textsize(XFontStruct *fstruct, int n, char *s)
 {
     PR_SIZE	    ret;
     int		    dir, asc, desc;
@@ -462,10 +469,7 @@ static int	gc_thickness[NUMOPS],
 		gc_cap_style[NUMOPS];
 
 GC
-makegc(op, fg, bg)
-    int		    op;
-    Pixel	    fg;
-    Pixel	    bg;
+makegc(int op, Pixel fg, Pixel bg)
 {
     register GC	    ngc;
     XGCValues	    gcv;
@@ -498,7 +502,7 @@ makegc(op, fg, bg)
     return (ngc);
 }
 
-init_gc()
+void init_gc(void)
 {
     int		    i;
     XColor	    tmp_color;
@@ -544,7 +548,7 @@ init_gc()
 /* create the gc's for fill style (PAINT and ERASE) */
 /* the fill_pm[] must already be created */
 
-init_fill_gc()
+void init_fill_gc(void)
 {
     XGCValues	    gcv;
     int		    i;
@@ -937,7 +941,7 @@ patrn_strct pattern_images[NUMPATTERNS] = {
 
 /* generate the fill pixmaps */
 
-init_fill_pm()
+void init_fill_pm(void)
 {
     int		    i,j;
 
@@ -1195,8 +1199,7 @@ pw_lines(Window w, zXPoint *points, int npoints, int op, int depth,
     }
 }
 
-set_clip_window(xmin, ymin, xmax, ymax)
-    int		    xmin, ymin, xmax, ymax;
+void set_clip_window(int xmin, int ymin, int xmax, int ymax)
 {
     clip_xmin = clip[0].x = xmin;
     clip_ymin = clip[0].y = ymin;
@@ -1210,22 +1213,17 @@ set_clip_window(xmin, ymin, xmax, ymax)
     XSetClipRectangles(tool_d, gccache[ERASE], 0, 0, clip, 1, YXBanded);
 }
 
-set_zoomed_clip_window(xmin, ymin, xmax, ymax)
-    int		    xmin, ymin, xmax, ymax;
+void set_zoomed_clip_window(int xmin, int ymin, int xmax, int ymax)
 {
     set_clip_window(ZOOMX(xmin), ZOOMY(ymin), ZOOMX(xmax), ZOOMY(ymax));
 }
 
-reset_clip_window()
+void reset_clip_window(void)
 {
     set_clip_window(0, 0, CANVAS_WD, CANVAS_HT);
 }
 
-set_fill_gc(fill_style, op, pencolor, fillcolor, xorg, yorg)
-    int		    fill_style;
-    int		    op;
-    Color	    pencolor, fillcolor;
-    int		    xorg, yorg;
+void set_fill_gc(int fill_style, int op, int pencolor, int fillcolor, int xorg, int yorg)
 {
     Color	    fg, bg;
 
@@ -1287,10 +1285,7 @@ static int ndash_3dots = 8;
 static float dash_3dots[8] = { 1., 0.4, 0., 0.3, 0., 0.3, 0., 0.4 };
 
 
-set_line_stuff(width, style, style_val, join_style, cap_style, op, color)
-    int		    width, style, join_style, cap_style, op;
-    float	    style_val;
-    Color	    color;
+void set_line_stuff(int width, int style, float style_val, int join_style, int cap_style, int op, int color)
 {
     XGCValues	    gcv;
     unsigned long   mask;
@@ -1399,8 +1394,7 @@ set_line_stuff(width, style, style_val, join_style, cap_style, op, color)
 }
 
 int
-x_color(col)
-int	col;
+x_color(int col)
 {
 	int	pix;
 	if (!all_colors_available) {
@@ -1437,8 +1431,7 @@ int	col;
 /* resize the fill patterns for the current display_zoomscale */
 /* also generate new Pixmaps in fill_pm[] */
 
-rescale_pattern(patnum)
-int	patnum;
+void rescale_pattern(int patnum)
 {
 	int		j;
 	XGCValues	gcv;
@@ -1466,8 +1459,7 @@ int	patnum;
 	reset_cursor();
 }
 
-scale_pattern(indx)
-int	indx;
+void scale_pattern(int indx)
 {
     int	    i;
     int	    j;
@@ -1541,15 +1533,10 @@ int	indx;
 static XPoint	*_pp_ = (XPoint *) NULL;	/* data pointer itself */
 static int	 _npp_ = 0;			/* number of points currently allocated */
 static Boolean	 _noalloc_ = False;		/* signals previous failed alloc */
-static Boolean	 chkalloc();
+static Boolean	 chkalloc(int n);
 static void	 convert_sh(zXPoint *p, int n);
 
-zXDrawLines(d, w, gc, points, n, coordmode)
-    Display	*d;
-    Window	 w;
-    GC		 gc;
-    zXPoint	*points;
-    int		 n, coordmode;
+void zXDrawLines(Display *d, Window w, GC gc, zXPoint *points, int n, int coordmode)
 {
 #ifdef CLIP_LINE
     XPoint	*outp;
@@ -1570,13 +1557,7 @@ zXDrawLines(d, w, gc, points, n, coordmode)
 #endif /* CLIP_LINE */
 }
 
-zXFillPolygon(d, w, gc, points, n, complex, coordmode)
-    Display	*d;
-    Window	 w;
-    GC		 gc;
-    zXPoint	*points;
-    int		 n;
-    int		 complex,coordmode;
+void zXFillPolygon(Display *d, Window w, GC gc, zXPoint *points, int n, int complex, int coordmode)
 {
     XPoint	*outp;
 
@@ -1595,9 +1576,7 @@ zXFillPolygon(d, w, gc, points, n, complex, coordmode)
 /* convert each point to short */
 
 static void
-convert_sh(p,n)
-    zXPoint	*p;
-    int		 n;
+convert_sh(zXPoint *p, int n)
 {
     int 	 i;
 
@@ -1608,8 +1587,7 @@ convert_sh(p,n)
 }
 
 static Boolean
-chkalloc(n)
-    int		 n;
+chkalloc(int n)
 {
     int		 i;
     XPoint	*tpp;

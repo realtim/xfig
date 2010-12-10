@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Parts Copyright (c) 1991 by Paul King
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -20,4 +20,4 @@ extern Widget	browse_selfile, browse_dir, browse_flist,
 		browse_dlist, browse_mask;
 extern char	cur_browse_dir[];
 extern Boolean	browse_up;
-extern		popup_browse_panel();
+extern void		popup_browse_panel(Widget w);

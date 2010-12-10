@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -17,6 +17,8 @@
 
 #ifndef W_UTIL_H
 #define W_UTIL_H
+
+#include "w_indpanel.h"
 
 /* constant values used for popup_query */
 
@@ -60,11 +62,7 @@
 
 /* number of arrow types */
 
-#ifdef NEWARROWTYPES
 #define NUM_ARROW_TYPES		30
-#else
-#define NUM_ARROW_TYPES		8
-#endif /* NEWARROWTYPES */
 
 /* EXPORTS */
 
@@ -73,21 +71,21 @@ extern	char	*grid_cm_choices[];
 extern	int	num_grid_inch_choices, num_grid_tenth_inch_choices, num_grid_cm_choices;
 extern	char	**grid_choices;
 extern	int	n_grid_choices, grid_minor, grid_major;
-extern	Widget	make_grid_options();
-extern	void	reset_grid_menus();
+extern	Widget	make_grid_options(Widget parent, Widget put_below, Widget put_beside, char *minor_grid_value, char *major_grid_value, Widget *grid_minor_menu_button, Widget *grid_major_menu_button, Widget *grid_minor_menu, Widget *grid_major_menu, Widget *print_grid_minor_text, Widget *print_grid_major_text, Widget *grid_unit_label, void (*grid_major_select) (/* ??? */), void (*grid_minor_select) (/* ??? */));
+extern	void	reset_grid_menus(Boolean inches);
 
-extern	Boolean	check_action_on();
-extern	void	check_for_resize();
-extern	void	check_colors();
+extern	Boolean	check_action_on(void);
+extern	void	check_for_resize(Widget tool, XButtonEvent *event, String *params, Cardinal *nparams);
+extern	void	check_colors(void);
 
-extern	Widget	make_pulldown_menu();
-extern	Widget	make_color_popup_menu();
-extern	void	set_color_name();
-extern	void	set_but_col();
-extern	Widget	MakeIntSpinnerEntry();
-extern	Widget	MakeFloatSpinnerEntry();
-extern	Widget	CreateCheckbutton();
-extern	XtCallbackProc toggle_checkbutton();
+extern	Widget	make_pulldown_menu(char **entries, Cardinal nent, int divide_line, char *divide_message, Widget parent, XtCallbackProc callback);
+extern	Widget	make_color_popup_menu(Widget parent, char *name, XtCallbackProc callback, Boolean include_transp, Boolean include_backg);
+extern	void	set_color_name(int color, char *buf);
+extern	void	set_but_col(Widget widget, Pixel color);
+extern	Widget	MakeIntSpinnerEntry(Widget parent, Widget *text, char *name, Widget below, Widget beside, XtCallbackProc callback, char *string, int min, int max, int inc, int width);
+extern	Widget	MakeFloatSpinnerEntry(Widget parent, Widget *text, char *name, Widget below, Widget beside, XtCallbackProc callback, char *string, float min, float max, float inc, int width);
+extern	Widget	CreateCheckbutton(char *label, char *widget_name, Widget parent, Widget below, Widget beside, Boolean manage, Boolean large, Boolean *value, XtCallbackProc user_callback, Widget *togwidg);
+extern	XtCallbackProc toggle_checkbutton(Widget w, XtPointer data, XtPointer garbage);
 extern	Pixmap	mouse_l, mouse_r;
 extern	Pixmap	check_pm, null_check_pm;
 extern	Pixmap	sm_check_pm, sm_null_check_pm;
@@ -102,16 +100,17 @@ extern	Pixmap	menu_arrow, menu_cascade_arrow;
 extern	Pixmap	arrow_pixmaps[NUM_ARROW_TYPES+1];
 extern	Pixmap	diamond_pixmap;
 extern	Pixmap	linestyle_pixmaps[NUM_LINESTYLE_TYPES];
-extern	char    *panel_get_value();
-extern	void	panel_set_value();
-extern	void	panel_set_int(), panel_set_float();
-extern	void	update_wm_title();
-extern	void	get_pointer_win_xy();
-extern	void	get_pointer_root_xy();
-extern	void	spinner_up_down();
-extern	void	clear_splash();
+extern	char    *panel_get_value(Widget widg);
+extern	void	panel_set_value(Widget widg, char *val);
+extern	void	panel_set_int(Widget widg, int intval), panel_set_float(Widget widg, float floatval, char *format);
+extern	void	update_wm_title(char *name);
+extern	void	get_pointer_win_xy(int *xposn, int *yposn);
+extern	void	get_pointer_root_xy(int *xposn, int *yposn);
+extern	void	spinner_up_down(Widget w, XButtonEvent *ev, String *params, Cardinal *num_params);
+extern	void	clear_splash(void);
 extern	void	InstallScroll(Widget widget);
 extern	void	InstallScrollParent(Widget widget);
+extern  void fix_converters(void);
 
 extern	Boolean	user_colors_saved;
 extern	Boolean	nuser_colors_saved;
@@ -163,5 +162,18 @@ typedef struct {
 	float	min, max;	/* min, max values allowed */
 	float	inc;		/* how much to inc/dec spinner with each click */
 } spin_struct;
+
+extern void app_flush (void);
+extern void file_msg_add_grab (void);
+extern void process_pending (void);
+extern void resize_all (int width, int height);
+extern void restore_nuser_colors (void);
+extern void restore_user_colors (void);
+extern void save_nuser_colors (void);
+extern void save_user_colors (void);
+extern int popup_query(int query_type, char *message);
+extern void create_bitmaps(void);
+extern void splash_screen(void);
+extern int xallncol(char *name, XColor *color, XColor *exact);
 
 #endif /* W_UTIL_H */

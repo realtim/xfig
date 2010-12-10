@@ -1,6 +1,6 @@
 /*
  * FIG : Facility for Interactive Generation of figures
- * Copyright (c) 2000-2002 by Brian V. Smith
+ * Copyright (c) 2000-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -17,19 +17,22 @@
 #include "resources.h"
 #include "object.h"
 #include "f_neuclrtab.h"
+#include "f_util.h"
+#include "w_indpanel.h"
 #include "w_color.h"
 #include "w_msgpanel.h"
 #include "w_setup.h"
+
+#include "f_picobj.h"
+
 #include <png.h>
 
+
+
 int
-read_png(file,filetype,pic)
-    FILE	   *file;
-    int		    filetype;
-    F_pic	   *pic;
+read_png(FILE *file, int filetype, F_pic *pic)
 {
     register int    i, j;
-    int		    status;
     png_structp	    png_ptr;
     png_infop	    info_ptr;
     png_infop	    end_info;

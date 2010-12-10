@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -30,12 +30,17 @@
 #include "w_util.h"
 #include "w_setup.h"
 #include "u_redraw.h"
+#include "w_snap.h"
+
+#include "w_cmdpanel.h"
+#include "w_msgpanel.h"
+#include "w_canvas.h"
 
 /* EXPORTS */
 
 /* which layer buttons are active */
 Boolean	active_layers[MAX_DEPTH +1];
-Boolean	any_active_in_compound();
+Boolean	any_active_in_compound(F_compound *cmpnd);
 Widget	layer_form;
 Boolean	gray_layers = True;
 int	object_depths[MAX_DEPTH +1];	/* count of objects at each depth */
@@ -53,24 +58,24 @@ DeclareStaticArgs(20);
 static	Widget		all_active_but, all_inactive_but, toggle_all_but;
 static	Widget		graytoggle, blanktoggle, graylabel, blanklabel;
 static	Widget		layer_viewp, layer_canvas;
-static	XtActionProc	toggle_layer();
-static	XtActionProc	set_depth_to_layer();
-static	XtActionProc	sweep_layer();
-static	XtActionProc	leave_layer();
-static	XtCallbackProc	all_active();
-static	XtCallbackProc	all_inactive();
-static	XtCallbackProc	toggle_all();
-static	XtCallbackProc	switch_layer_mode();
-static	XtActionProc	layer_exposed();
+static	void	toggle_layer(Widget w, XButtonEvent *event, String *params, Cardinal *nparams);
+static	void	set_depth_to_layer(Widget w, XButtonEvent *event, String *params, Cardinal *nparams);
+static	void	sweep_layer(Widget w, XButtonEvent *event, String *params, Cardinal *nparams);
+static	void	leave_layer(Widget w, XButtonEvent *event, String *params, Cardinal *nparams);
+static	void	all_active(Widget w, XtPointer closure, XtPointer call_data);
+static	void	all_inactive(Widget w, XtPointer closure, XtPointer call_data);
+static	void	toggle_all(Widget w, XtPointer closure, XtPointer call_data);
+static	void	switch_layer_mode(Widget w, XtPointer closure, XtPointer call_data);
+static	void	layer_exposed(Widget w, XExposeEvent *event, String *params, Cardinal *nparams);
 
 #ifndef XAW3D1_5E
 /* popup message over command button when mouse enters it */
-static void     layer_balloon_trigger();
-static void     layer_unballoon();
+static void     layer_balloon_trigger(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch);
+static void     layer_unballoon(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch);
 #endif /* XAW3D1_5E */
 
-static  void	draw_layer_button();
-static  void	draw_layer_buttons();
+static  void	draw_layer_button(Window win, int but);
+static  void	draw_layer_buttons(void);
 
 XtActionsRec	layer_actions[] =
 {
@@ -88,8 +93,10 @@ static String	layer_translations =
      <Leave>: LeaveLayerButton()\n\
      <Expose>:ExposeLayerButtons()\n";
 
+
+
 void
-reset_layers()
+reset_layers(void)
 {
   int i;
   for (i=0; i<=MAX_DEPTH;  i++) {
@@ -98,7 +105,7 @@ reset_layers()
 }
 
 void
-reset_depths()
+reset_depths(void)
 {
   int i;
   for (i=0; i<=MAX_DEPTH;  i++) {
@@ -107,8 +114,7 @@ reset_depths()
 }
 
 void
-init_depth_panel(parent)
-    Widget	 parent;
+init_depth_panel(Widget parent)
 {
     Widget	 label, below;
     Widget	 layer_viewform;
@@ -124,6 +130,7 @@ init_depth_panel(parent)
     NextArg(XtNheight, LAYER_HT);
     NextArg(XtNleft, XtChainRight);
     NextArg(XtNright, XtChainRight);
+    NextArg(XtNfromVert, snap_indicator_panel);
     layer_form = XtCreateWidget("layer_form",formWidgetClass, parent, Args, ArgCount);     
     if (appres.showdepthmanager)
 	XtManageChild(layer_form);
@@ -151,9 +158,9 @@ init_depth_panel(parent)
 #ifndef XAW3D1_5E
     /* popup when mouse passes over button */
     XtAddEventHandler(below, EnterWindowMask, False,
-			  layer_balloon_trigger, (XtPointer) "Display all depths");
+			  (XtEventHandler)layer_balloon_trigger, (XtPointer) "Display all depths");
     XtAddEventHandler(below, LeaveWindowMask, False,
-			  layer_unballoon, (XtPointer) NULL);
+			   (XtEventHandler)layer_unballoon, (XtPointer) NULL);
 #endif /* XAW3D1_5E */
 
     FirstArg(XtNlabel, "All Off");
@@ -168,9 +175,9 @@ init_depth_panel(parent)
 #ifndef XAW3D1_5E
     /* popup when mouse passes over button */
     XtAddEventHandler(below, EnterWindowMask, False,
-			  layer_balloon_trigger, (XtPointer) "Hide all depths");
+			   (XtEventHandler)layer_balloon_trigger, (XtPointer) "Hide all depths");
     XtAddEventHandler(below, LeaveWindowMask, False,
-			  layer_unballoon, (XtPointer) NULL);
+			   (XtEventHandler)layer_unballoon, (XtPointer) NULL);
 #endif /* XAW3D1_5E */
 
     FirstArg(XtNlabel, "Toggle ");
@@ -185,9 +192,9 @@ init_depth_panel(parent)
 #ifndef XAW3D1_5E
     /* popup when mouse passes over button */
     XtAddEventHandler(below, EnterWindowMask, False,
-			  layer_balloon_trigger, (XtPointer) "Toggle displayed/hidden depths");
+			   (XtEventHandler)layer_balloon_trigger, (XtPointer) "Toggle displayed/hidden depths");
     XtAddEventHandler(below, LeaveWindowMask, False,
-			  layer_unballoon, (XtPointer) NULL);
+			   (XtEventHandler)layer_unballoon, (XtPointer) NULL);
 #endif /* XAW3D1_5E */
 
     /* radio buttons to switch between graying out inactive layers or blanking altogether */
@@ -228,9 +235,9 @@ init_depth_panel(parent)
 #ifndef XAW3D1_5E
     /* popup when mouse passes over button */
     XtAddEventHandler(below, EnterWindowMask, False,
-			  layer_balloon_trigger, (XtPointer) "Display inactive layers in gray");
+			   (XtEventHandler)layer_balloon_trigger, (XtPointer) "Display inactive layers in gray");
     XtAddEventHandler(below, LeaveWindowMask, False,
-			  layer_unballoon, (XtPointer) NULL);
+			   (XtEventHandler)layer_unballoon, (XtPointer) NULL);
 #endif /* XAW3D1_5E */
 
     /* radio for blanking */
@@ -269,9 +276,9 @@ init_depth_panel(parent)
 #ifndef XAW3D1_5E
     /* popup when mouse passes over button */
     XtAddEventHandler(below, EnterWindowMask, False,
-			  layer_balloon_trigger, (XtPointer) "Blank inactive layers");
+			   (XtEventHandler)layer_balloon_trigger, (XtPointer) "Blank inactive layers");
     XtAddEventHandler(below, LeaveWindowMask, False,
-			  layer_unballoon, (XtPointer) NULL);
+			   (XtEventHandler)layer_unballoon, (XtPointer) NULL);
 #endif /* XAW3D1_5E */
 
     /* a form to hold the "Front" and "Back" labels and the viewport widget */
@@ -315,12 +322,12 @@ init_depth_panel(parent)
     /* pass null pointer for trigger message so we'll use the two-line one */
 #ifndef XAW3D1_5E
     XtAddEventHandler(layer_viewp, EnterWindowMask, False,
-			  layer_balloon_trigger, (XtPointer) NULL);
+			   (XtEventHandler)layer_balloon_trigger, (XtPointer) NULL);
     XtAddEventHandler(layer_viewp, LeaveWindowMask, False,
-			  layer_unballoon, (XtPointer) NULL);
+			   (XtEventHandler)layer_unballoon, (XtPointer) NULL);
 #endif /* XAW3D1_5E */
     XtAddEventHandler(layer_viewp, StructureNotifyMask, False,
-			  update_layers, (XtPointer) NULL);
+			   (XtEventHandler)update_layers, (XtPointer) NULL);
 
     /* canvas (label, actually) in which to create the buttons */
     /* we're not using real commandButtons because of the time to create
@@ -357,13 +364,15 @@ init_depth_panel(parent)
    correctly, resize our form */
 
 void
-setup_depth_panel()
+setup_depth_panel(void)
 {
-    Dimension	 ind_ht;
-    /* get height of indicator panel */
+    Dimension	 ind_ht, snap_ht=0;
+    /* get height of indicator and snap panels */
     FirstArg(XtNheight, &ind_ht);
     GetValues(ind_panel);
-    LAYER_HT = MOUSEFUN_HT + TOPRULER_HT + CANVAS_HT + ind_ht + INTERNAL_BW*4;
+    FirstArg(XtNheight, &snap_ht);
+    GetValues(snap_indicator_panel);
+    LAYER_HT = MOUSEFUN_HT + TOPRULER_HT + CANVAS_HT + ind_ht - snap_ht + INTERNAL_BW*4;
 
     /* now that the bitmaps have been created, put the checkmark in the proper toggle */
     FirstArg(XtNbitmap, (gray_layers? sm_check_pm : sm_null_check_pm));
@@ -386,7 +395,7 @@ setup_depth_panel()
 /* get_min_max_depth() must have already been called */
 
 void
-update_layers()
+update_layers(void)
 {
     Window	 w = XtWindow(layer_canvas);
     int		 i, height;
@@ -411,7 +420,7 @@ update_layers()
 }
 
 static void
-draw_layer_buttons()
+draw_layer_buttons(void)
 {
     Window	 w = XtWindow(layer_canvas);
     int		 i;
@@ -429,9 +438,7 @@ draw_layer_buttons()
 	XDrawLine(tool_d, w, button_gc, x1, y1, x2, y2);
 
 static void
-draw_layer_button(win, but)
-    Window	 win;
-    int		 but;
+draw_layer_button(Window win, int but)
 {
     char	 str[20];
     int		 x, y, w, h, i;
@@ -477,12 +484,8 @@ draw_layer_button(win, but)
 
 /* this is the callback to refresh the layer buttons that have been exposed */
 
-static XtActionProc
-layer_exposed(w, event, params, nparams)
-    Widget	    w;
-    XExposeEvent   *event;
-    String	   *params;
-    Cardinal	   *nparams;
+static void
+layer_exposed(Widget w, XExposeEvent *event, String *params, Cardinal *nparams)
 {
     int		    y, i;
 
@@ -503,8 +506,7 @@ layer_exposed(w, event, params, nparams)
 static int pressed_but = -1;
 
 static int
-calculate_pressed_depth(y)
-     int y;
+calculate_pressed_depth(int y)
 {
   int i, y1;
 
@@ -520,12 +522,8 @@ calculate_pressed_depth(y)
 
 /* user pressed right button on layer checkbox, set depth attribute to that layer */
 
-static XtActionProc
-set_depth_to_layer(w, event, params, nparams)
-    Widget	    w;
-    XButtonEvent   *event;
-    String	   *params;
-    Cardinal	   *nparams;
+static void
+set_depth_to_layer(Widget w, XButtonEvent *event, String *params, Cardinal *nparams)
 {
     int		    but;
 
@@ -536,12 +534,8 @@ set_depth_to_layer(w, event, params, nparams)
     show_depth(depth_button);
 }
 
-static XtActionProc
-toggle_layer(w, event, params, nparams)
-    Widget	    w;
-    XButtonEvent   *event;
-    String	   *params;
-    Cardinal	   *nparams;
+static void
+toggle_layer(Widget w, XButtonEvent *event, String *params, Cardinal *nparams)
 {
     Window	    win = XtWindow(layer_canvas);
     int		    but, i;
@@ -576,12 +570,8 @@ toggle_layer(w, event, params, nparams)
     pressed_but = but;
 }
 
-static XtActionProc
-sweep_layer(w, event, params, nparams)
-    Widget	    w;
-    XButtonEvent   *event;
-    String	   *params;
-    Cardinal	   *nparams;
+static void
+sweep_layer(Widget w, XButtonEvent *event, String *params, Cardinal *nparams)
 {
     Window	    win = XtWindow(layer_canvas);
     int		    but;
@@ -619,20 +609,14 @@ sweep_layer(w, event, params, nparams)
 	redisplay_canvas();
 }
 
-static XtActionProc
-leave_layer(w, event, params, nparams)
-    Widget	    w;
-    XButtonEvent   *event;
-    String	   *params;
-    Cardinal	   *nparams;
+static void
+leave_layer(Widget w, XButtonEvent *event, String *params, Cardinal *nparams)
 {
     pressed_but = -1;
 }
 
-static XtCallbackProc
-all_active(w, closure, call_data)
-    Widget	    w;
-    XtPointer       closure, call_data;
+static void
+all_active(Widget w, XtPointer closure, XtPointer call_data)
 {
     int i;
     Boolean changed = False;
@@ -652,10 +636,8 @@ all_active(w, closure, call_data)
     }
 }
 
-static XtCallbackProc
-all_inactive(w, closure, call_data)
-    Widget	    w;
-    XtPointer       closure, call_data;
+static void
+all_inactive(Widget w, XtPointer closure, XtPointer call_data)
 {
     int i;
     Boolean changed = False;
@@ -675,10 +657,8 @@ all_inactive(w, closure, call_data)
     }
 }
 
-static XtCallbackProc
-toggle_all(w, closure, call_data)
-    Widget	    w;
-    XtPointer       closure, call_data;
+static void
+toggle_all(Widget w, XtPointer closure, XtPointer call_data)
 {
     int i;
 
@@ -693,10 +673,8 @@ toggle_all(w, closure, call_data)
 
 /* when user toggles between gray-out and blank inactive layers */
 
-static XtCallbackProc
-switch_layer_mode(w, closure, call_data)
-    Widget	    w;
-    XtPointer       closure, call_data;
+static void
+switch_layer_mode(Widget w, XtPointer closure, XtPointer call_data)
 {
     Boolean	    state;
     int		    which;
@@ -739,8 +717,7 @@ switch_layer_mode(w, closure, call_data)
 /* return True if *any* object in the compound is in any active layer */
 
 Boolean
-any_active_in_compound(cmpnd)
-    F_compound	   *cmpnd;
+any_active_in_compound(F_compound *cmpnd)
 {
 	F_ellipse  *e;
 	F_arc	   *a;
@@ -771,7 +748,7 @@ any_active_in_compound(cmpnd)
 }
 
 #ifdef XAW3D1_5E
-update_layerpanel()
+void update_layerpanel()
 {
     /*
      * We must test for the widgets, as this is called by
@@ -815,16 +792,12 @@ static	XtIntervalId balloon_id = (XtIntervalId) 0;
 static	Widget balloon_w;
 static	char *popmsg;
 
-static	void layer_balloon();
+static	void layer_balloon(Widget w, XtPointer closure, XtPointer call_data);
 
 /* come here when the mouse passes over a button in the depths panel */
 
 static void
-layer_balloon_trigger(widget, closure, event, continue_to_dispatch)
-    Widget        widget;
-    XtPointer	  closure;
-    XEvent*	  event;
-    Boolean*	  continue_to_dispatch;
+layer_balloon_trigger(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch)
 {
 	if (!appres.showballoons)
 		return;
@@ -842,10 +815,7 @@ layer_balloon_trigger(widget, closure, event, continue_to_dispatch)
 /* come here when the timer times out (and the mouse is still over the button) */
 
 static void
-layer_balloon(w, closure, call_data)
-    Widget          w;
-    XtPointer	    closure;
-    XtPointer	    call_data;
+layer_balloon(Widget w, XtPointer closure, XtPointer call_data)
 {
 	Position  x, y;
 	Dimension wid, ht;
@@ -913,11 +883,7 @@ layer_balloon(w, closure, call_data)
 /* come here when the mouse leaves a button in the layer panel */
 
 static void
-layer_unballoon(widget, closure, event, continue_to_dispatch)
-    Widget          widget;
-    XtPointer	    closure;
-    XEvent*	    event;
-    Boolean*	    continue_to_dispatch;
+layer_unballoon(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch)
 {
     if (balloon_id) {
 	XtRemoveTimeOut(balloon_id);
@@ -933,7 +899,7 @@ layer_unballoon(widget, closure, event, continue_to_dispatch)
 /* map/unmap the depth manager on the right side */
 
 void
-toggle_show_depths()
+toggle_show_depths(void)
 {
     Dimension	wid, b;
 
@@ -961,7 +927,7 @@ toggle_show_depths()
 }
 
 void
-save_active_layers()
+save_active_layers(void)
 {
     int		 i;
     for (i=0; i<=MAX_DEPTH; i++)
@@ -971,7 +937,7 @@ save_active_layers()
 /* save depth counts and min/max depth */
 
 void
-save_depths()
+save_depths(void)
 {
     int		 i;
     saved_min_depth = min_depth;
@@ -981,7 +947,7 @@ save_depths()
 }
 
 void
-save_counts()
+save_counts(void)
 {
     int		 i;
     for (i=0; i<=MAX_DEPTH; i++)
@@ -989,14 +955,14 @@ save_counts()
 }
 
 void
-save_counts_and_clear()
+save_counts_and_clear(void)
 {
     save_counts();
     clearallcounts();
 }
 
 void
-restore_active_layers()
+restore_active_layers(void)
 {
     int		 i;
     for (i=0; i<=MAX_DEPTH; i++)
@@ -1006,7 +972,7 @@ restore_active_layers()
 /* restore depth counts and reset min/max depth */
 
 void
-restore_depths()
+restore_depths(void)
 {
     int		 i;
     min_depth = saved_min_depth;
@@ -1018,7 +984,7 @@ restore_depths()
 }
 
 void
-restore_counts()
+restore_counts(void)
 {
     int		 i;
     for (i=0; i<=MAX_DEPTH; i++)

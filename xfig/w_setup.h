@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -32,8 +32,8 @@
 #define		DEF_CANVAS_HT_PORT	9.5*DISPLAY_PIX_PER_INCH+1
 #define		DEF_CANVAS_WD_PORT	8.5*DISPLAY_PIX_PER_INCH+1
 
-/* Landscape dimensions */
-#define		DEF_CANVAS_HT_LAND	8.5*DISPLAY_PIX_PER_INCH+1
+/* Landscape dimensions (allow enough height for the mode panel) */
+#define		DEF_CANVAS_HT_LAND	9.0*DISPLAY_PIX_PER_INCH+1
 #define		DEF_CANVAS_WD_LAND	11*DISPLAY_PIX_PER_INCH+1
 
 #define		DEF_RULER_WD		24
@@ -56,7 +56,7 @@
 extern int	TOOL_WD, TOOL_HT;
 extern int	CMDFORM_WD, CMDFORM_HT;
 extern int	NAMEPANEL_WD;
-extern int	MODEPANEL_WD, MODEPANEL_HT;
+extern int	MODEPANEL_WD;
 extern int	MODEPANEL_SPACE;
 extern int	MSGPANEL_WD, MSGPANEL_HT;
 extern int	MOUSEFUN_HT;
@@ -70,4 +70,7 @@ extern int	SIDERULER_WD, SIDERULER_HT;
 extern int	LAYER_WD, LAYER_HT;
 extern int	SW_PER_ROW;
 extern int	NUM_MODE_SW;
+
+extern void setup_sizes (int new_canv_wd, int new_canv_ht);
+
 #endif /* W_SETUP_H */

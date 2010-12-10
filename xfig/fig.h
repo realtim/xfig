@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -18,12 +18,15 @@
 #ifndef FIG_H
 #define FIG_H
 
-extern	char	*my_strdup();
+extern	char	*my_strdup(char *str);
 
 /* For the X stuff, include only Xlib.h and Intrinsic.h here - 
    use figx.h for widget stuff */
 
-#if defined(ultrix) || defined(__bsdi__) || defined(Mips) || defined(apollo)
+#if defined(ultrix) || defined(__bsdi__) || defined(Mips) || defined(apollo) || defined(__hpux)
+#if defined(__hpux)
+#define _HPUX_SOURCE /* for typedef caddr_t :-(( */
+#endif 
 #include <sys/types.h>	/* for stat structure */
 #endif
 #include <sys/stat.h>
@@ -57,7 +60,7 @@ extern char	*strerror();
 #  endif
 #endif /* NEED_STRERROR */
 
-extern char    *mktemp();
+extern char    *mktemp(char *);
 
 #include <math.h>	/* for sin(), cos() etc */
 
@@ -299,15 +302,6 @@ extern char *getenv();
 #endif /* X_NOT_STDC_ENV */
 #endif /* defined(SYSV) && defined(SYSV386) */
 
-/* 
-#if defined(SYSV) || defined(SVR4) || defined(__osf__) || defined(USE_DIRENT)
-#define u_int uint
-#define USE_DIRENT
-#define DIRSTRUCT	struct dirent
-#else
-#define DIRSTRUCT	struct direct
-#endif
-*/
 #ifdef HAVE_NO_DIRENT
 #define DIRSTRUCT struct direct
 #else
@@ -358,7 +352,6 @@ extern char *getenv();
 #define INLINE
 #endif /* USE_INLINE */
 
-#endif /* FIG_H */
 
 #ifdef NOSTRSTR
 extern char *strstr();
@@ -381,11 +374,17 @@ extern	double		drand48();
 extern	long		random();
 extern	void		srandom(unsigned int);
 
-#elif !defined(__osf__) && !defined(__CYGWIN__)
-extern	void		srandom();
+#elif !defined(__osf__) && !defined(__CYGWIN__) && !defined(linux) && !defined(__FreeBSD__) && !defined(__GLIBC__)
+extern	void		srandom(int);
 
 #endif
 
 #ifndef frandom
 #define	frandom()	(random()*(1./2147483648.))
 #endif
+
+#ifdef I18N
+#include <locale.h>
+#endif  /* I18N */
+
+#endif /* FIG_H */

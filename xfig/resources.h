@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -137,7 +137,7 @@ extern char		 orig_dir[PATH_MAX+2];
 extern Boolean		 update_figs;
 
 #ifdef USE_XPM
-#include <xpm.h>
+#include <X11/xpm.h>
 extern XpmAttributes	 xfig_icon_attr;
 #endif
 extern fig_colors	 colorNames[NUM_STD_COLS + 1];
@@ -214,7 +214,7 @@ typedef struct _appres {
     Boolean	 showallbuttons;
     Boolean	 showballoons;		/* show popup messages when user passes over buttons */
     Boolean	 showlengths;		/* length/width lines when drawing or moving */
-    Boolean	 shownums;		/* print point numbers above polyline points */
+    Boolean	 shownums;		/* print vertex numbers above polyline points */
     Boolean	 show_pageborder;	/* show page border in color on canvas */
     Boolean	 specialtext;
     char	*spellcheckcommand;	/* spell check command e.g. 
@@ -224,6 +224,11 @@ typedef struct _appres {
     int		 startfillstyle;	/* starting fill style */
     float	 startfontsize;		/* ges 6 Feb 91 */
     int		 startgridmode;		/* starting grid mode */
+    int		 startgridtype;		/* starting grid type */		// isometric grid
+    int		 startarrowtype;	/* starting arrow type */
+    float	 startarrowthick;	/* starting arrow thick */
+    float	 startarrowwidth;	/* starting arrow width */
+    float	 startarrowlength;	/* starting arrow length (height) */
     char	*startlatexFont;	/* bab 11 Jan 92 */
     int		 startlinewidth;	/* starting line width */
     int		 startposnmode;		/* starting point position mode */
@@ -395,7 +400,6 @@ extern char    *multiple_pages[2], *overlap_pages[2];
 /* for w_file.c and w_export.c */
 
 extern char    *offset_unit_items[3];
-#endif /* RESOURCES_H */
 
 extern int	RULER_WD;
 
@@ -415,3 +419,4 @@ typedef struct _recent_file_struct {
 
 extern _recent_files recent_files[];
 
+#endif /* RESOURCES_H */

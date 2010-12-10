@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -20,6 +20,8 @@
 #include "resources.h"
 #include "paintop.h"
 
+#include "w_util.h"
+
 #define magnify_width 16
 #define magnify_height 16
 #define magnify_x_hot 6
@@ -29,8 +31,10 @@ static unsigned char magnify_bits[] = {
    0xff, 0x1f, 0x42, 0x08, 0x42, 0x08, 0x46, 0x0c, 0x4c, 0x1e, 0xf8, 0x3f,
    0x40, 0x7c, 0x00, 0xf8, 0x00, 0xf0, 0x00, 0x60};
 
+
+
 void
-init_cursor()
+init_cursor(void)
 {
     register Display *d = tool_d;
     register Pixmap  mag_pixmap;
@@ -64,7 +68,7 @@ init_cursor()
 }
 
 void
-recolor_cursors()
+recolor_cursors(void)
 {
     register Display *d = tool_d;
 
@@ -90,7 +94,7 @@ recolor_cursors()
 static Cursor active_cursor = None;
 
 void
-reset_cursor()
+reset_cursor(void)
 {
     if (active_cursor != cur_cursor) {
 	active_cursor = cur_cursor;
@@ -100,8 +104,7 @@ reset_cursor()
 }
 
 void
-set_temp_cursor(cursor)
-    Cursor            cursor;
+set_temp_cursor(Cursor cursor)
 {
   if (active_cursor != cursor) {
     active_cursor = cursor;
@@ -111,8 +114,7 @@ set_temp_cursor(cursor)
 }
 
 void
-set_cursor(cursor)
-    Cursor            cursor;
+set_cursor(Cursor cursor)
 {
   cur_cursor = cursor;
   if (active_cursor != cur_cursor) {

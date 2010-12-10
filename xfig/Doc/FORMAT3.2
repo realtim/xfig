@@ -77,6 +77,14 @@ Description of the Fig Format Follows
     will scale the figure upon reading it in if its resolution is different
     from 1200ppi.  Pixels are assumed to be square.
 
+    Note about metric units:  To preserve a regular grid on the canvas the
+    centimeter is defined to be 450 Fig units and not 472.4 (1200/2.54).
+    For drawings done in metric units, fig2dev magnifies the output when
+    exporting or printing to compensate for the difference (472.4/450).
+    Also, if you make a drawing in one unit scale and switch to the other
+    units in xfig, the drawing will be rescaled on the screen by xfig to
+    remain consistent.
+
     Xfig will read the orientation string and change the canvas to match
     either the Landscape or Portrait mode of the figure file.
 

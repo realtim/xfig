@@ -1,6 +1,6 @@
 /*
  * FIG : Facility for Interactive Generation of figures
- * Copyright (c) 1989-2002 by Brian V. Smith
+ * Copyright (c) 1989-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -23,6 +23,8 @@
 #include "w_setup.h"
 #include "w_util.h"
 
+#include "w_canvas.h"
+
 /* LOCAL */
 
 /* max value for sequence number in filename */
@@ -32,12 +34,12 @@ static	Widget	digitize_popup = 0;
 static	Widget	digitize_panel;
 static	Widget	digitize_file_prefix, digitize_file_seq, digitize_file_suffix;
 static	Widget	newfiletoggle, appendtoggle, example_filename;
-static	void	digitize_panel_done(), digitize_panel_cancel();
+static	void	digitize_panel_done(void), digitize_panel_cancel(void);
 static	Boolean	digitize_append_flag = True;	/* whether to append to same file or make
 						   new ones for each digitized line */
-static	void	create_digitize_panel();
-static	void	update_example();
-static	XtCallbackProc switch_file_mode();
+static	void	create_digitize_panel(void);
+static	void	update_example(Widget w, XtPointer info, XtPointer dum);
+static	void    switch_file_mode(Widget w, XtPointer closure, XtPointer call_data);
 
 String  dig_translations =
         "<Message>WM_PROTOCOLS: DismissDigitize()";
@@ -60,8 +62,7 @@ static	char	*example_save = (char *) NULL;
 static	Boolean	digitize_append_save;
 
 void
-popup_digitize_panel(w)
-    Widget	    w;
+popup_digitize_panel(Widget w)
 {
 	DeclareArgs(2);
 	char	   *tmpstr;
@@ -84,7 +85,7 @@ popup_digitize_panel(w)
 }
 
 static void
-create_digitize_panel()
+create_digitize_panel(void)
 {
 	DeclareArgs(20);
 	Widget	    	beside, below, done_but;
@@ -342,7 +343,7 @@ create_digitize_panel()
 }
 
 static void
-digitize_panel_done()
+digitize_panel_done(void)
 {
     XtPopdown(digitize_popup);
     free(prefix_save);
@@ -352,7 +353,7 @@ digitize_panel_done()
 }
 
 static void
-digitize_panel_cancel()
+digitize_panel_cancel(void)
 {
     DeclareArgs(2);
 
@@ -382,9 +383,7 @@ digitize_panel_cancel()
 /* this is called each time user changes prefix, starting number, or suffix */
 
 static void
-update_example(w, info, dum)
-    Widget	w;
-    XtPointer	info, dum;
+update_example(Widget w, XtPointer info, XtPointer dum)
 {
     DeclareArgs(2);
     char	*prefix, *suffix;
@@ -403,10 +402,8 @@ update_example(w, info, dum)
 
 /* when user toggles between append and newfile digitize mode */
 
-static XtCallbackProc
-switch_file_mode(w, closure, call_data)
-    Widget	    w;
-    XtPointer       closure, call_data;
+static void
+switch_file_mode(Widget w, XtPointer closure, XtPointer call_data)
 {
     DeclareArgs(5);
     Boolean	    state;
@@ -441,4 +438,6 @@ switch_file_mode(w, closure, call_data)
 
     /* set global state */
     digitize_append_flag = state;
+
+    return;
 }

@@ -2,7 +2,7 @@
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1992 by Brian Boyter
  * DPS option Copyright 1992 by Dave Hale
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -16,8 +16,9 @@
  *
  */
 
-extern FILE		*open_picfile();
-extern void		 close_picfile();
+extern FILE		*open_picfile(char *name, int *type, Boolean pipeok, char *retname);
+extern void		 close_picfile(FILE *file, int type);
 
 #define PIPEOK		True
 #define PIPE_NOTOK	False
+extern void read_picobj (F_pic *pic, char *file, int color, Boolean force, Boolean *existing);

@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -28,4 +28,5 @@ typedef struct f_libobj {
 extern F_libobject **lib_compounds;
 extern char	   **library_objects_texts;
 
-extern void	popup_library_panel();
+extern void	popup_library_panel(void);
+extern void set_comments(char *comments);

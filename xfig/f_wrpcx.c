@@ -1,6 +1,6 @@
 /*
  * FIG : Facility for Interactive Generation of figures
- * Copyright (c) 1989-2002 by Brian V. Smith
+ * Copyright (c) 1989-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -16,18 +16,11 @@
 #include "fig.h"
 #include "pcx.h"
 
-static void	create_pcx_head();
-static void	write_pcx_head();
-static void	pcx_enc_scan();
+static void	create_pcx_head(pcxheadr *pcxhead, int width, int height);
+static void	write_pcx_head(FILE *file, pcxheadr *pcx_hd);
+static void	pcx_enc_scan(FILE *file, unsigned char *inbuffer, int bufsize);
 
-_write_pcx(file, data, Red, Green, Blue, numcols, width, height)
-    FILE	   *file;
-    unsigned char  *data;
-    unsigned char   Red[],
-		    Green[],
-		    Blue[];
-    int		    numcols;
-    int		    width, height;
+void _write_pcx(FILE *file, unsigned char *data, unsigned char *Red, unsigned char *Green, unsigned char *Blue, int numcols, int width, int height)
 {
     pcxheadr	    pcxhead;
     int		    i;
@@ -63,9 +56,7 @@ _write_pcx(file, data, Red, Green, Blue, numcols, width, height)
 /* create the pcx header */
 
 static void
-create_pcx_head(pcxhead,width,height)
-    pcxheadr   *pcxhead;
-    int		width,height;
+create_pcx_head(pcxheadr *pcxhead, int width, int height)
 {
     int		i;
 
@@ -92,18 +83,14 @@ create_pcx_head(pcxhead,width,height)
 
 
 static void
-putword(w, file)
-    unsigned short w;
-    FILE	*file;
+putword(short unsigned int w, FILE *file)
 {
     putc((unsigned char) (w&255), file);
     putc((unsigned char) ((w>>8)&255), file);
 }
 
 static void
-write_pcx_head(file, pcx_hd)
-FILE      *file;
-pcxheadr *pcx_hd;
+write_pcx_head(FILE *file, pcxheadr *pcx_hd)
 {
     register int i;
 
@@ -135,10 +122,10 @@ pcxheadr *pcx_hd;
 }
 
 static void
-pcx_enc_scan(file, inbuffer, bufsize)
-    FILE	*file;
-    unsigned char *inbuffer;	/* Pointer to buffer holding unencoded data */
-    int		 bufsize;       /* Size of buffer holding unencoded data */
+pcx_enc_scan(FILE *file, unsigned char *inbuffer, int bufsize)
+        	      
+                            	/* Pointer to buffer holding unencoded data */
+       		                /* Size of buffer holding unencoded data */
 {
     register int index = 0;	/* Index into uncompressed data buffer */
     unsigned char runcount;	/* Length of encoded pixel run */

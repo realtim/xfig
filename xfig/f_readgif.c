@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Parts Copyright (c) 1990 David Koblas
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -20,6 +20,8 @@
 #include "f_picobj.h"
 #include "w_msgpanel.h"
 
+#include "f_readpcx.h"
+
 #define BUFLEN 1024
 
 /* Some of the following code is extracted from giftopnm.c, from the netpbm package */
@@ -35,9 +37,9 @@
 /* +-------------------------------------------------------------------+ */
 
 
-static Boolean	ReadColorMap();
-static Boolean	DoGIFextension();
-static int	GetDataBlock();
+static Boolean	ReadColorMap(FILE *fd, unsigned int number, struct Cmap *cmap);
+static Boolean	DoGIFextension(FILE *fd, int label);
+static int	GetDataBlock(FILE *fd, unsigned char *buf);
 
 #define LOCALCOLORMAP		0x80
 #define	ReadOK(file,buffer,len)	(fread((void *) buffer, (size_t) len, (size_t) 1, (FILE *) file) != 0)
@@ -66,16 +68,15 @@ struct {
 		  FileInvalid (-2) : invalid file
 */
 
+
+
 int
-read_gif(file,filetype,pic)
-    FILE	   *file;
-    int		    filetype;
-    F_pic	   *pic;
+read_gif(FILE *file, int filetype, F_pic *pic)
 {
 	char		buf[BUFLEN],pcxname[PATH_MAX];
 	FILE		*giftopcx;
 	struct Cmap 	localColorMap[MAX_COLORMAP_SIZE];
-	int		i, stat, size;
+	int		i, stat, size, fd;
 	int		useGlobalColormap;
 	unsigned int	bitPixel, red, green, blue;
 	unsigned char	c;
@@ -172,9 +173,15 @@ read_gif(file,filetype,pic)
 	/* now call giftopnm and ppmtopcx */
 
 	/* make name for temp output file */
-	sprintf(pcxname, "%s/%s%06d.pix", TMPDIR, "xfig-pcx", getpid());
+	snprintf(pcxname, sizeof(pcxname), "%s/xfig-pcx.XXXXXX", TMPDIR);
+	if ((fd = mkstemp(pcxname)) == -1) {
+		file_msg("Cannot create temporary file\n");
+		return FileInvalid;
+	}
+	close(fd);
+
 	/* make command to convert gif to pcx into temp file */
-	sprintf(buf, "giftopnm | ppmtopcx > %s 2> /dev/null", pcxname);
+	sprintf(buf, "giftopnm -quiet | ppmtopcx -quiet > %s", pcxname);
 	if ((giftopcx = popen(buf,"w" )) == 0) {
 	    file_msg("Cannot open pipe to giftopnm or ppmtopcx\n");
 	    close_picfile(file,filetype);
@@ -223,10 +230,7 @@ read_gif(file,filetype,pic)
 }
 
 static Boolean
-ReadColorMap(fd,number,cmap)
-FILE	*fd;
-unsigned int	number;
-struct Cmap cmap[MAX_COLORMAP_SIZE];
+ReadColorMap(FILE *fd, unsigned int number, struct Cmap *cmap)
 {
 	int		i;
 	unsigned char	rgb[3];
@@ -244,9 +248,7 @@ struct Cmap cmap[MAX_COLORMAP_SIZE];
 }
 
 static Boolean
-DoGIFextension(fd, label)
-FILE	*fd;
-int	label;
+DoGIFextension(FILE *fd, int label)
 {
 	static unsigned char buf[256];
 	char	    *str;
@@ -294,9 +296,7 @@ int	label;
 int	ZeroDataBlock = False;
 
 static int
-GetDataBlock(fd, buf)
-FILE		*fd;
-unsigned char 	*buf;
+GetDataBlock(FILE *fd, unsigned char *buf)
 {
 	unsigned char	count;
 

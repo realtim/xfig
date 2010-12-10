@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  * Parts Copyright (c) 1995 by C. Blanc and C. Schlick
  *
@@ -38,6 +38,17 @@
 #include "w_msgpanel.h"
 #include "w_setup.h"
 
+#include "e_deletept.h"
+#include "e_scale.h"
+#include "f_read.h"
+#include "u_bound.h"
+#include "u_free.h"
+#include "u_markers.h"
+#include "u_translate.h"
+#include "w_cmdpanel.h"
+#include "w_indpanel.h"
+#include "w_color.h"
+
 /*************** EXPORTS *****************/
 
 /*
@@ -73,8 +84,27 @@ static F_arrow    *last_for_arrow, *last_back_arrow;
 static int	last_linkmode;
 static double	last_origin_tension, last_extremity_tension;
 
+
+void undo_add (void);
+void undo_delete (void);
+void undo_move (void);
+void undo_change (void);
+void undo_glue (void);
+void undo_break (void);
+void undo_load (void);
+void undo_scale (void);
+void undo_addpoint (void);
+void undo_deletepoint (void);
+void undo_add_arrowhead (void);
+void undo_delete_arrowhead (void);
+void undo_convert (void);
+void undo_open_close (void);
+void undo_join_split (void);
+void set_action_object (int action, int object);
+void swap_newp_lastp (void);
+
 void
-undo()
+undo(void)
 {
     /* turn off Compose key LED */
     setCompLED(0);
@@ -133,7 +163,7 @@ undo()
     put_msg("Undo complete");
 }
 
-undo_join_split()
+void undo_join_split(void)
 {
     F_line	    swp_l;
     F_spline	    swp_s;
@@ -166,7 +196,7 @@ undo_join_split()
     }
 }
 
-undo_addpoint()
+void undo_addpoint(void)
 {
     if (last_object == O_POLYLINE)
 	linepoint_deleting(saved_objects.lines, last_prev_point,
@@ -176,7 +206,7 @@ undo_addpoint()
 			     last_selected_point);
 }
 
-undo_deletepoint()
+void undo_deletepoint(void)
 {
     last_action = F_NULL;	/* to avoid doing a clean-up during adding */
 
@@ -195,7 +225,7 @@ undo_deletepoint()
     last_next_point = NULL;
 }
 
-undo_break()
+void undo_break(void)
 {
     cut_objects(&objects, &object_tails);
     /* remove the depths from this compound because they'll be added in right after */
@@ -206,7 +236,7 @@ undo_break()
     mask_toggle_compoundmarker(saved_objects.compounds);
 }
 
-undo_glue()
+void undo_glue(void)
 {
     list_delete_compound(&objects.compounds, saved_objects.compounds);
     tail(&objects, &object_tails);
@@ -220,7 +250,7 @@ undo_glue()
 	set_tags(saved_objects.compounds, 0);
 }
 
-undo_convert()
+void undo_convert(void)
 {
     switch (last_object) {
       case O_POLYLINE:
@@ -236,7 +266,7 @@ undo_convert()
     }
 }
 
-undo_add_arrowhead()
+void undo_add_arrowhead(void)
 {
     switch (last_object) {
       case O_POLYLINE:
@@ -256,7 +286,7 @@ undo_add_arrowhead()
     last_action = F_DELETE_ARROW_HEAD;
 }
 
-undo_delete_arrowhead()
+void undo_delete_arrowhead(void)
 {
     switch (last_object) {
       case O_POLYLINE:
@@ -291,7 +321,7 @@ undo_delete_arrowhead()
  * saved_objects.xxxx->next points to the changed object.
  */
 
-undo_change()
+void undo_change(void)
 {
     char	   *swp_comm;
     F_compound	    swp_c;
@@ -442,7 +472,7 @@ undo_change()
  * remove-all operation will zero pointers in objects.
  */
 
-undo_add()
+void undo_add(void)
 {
     int		    xmin, ymin, xmax, ymax;
     char	    ctemp[PATH_MAX];
@@ -487,7 +517,7 @@ undo_add()
     last_action = F_DELETE;
 }
 
-undo_delete()
+void undo_delete(void)
 {
     int		    xmin, ymin, xmax, ymax;
     char	    ctemp[PATH_MAX];
@@ -533,7 +563,7 @@ undo_delete()
     last_action = F_ADD;
 }
 
-undo_move()
+void undo_move(void)
 {
     int		    dx, dy;
     int		    xmin1, ymin1, xmax1, ymax1;
@@ -593,7 +623,7 @@ undo_move()
     swap_newp_lastp();
 }
 
-undo_load()
+void undo_load(void)
 {
     F_compound	    temp;
     char	    ctemp[PATH_MAX];
@@ -618,7 +648,7 @@ undo_load()
     last_action = F_LOAD;
 }
 
-undo_scale()
+void undo_scale(void)
 {
     float	    scalex, scaley;
     int		    xmin1, ymin1, xmax1, ymax1;
@@ -634,7 +664,7 @@ undo_scale()
     swap_newp_lastp();
 }
 
-undo_open_close()
+void undo_open_close(void)
 {
   switch (last_object) {
   case O_POLYLINE:
@@ -671,7 +701,7 @@ undo_open_close()
   }   
 }
 
-swap_newp_lastp()
+void swap_newp_lastp(void)
 {
     int		    t;		/* swap new_position and last_position	*/
 
@@ -691,7 +721,7 @@ swap_newp_lastp()
  * if they are to be called in the same routine.
  */
 
-clean_up()
+void clean_up(void)
 {
     if (last_action == F_EDIT) {
 	switch (last_object) {
@@ -809,122 +839,102 @@ clean_up()
     last_action = F_NULL;
 }
 
-set_latestarc(arc)
-    F_arc	   *arc;
+void set_latestarc(F_arc *arc)
 {
     saved_objects.arcs = arc;
 }
 
-set_latestobjects(objects)
-    F_compound	   *objects;
+void set_latestobjects(F_compound *objects)
 {
     saved_objects = *objects;
 }
 
-set_latestcompound(compound)
-    F_compound	   *compound;
+void set_latestcompound(F_compound *compound)
 {
     saved_objects.compounds = compound;
 }
 
-set_latestellipse(ellipse)
-    F_ellipse	   *ellipse;
+void set_latestellipse(F_ellipse *ellipse)
 {
     saved_objects.ellipses = ellipse;
 }
 
-set_latestline(line)
-    F_line	   *line;
+void set_latestline(F_line *line)
 {
     saved_objects.lines = line;
 }
 
-set_latestspline(spline)
-    F_spline	   *spline;
+void set_latestspline(F_spline *spline)
 {
     saved_objects.splines = spline;
 }
 
-set_latesttext(text)
-    F_text	   *text;
+void set_latesttext(F_text *text)
 {
     saved_objects.texts = text;
 }
 
-set_last_prevpoint(prev_point)
-    F_point	   *prev_point;
+void set_last_prevpoint(F_point *prev_point)
 {
     last_prev_point = prev_point;
 }
 
-set_last_selectedpoint(selected_point)
-    F_point	   *selected_point;
+void set_last_selectedpoint(F_point *selected_point)
 {
     last_selected_point = selected_point;
 }
 
-set_last_selectedsfactor(selected_sfactor)
-     F_sfactor     *selected_sfactor;
+void set_last_selectedsfactor(F_sfactor *selected_sfactor)
 {
   last_selected_sfactor = selected_sfactor;
 }
 
-set_last_nextpoint(next_point)
-    F_point	   *next_point;
+void set_last_nextpoint(F_point *next_point)
 {
     last_next_point = next_point;
 }
 
-set_last_arcpointnum(num)
-    int		    num;
+void set_last_arcpointnum(int num)
 {
     last_arcpointnum = num;
 }
 
-set_lastposition(x, y)
-    int		    x, y;
+void set_lastposition(int x, int y)
 {
     last_position.x = x;
     last_position.y = y;
 }
 
-set_newposition(x, y)
-    int		    x, y;
+void set_newposition(int x, int y)
 {
     new_position.x = x;
     new_position.y = y;
 }
 
-set_action(action)
-    int		    action;
+void set_action(int action)
 {
     last_action = action;
 }
 
-set_action_object(action, object)
-    int		    action, object;
+void set_action_object(int action, int object)
 {
     last_action = action;
     last_object = object;
 }
 
-set_lastlinkinfo(mode, links)
-    int		    mode;
-    F_linkinfo	   *links;
+void set_lastlinkinfo(int mode, F_linkinfo *links)
 {
     last_linkmode = mode;
     last_links = links;
 }
 
-set_last_tension(origin, extremity)
-    double          origin, extremity;
+void set_last_tension(double origin, double extremity)
 {
   last_origin_tension = origin;
   last_extremity_tension = extremity;
 }
 
-set_last_arrows(forward, backward)
-     F_arrow *forward, *backward;
+void set_last_arrows(F_arrow *forward, F_arrow *backward)
 {
       last_for_arrow = forward;
       last_back_arrow = backward;

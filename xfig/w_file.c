@@ -1,6 +1,6 @@
 /*
  * FIG : Facility for Interactive Generation of figures
- * Copyright (c) 1989-2002 by Brian V. Smith
+ * Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -34,8 +34,17 @@
 #include "w_util.h"
 #include "w_setup.h"
 #include "w_icons.h"
-#include "w_util.h"
 #include "w_zoom.h"
+
+#include "e_compound.h"
+#include "f_load.h"
+#include "f_save.h"
+#include "u_free.h"
+#include "u_list.h"
+#include "w_canvas.h"
+#include "w_cmdpanel.h"
+#include "w_color.h"
+#include "w_cursor.h"
 
 #define	FILE_WID	157	/* width of Current file etc to show preview to the right */
 #define FILE_ALT_WID	260	/* width of file alternatives panel */
@@ -68,11 +77,11 @@ Widget		comments_widget;
 Pixmap		preview_land_pixmap, preview_port_pixmap;
 Boolean		cancel_preview = False;
 Boolean		preview_in_progress = False;
-void		load_request();		/* this is needed by main() */
+void		load_request(Widget w, XButtonEvent *ev);		/* this is needed by main() */
 
 /* LOCALS */
 
-static void	file_preview_stop();
+static void	file_preview_stop(Widget w, XButtonEvent *ev);
 static Boolean	file_cancel_request = False;
 static Boolean	file_load_request = False;
 static Boolean	file_save_request = False;
@@ -91,11 +100,11 @@ static XColor	save_image_cells[MAX_COLORMAP_SIZE];
 static int	save_avail_image_cols;
 static Boolean	image_colors_are_saved = False;
 
-static void	popup_file_panel();
-static void	file_panel_cancel();
-static void	do_load(), do_merge();
-static void	merge_request(), cancel_request(), save_request();
-static void	clear_preview();
+static void	popup_file_panel(int mode);
+static void	file_panel_cancel(Widget w, XButtonEvent *ev);
+static void	do_load(Widget w, XButtonEvent *ev), do_merge(Widget w, XButtonEvent *ev);
+static void	merge_request(Widget w, XButtonEvent *ev), cancel_request(Widget w, XButtonEvent *ev), save_request(Widget w, XButtonEvent *ev);
+static void	clear_preview(void);
 
 DeclareStaticArgs(15);
 static Widget	file_stat_label, file_status, num_obj_label, num_objects;
@@ -150,8 +159,12 @@ static XtActionsRec	file_actions[] =
     {"DoMerge", (XtActionProc) merge_request},
 };
 
+
+int renamefile (char *file);
+void create_file_panel (void);
+
 void
-file_panel_dismiss()
+file_panel_dismiss(void)
 {
     int i;
 
@@ -180,8 +193,7 @@ file_panel_dismiss()
 
 /* get x/y offsets from panel */
 
-file_getxyoff(ixoff,iyoff)
-    int		   *ixoff,*iyoff;
+void file_getxyoff(int *ixoff, int *iyoff)
 {
     float xoff, yoff;
     *ixoff = *iyoff = 0;
@@ -196,10 +208,8 @@ file_getxyoff(ixoff,iyoff)
     *iyoff = round(yoff*offset_unit_conv[yoff_unit_setting]);
 }
 
-void
-merge_request(w, ev)
-    Widget	    w;
-    XButtonEvent   *ev;
+static void
+merge_request(Widget w, XButtonEvent *ev)
 {
     if (preview_in_progress) {
 	file_merge_request = True;
@@ -213,9 +223,7 @@ merge_request(w, ev)
 }
 
 static void
-do_merge(w, ev)
-    Widget	    w;
-    XButtonEvent   *ev;
+do_merge(Widget w, XButtonEvent *ev)
 {
     char	    path[PATH_MAX], fname[PATH_MAX];
     char	   *fval, *dval;
@@ -270,9 +278,7 @@ do_merge(w, ev)
 */
 
 void
-load_request(w, ev)
-    Widget	    w;
-    XButtonEvent   *ev;
+load_request(Widget w, XButtonEvent *ev)
 {
     if (preview_in_progress) {
 	file_load_request = True;
@@ -285,10 +291,8 @@ load_request(w, ev)
     }
 }
 
-void
-do_load(w, ev)
-    Widget	    w;
-    XButtonEvent   *ev;
+static void
+do_load(Widget w, XButtonEvent *ev)
 {
     char	    fname[PATH_MAX];
     char	   *fval, *dval;
@@ -356,9 +360,7 @@ do_load(w, ev)
 }
 
 void
-new_xfig_request(w, ev)
-    Widget	    w;
-    XButtonEvent   *ev;
+new_xfig_request(Widget w, XButtonEvent *ev)
 {
     pid_t pid;
     char *fval, fname[PATH_MAX];
@@ -404,9 +406,7 @@ new_xfig_request(w, ev)
 /* set a request to save.  See notes above for load_request() */
 
 void
-save_request(w, ev)
-    Widget	    w;
-    XButtonEvent   *ev;
+save_request(Widget w, XButtonEvent *ev)
 {
     /* turn off Compose key LED */
     setCompLED(0);
@@ -423,12 +423,9 @@ save_request(w, ev)
 }
 
 void
-do_save(w, ev)
-    Widget	    w;
-    XButtonEvent   *ev;
+do_save(Widget w, XButtonEvent *ev)
 {
     char	   *fval, *dval, fname[PATH_MAX];
-    char	    tmpstr[PATH_MAX];
     int		    qresult;
 
     /* don't save if in the middle of drawing/editing */
@@ -523,8 +520,7 @@ do_save(w, ev)
 
 /* try to rename current to current.bak */
 
-renamefile(file)
-    char	   *file;
+int renamefile(char *file)
 {
     char	    bak_name[PATH_MAX];
 
@@ -536,8 +532,7 @@ renamefile(file)
 }
 
 Boolean
-query_save(msg)
-    char	   *msg;
+query_save(char *msg)
 {
     int		    qresult;
     if (!emptyfigure() && figure_modified && !aborting) {
@@ -558,9 +553,7 @@ query_save(msg)
 }
 
 static void
-cancel_request(w, ev)
-    Widget	    w;
-    XButtonEvent   *ev;
+cancel_request(Widget w, XButtonEvent *ev)
 {
     if (preview_in_progress) {
 	file_cancel_request = True;
@@ -574,9 +567,7 @@ cancel_request(w, ev)
 }
 
 static void
-file_panel_cancel(w, ev)
-    Widget	    w;
-    XButtonEvent   *ev;
+file_panel_cancel(Widget w, XButtonEvent *ev)
 {
     if (user_colors_saved) {
 	restore_user_colors();
@@ -589,29 +580,27 @@ file_panel_cancel(w, ev)
 }
 
 void
-popup_saveas_panel()
+popup_saveas_panel(void)
 {
 	popup_file_panel(F_SAVEAS);
 }
 
 void
-popup_open_panel()
+popup_open_panel(void)
 {
 	popup_file_panel(F_OPEN);
 }
 
 void
-popup_merge_panel()
+popup_merge_panel(void)
 {
 	popup_file_panel(F_MERGE);
 }
 
 static void
-popup_file_panel(mode)
-    int	    mode;
+popup_file_panel(int mode)
 {
 	DeclareArgs(5);
-	XEvent event;
 
 	/* turn off Compose key LED */
 	setCompLED(0);
@@ -717,9 +706,7 @@ popup_file_panel(mode)
 }
 
 static void
-file_xoff_unit_select(w, new_unit, garbage)
-    Widget          w;
-    XtPointer       new_unit, garbage;
+file_xoff_unit_select(Widget w, XtPointer new_unit, XtPointer garbage)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(file_xoff_unit_panel);
@@ -727,16 +714,14 @@ file_xoff_unit_select(w, new_unit, garbage)
 }
 
 static void
-file_yoff_unit_select(w, new_unit, garbage)
-    Widget          w;
-    XtPointer       new_unit, garbage;
+file_yoff_unit_select(Widget w, XtPointer new_unit, XtPointer garbage)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(file_yoff_unit_panel);
     yoff_unit_setting = (int) new_unit;
 }
 
-create_file_panel()
+void create_file_panel(void)
 {
 	Widget		 file, beside, below, butbelow;
 	XFontStruct	*temp_font;
@@ -1171,7 +1156,7 @@ create_file_panel()
 
 /* check if user pressed cancel button */
 Boolean
-check_cancel()
+check_cancel(void)
 {
     if (preview_in_progress) {
 	process_pending();
@@ -1182,7 +1167,7 @@ check_cancel()
 }
 
 static void
-clear_preview()
+clear_preview(void)
 {
     FirstArg(XtNlabel, "                                 ");
     SetValues(preview_name);
@@ -1205,9 +1190,7 @@ clear_preview()
 }
 
 static void
-file_preview_stop(w, ev)
-    Widget	    w;
-    XButtonEvent   *ev;
+file_preview_stop(Widget w, XButtonEvent *ev)
 {
     /* set the cancel flag */
     cancel_preview = True;
@@ -1216,10 +1199,7 @@ file_preview_stop(w, ev)
     process_pending();
 }
 
-preview_figure(filename, parent, canvas, size_widget, port_pixmap, land_pixmap)
-    char       *filename;
-    Widget	parent, canvas, size_widget;
-    Pixmap	port_pixmap, land_pixmap;
+void preview_figure(char *filename, Widget parent, Widget canvas, Widget size_widget, Pixmap port_pixmap, Pixmap land_pixmap)
 {
     fig_settings    settings;
     int		save_objmask;
@@ -1233,7 +1213,6 @@ preview_figure(filename, parent, canvas, size_widget, port_pixmap, land_pixmap)
     int		i, status;
     char	figsize[50];
     Pixel	pb;
-    struct counts obj_counts[MAX_DEPTH+1];
 
     /* alloc a compound object - we must do it this way so free_compound()
        works properly */

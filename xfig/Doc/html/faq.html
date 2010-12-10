@@ -46,7 +46,7 @@
 <h2><a name="faq-running">Problems when running <b>xfig</b> or <b>TransFig (fig2dev)</b></a></h2>
 
 <ol>
-<li><a href="#nocolor">I don't get any color in <b>xfig</b>'s buttons</a>
+<li><a href="#Xaw3Dlink">When I pull up a menu, <b>xfig</b> crashes</a>
 
 <p>
 <li><a href="#icons">Icons in the side and bottom panels appear then disappear</a>
@@ -267,11 +267,6 @@ There are several files that you need:
 to the directory you want this file to go into, or specify the file
 with resource &quot;<tt>Fig*keyFile: <i>your_lib_area</i>/CompKeyDB</tt>&quot;.
 
-<dt><tt>Fig</tt> and <tt>Fig-color</tt> (from the <tt>Fig.ad</tt> 
-and <tt>Fig-color.ad</tt> files)
-<dd>Set the shell environment variable <tt>XAPPLRESDIR</tt>
-to the directory where you want these files to go.
-
 <dt><tt>Doc/html</tt>
 <dd>You must copy this whole directory (and its sub-directory) to the directory
 where <tt>XFIGLIBDIR</tt> in the Imakefile points (use <tt>cp -r</tt>).
@@ -311,31 +306,25 @@ be posted to
 <b>TransFig (fig2dev)</b></a></h2>
 
 <ol>
+
 <li>
-<h3><a name="nocolor">I don't get any color in <b>xfig</b>'s buttons</a></h3>
+<h3><a name="Xaw3Dlink">When I pull up a menu, <b>xfig</b> crashes</a></h3>
 
 <dl>
 <dt>POSSIBLE CAUSE:
-<dd>You didn't install the app-defaults files correctly
-and/or you don't have the customization resource set.
+<dd>Your version of the 3D Athena Widget Set may be incompatible
 
 <p>
 <dt>SOLUTION:
-<dd>You should install the app-defaults files <tt>Fig</tt> and <tt>Fig-color</tt>
-(<tt>Fig.ad</tt> and <tt>Fig-color.ad</tt> in <b>xfig</b> source distribution)
-into the appropriate directory.
-You should also put the string &quot;<tt>*customization: -color</tt>&quot;
-in a global resource file that gets loaded into the X server resources
-(<tt>.Xdefaults</tt>), and then restart the X server.
-<p>
-<b>Explanation:</b>
-Since X11R5, there has been a general resource <tt>*customization</tt> which
-can be set to the string <tt>-color</tt> which tells the system to look for
-an app-default file with the suffix <tt>-color</tt> (e.g. <tt>Fig-color</tt>)
-and read that instead of the usual (<tt>Fig</tt>).
-Inside <tt>Fig-color</tt> is an <tt>#include</tt> statement to read the
-normal <tt>Fig</tt> app-default file to get everything else not pertaining to 
-color.
+<dd>If your vendor has installed the Xaw3D1.5E verison of the 3D Athena Widget set
+but has called it Xaw3D, then it is incompatible with <b>xfig</b>'s menu widget.
+Fix this by uncommenting the <b>#define XAW3D1_5E</b> line in the Imakefile
+and recompiling <b>xfig</b>.  Be sure to do:
+<dl>
+<dd>xmkmf
+<dd>make clean
+<dd>make install
+</dl>
 </dl>
 
 <hr>
@@ -361,11 +350,11 @@ like &quot;Warning: Actions not found: ModeOpenCompound&quot;</a></h3>
 
 <dl>
 <dt>POSSIBLE CAUSE:
-<dd>You didn't install the current app-defaults files.
+<dd>You didn't install the current app-defaults file.
 
 <p>
 <dt>SOLUTION:
-<dd>Install the app-default files (<tt>Fig.ad</tt> and <tt>Fig-color.ad</tt>)
+<dd>Install the app-default file (<tt>Fig.ad</tt>)
 which comes with the <b>xfig</b>.  
 <br>
 This is most easily done with &quot;<tt>make install</tt>&quot;.
@@ -655,7 +644,7 @@ in your LaTeX document.
 Your X server (screen) fonts may not be the same as the PostScript fonts that fig2dev
 uses when exporting.  If you use the ghostscript fonts in your X server things will
 improve.  To do this, see 
-<a href="http://sketch.sourceforge.net/Doc/usersguide-4.html">Installing Ghostscript's Type1 fonts for X.</a>
+<a href="installation.html#install-ghostfonts">Installing Ghostscript's Type1 fonts under X.</a>
 </dl>
 
 <!-- ********************** -->

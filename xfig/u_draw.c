@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  * Parts Copyright (c) 1992 by James Tough
  * Parts Copyright (c) 1998 by Georg Stemmer
@@ -41,6 +41,15 @@
 #include "w_setup.h"
 #include "w_util.h"
 #include "w_zoom.h"
+#include "u_redraw.h"
+#include "w_cursor.h"
+
+static Boolean add_point(int x, int y);
+static void init_point_array(void);
+static Boolean add_closepoint(void);
+
+#include "u_draw_spline.c"
+
 
 /* the spline definition stuff has been moved to u_draw_spline.c which
    is included later in this file */
@@ -83,7 +92,6 @@ static struct _arrow_shape arrow_shapes[NUM_ARROW_TYPES] = {
 		   { 5, 1, 0, True, True, False, 1.5, {{-0.75,0.5},{0,0},{-0.75,-0.5},{-1.0,0},{-0.75,0.5}}},
 		   /* type 3b filled convex spearhead */
 		   { 5, 1, 0, True, True, False, 1.5, {{-0.75,0.5},{0,0},{-0.75,-0.5},{-1.0,0},{-0.75,0.5}}},
-#ifdef NEWARROWTYPES
 		   /* type 4a diamond */
 		   { 5, 1, 0, True, True, False, 1.15, {{-0.5,0.5},{0,0},{-0.5,-0.5},{-1.0,0},{-0.5,0.5}}},
 		   /* type 4b filled diamond */
@@ -131,7 +139,6 @@ static struct _arrow_shape arrow_shapes[NUM_ARROW_TYPES] = {
 		   { 4, 0, 0, True, True, False, -1.0, {{0,0.5},{-1.0,0.5},{-1.0,-0.5},{0,-0.5}}},
 		   /* type 14b backward two-prong fork */
 		   { 4, 1, 0, True, True, False, 0.0, {{-1.0,0.5,},{0,0.5},{0,-0.5},{-1.0,-0.5}}},
-#endif /* NEWARROWTYPES */
 		};
 
 /************** POLYGON/CURVE DRAWING FACILITIES ****************/
@@ -149,15 +156,25 @@ static int	    nfpts, nbpts, nffillpts, nbfillpts;
 
 /************* Code begins here *************/
 
+
+void clip_arrows (F_line *obj, int objtype, int op, int skip);
+void draw_arrow (F_line *obj, F_arrow *arrow, zXPoint *points, int npoints, zXPoint *points2, int npoints2, int op);
+void debug_depth (int depth, int x, int y);
+void newpoint (float xp, float yp);
+void draw_arcbox (F_line *line, int op);
+void draw_pic_pixmap (F_line *box, int op);
+void create_pic_pixmap (F_line *box, int rotation, int width, int height, int flipped);
+void clr_mask_bit (int r, int c, int bwidth, unsigned char *mask);
+void greek_text (F_text *text, int x1, int y1, int x2, int y2);
+
 static void
-init_point_array()
+init_point_array(void)
 {
   npoints = 0;
 }
 
 static Boolean
-add_point(x, y)
-	int     x, y;
+add_point(int x, int y)
 {
 	if (npoints >= max_points) {
 	    int tmp_n;
@@ -196,14 +213,7 @@ y)
 	return True;
 }
 
-draw_point_array(w, op, depth, line_width, line_style, style_val, 
-	    join_style, cap_style, fill_style, pen_color, fill_color)
-    Window          w;
-    int             op, depth;
-    int             line_width, line_style, cap_style;
-    float           style_val;
-    int             join_style, fill_style;
-    Color           pen_color, fill_color;
+void draw_point_array(Window w, int op, int depth, int line_width, int line_style, float style_val, int join_style, int cap_style, int fill_style, int pen_color, int fill_color)
 {
 	pw_lines(w, points, npoints, op, depth, line_width, line_style, style_val,
 		    join_style, cap_style, fill_style, pen_color, fill_color);
@@ -211,9 +221,7 @@ draw_point_array(w, op, depth, line_width, line_style, style_val,
 
 /*********************** ARC ***************************/
 
-draw_arc(a, op)
-    F_arc	   *a;
-    int		    op;
+void draw_arc(F_arc *a, int op)
 {
     double	    rx, ry, rcx, rcy;
     int		    cx, cy, scx, scy;
@@ -235,7 +243,7 @@ draw_arc(a, op)
     cy = rcy = a->center.y;
 
     /* show point numbers if requested */
-    if (appres.shownums) {
+    if (appres.shownums && active_layer(a->depth)) {
 	/* we may have to enlarge the clipping area to include the center point of the arc */
 	scx = ZOOMX(cx);
 	scy = ZOOMY(cy);
@@ -272,7 +280,7 @@ draw_arc(a, op)
 
     /* setup clipping so that spline doesn't protrude beyond arrowhead */
     /* also create the arrowheads */
-    clip_arrows(a,O_ARC,op,0);
+    clip_arrows((F_line *)a,O_ARC,op,0);
 
     /* draw the arc itself */
     draw_point_array(canvas_win, op, a->depth, a->thickness,
@@ -286,10 +294,10 @@ draw_arc(a, op)
     /* draw the arrowheads, if any */
     if (a->type != T_PIE_WEDGE_ARC) {
       if (a->for_arrow) {
-	    draw_arrow(a, a->for_arrow, farpts, nfpts, farfillpts, nffillpts, op);
+	    draw_arrow((F_line *)a, a->for_arrow, farpts, nfpts, farfillpts, nffillpts, op);
       }
       if (a->back_arrow) {
-	    draw_arrow(a, a->back_arrow, barpts, nbpts, barfillpts, nbfillpts, op);
+	    draw_arrow((F_line *)a, a->back_arrow, barpts, nbpts, barfillpts, nbfillpts, op);
       }
     }
     /* write the depth on the object */
@@ -298,9 +306,7 @@ draw_arc(a, op)
 
 /*********************** ELLIPSE ***************************/
 
-draw_ellipse(e, op)
-    F_ellipse	   *e;
-    int		    op;
+void draw_ellipse(F_ellipse *e, int op)
 {
     int		    a, b, xmin, ymin, xmax, ymax;
 
@@ -338,7 +344,7 @@ draw_ellipse(e, op)
 }
 
 static Boolean
-add_closepoint()
+add_closepoint(void)
 {
   return add_point(points[0].x,points[0].y);
 }
@@ -454,15 +460,7 @@ static int	nump[4];
 static int	totpts,i,j;
 static int	order[4]={0,1,3,2};
 
-angle_ellipse(center_x, center_y, radius_x, radius_y, angle,
-	      op, depth, thickness, style, style_val, fill_style,
-	      pen_color, fill_color)
-    int		    center_x, center_y;
-    int		    radius_x, radius_y;
-    float	    angle;
-    int		    op,depth,thickness,style,fill_style;
-    int		    pen_color, fill_color;
-    float	    style_val;
+void angle_ellipse(int center_x, int center_y, int radius_x, int radius_y, float angle, int op, int depth, int thickness, int style, float style_val, int fill_style, int pen_color, int fill_color)
 {
 	float	xcen, ycen, a, b;
 
@@ -560,8 +558,7 @@ angle_ellipse(center_x, center_y, radius_x, radius_y, angle,
 
 /* store the points across (row-wise in) the matrix */
 
-newpoint(xp,yp)
-    float	   xp,yp;
+void newpoint(float xp, float yp)
 {
     if (totpts >= MAXNUMPTS/4) {
 	if (totpts == MAXNUMPTS/4) {
@@ -584,9 +581,7 @@ newpoint(xp,yp)
 
 /*********************** LINE ***************************/
 
-draw_line(line, op)
-    F_line	   *line;
-    int		    op;
+void draw_line(F_line *line, int op)
 {
     F_point	   *point;
     int		    i, x, y;
@@ -675,9 +670,9 @@ draw_line(line, op)
 	pw_point(canvas_win, x, y, op, line->depth,
 			line->thickness, line->pen_color, line->cap_style);
 	/* label the point number above the point */
-	if (appres.shownums) {
+	if (appres.shownums && active_layer(line->depth)) {
 	    pw_text(canvas_win, x, round(y-3.0/zoomscale), PAINT, line->depth, 
-			roman_font, 0.0, "1", RED, COLOR_NONE);
+			roman_font, 0.0, "0", RED, COLOR_NONE);
 	}
 	return;
     }
@@ -685,12 +680,12 @@ draw_line(line, op)
     /* accumulate the points in an array - start with 50 */
     init_point_array();
 
-    i=1;
+    i=0;
     for (point = line->points; point != NULL; point = point->next) {
 	x = point->x;
 	y = point->y;
 	/* label the point number above the point */
-	if (appres.shownums) {
+	if (appres.shownums && active_layer(line->depth)) {
 	    /* if BOX or POLYGON, don't label last point (which is same as first) */
 	    if (((line->type == T_BOX || line->type == T_POLYGON) && point->next != NULL) ||
 		(line->type != T_BOX && line->type != T_POLYGON)) {
@@ -726,9 +721,7 @@ draw_line(line, op)
     debug_depth(line->depth,line->points->x,line->points->y);
 }
 
-draw_arcbox(line, op)
-    F_line	   *line;
-    int		    op;
+void draw_arcbox(F_line *line, int op)
 {
     F_point	   *point;
     int		    xmin, xmax, ymin, ymax;
@@ -737,7 +730,7 @@ draw_arcbox(line, op)
     point = line->points;
     xmin = xmax = point->x;
     ymin = ymax = point->y;
-    i = 1;
+    i = 0;
     while (point->next) {	/* find lower left (upper-left on screen) */
 	/* and upper right (lower right on screen) */
 	point = point->next;
@@ -750,7 +743,7 @@ draw_arcbox(line, op)
 	else if (point->y > ymax)
 	    ymax = point->y;
 	/* label the point number above the point */
-	if (appres.shownums) {
+	if (appres.shownums && active_layer(line->depth)) {
 	    sprintf(bufx,"%d",i++);
 	    pw_text(canvas_win, point->x, round(point->y-3.0/zoomscale), PAINT, line->depth,
 			roman_font, 0.0, bufx, RED, COLOR_NONE);
@@ -764,16 +757,13 @@ draw_arcbox(line, op)
 }
 
 static Boolean
-subset(xmin1, ymin1, xmax1, ymax1, xmin2, ymin2, xmax2, ymax2)
-    int		    xmin1, ymin1, xmax1, ymax1, xmin2, ymin2, xmax2, ymax2;
+subset(int xmin1, int ymin1, int xmax1, int ymax1, int xmin2, int ymin2, int xmax2, int ymax2)
 {
     return (xmin2 <= xmin1) && (xmax1 <= xmax2) && 
            (ymin2 <= ymin1) && (ymax1 <= ymax2);
 }
 
-draw_pic_pixmap(box, op)
-    F_line	   *box;
-    int		    op;
+void draw_pic_pixmap(F_line *box, int op)
 {
     int		    xmin, ymin;
     int		    xmax, ymax;
@@ -877,9 +867,7 @@ draw_pic_pixmap(box, op)
 
 #define	ALLOC_PIC_ERR "Can't alloc memory for image: %s"
 
-create_pic_pixmap(box, rotation, width, height, flipped)
-    F_line	   *box;
-    int		    rotation, width, height, flipped;
+void create_pic_pixmap(F_line *box, int rotation, int width, int height, int flipped)
 {
     int		    cwidth, cheight;
     int		    i,j,k;
@@ -1213,9 +1201,7 @@ create_pic_pixmap(box, rotation, width, height, flipped)
 
 static unsigned char bits[8] = { 1,2,4,8,16,32,64,128 };
 
-clr_mask_bit(r,c,bwidth,mask)
-    int    r,c,bwidth;
-    unsigned char   *mask;
+void clr_mask_bit(int r, int c, int bwidth, unsigned char *mask)
 {
     int		    byte;
     unsigned char   bit;
@@ -1229,9 +1215,7 @@ clr_mask_bit(r,c,bwidth,mask)
 
 static char    *hidden_text_string = "<<>>";
 
-draw_text(text, op)
-    F_text	   *text;
-    int		    op;
+void draw_text(F_text *text, int op)
 {
     PR_SIZE	    size;
     int		    x,y;
@@ -1300,15 +1284,13 @@ draw_text(text, op)
  * This is done when the text would be too small to read anyway.
  */
 
-greek_text(text, x1, y1, x2, y2)
-    F_text	*text;
-    int		 x1,y1, x2,y2;
+void greek_text(F_text *text, int x1, int y1, int x2, int y2)
 {
     int		 color;
     int		 lensofar, lenword, lenspace;
     int		 xs, ys, xe, ye;
     float	 dx, dy;
-    char	*word, *cp;
+    char	 *cp;
 
     if (text->depth < MAX_DEPTH+1 && !active_layer(text->depth))
 	color = MED_GRAY;
@@ -1352,9 +1334,7 @@ greek_text(text, x1, y1, x2, y2)
 /*********************** COMPOUND ***************************/
 
 void
-draw_compoundelements(c, op)
-    F_compound	   *c;
-    int		    op;
+draw_compoundelements(F_compound *c, int op)
 {
     F_line	   *l;
     F_spline	   *s;
@@ -1405,10 +1385,7 @@ draw_compoundelements(c, op)
 
 ****************************************************************/
 
-compute_arcarrow_angle(x1, y1, x2, y2, direction, arrow, x, y)
-    float x1, y1;
-    int x2, y2, direction, *x, *y;
-    F_arrow *arrow;
+void compute_arcarrow_angle(float x1, float y1, int x2, int y2, int direction, F_arrow *arrow, int *x, int *y)
 {
     double	r, alpha, beta, dy, dx;
     double	lpt,h;
@@ -1442,9 +1419,7 @@ compute_arcarrow_angle(x1, y1, x2, y2, direction, arrow, x, y)
 
 /* temporary error handler - see call to XSetRegion in clip_arrows below */
 
-tempXErrorHandler (display, event)
-    Display	*display;
-    XErrorEvent	*event;
+int tempXErrorHandler (Display *display, XErrorEvent *event)
 {
 	return 0;
 }
@@ -1468,11 +1443,7 @@ tempXErrorHandler (display, event)
  "skip" points are skipped from each end of the points[] array (for splines)
 ****************************************************************/
 
-clip_arrows(obj, objtype, op, skip)
-    F_line	   *obj;
-    int		    objtype;
-    int		    op;
-    int		    skip;
+void clip_arrows(F_line *obj, int objtype, int op, int skip)
 {
     Region	    mainregion, newregion;
     Region	    region;
@@ -1624,13 +1595,7 @@ clip_arrows(obj, objtype, op, skip)
 #define ROTXC(x,y)  (x)*cosa + (y)*sina + fix_x
 #define ROTYC(x,y) -(x)*sina + (y)*cosa + fix_y
 
-calc_arrow(x1, y1, x2, y2, linethick, arrow, 
-			points, npoints, fillpoints, nfillpoints, clippts, nclippts)
-    int		    x1, y1, x2, y2;
-    int		    linethick;
-    F_arrow	   *arrow;
-    zXPoint	    points[], fillpoints[], clippts[];
-    int		   *npoints, *nfillpoints, *nclippts;
+void calc_arrow(int x1, int y1, int x2, int y2, int linethick, F_arrow *arrow, zXPoint *points, int *npoints, zXPoint *fillpoints, int *nfillpoints, zXPoint *clippts, int *nclippts)
 {
     double	    x, y, xb, yb, dx, dy, l, sina, cosa;
     double	    mx, my;
@@ -1638,7 +1603,6 @@ calc_arrow(x1, y1, x2, y2, linethick, arrow,
     double	    alpha;
     double	    miny, maxy;
     int		    xa, ya, xs, ys;
-    double	    xt, yt;
     double	    wd  = (double) arrow->wd*ZOOM_FACTOR;
     double	    len = (double) arrow->ht*ZOOM_FACTOR;
     double	    th  = arrow->thickness*ZOOM_FACTOR;
@@ -1852,12 +1816,7 @@ calc_arrow(x1, y1, x2, y2, linethick, arrow,
 /* draw the arrowhead resulting from the call to calc_arrow() */
 /* points[npoints] contains the outline and points2[npoints2] the points to be filled */
 
-draw_arrow(obj, arrow, points, npoints, points2, npoints2, op)
-    F_line	   *obj;
-    F_arrow	   *arrow;
-    zXPoint	    points[], points2[];
-    int		    npoints, npoints2;
-    int		    op;
+void draw_arrow(F_line *obj, F_arrow *arrow, zXPoint *points, int npoints, zXPoint *points2, int npoints2, int op)
 {
     int		    fill;
 
@@ -2036,8 +1995,7 @@ curve(Window window, int depth, int xstart, int ystart, int xend, int yend,
 
 /* redraw all the picture objects */
 
-redraw_images(obj)
-    F_compound	   *obj;
+void redraw_images(F_compound *obj)
 {
     F_line	   *l;
     F_compound	   *c;
@@ -2051,13 +2009,12 @@ redraw_images(obj)
     }
 }
 
-too_many_points()
+void too_many_points(void)
 {
     put_msg("Too many points, recompile with MAXNUMPTS > %d in w_drawprim.h", MAXNUMPTS);
 }
 
-debug_depth(depth, x, y)
-int depth, x, y;
+void debug_depth(int depth, int x, int y)
 {
     char	str[10];
     PR_SIZE	size;
@@ -2076,12 +2033,8 @@ int depth, x, y;
 /* include common spline routines */
 /**********************************/
 
-#include "u_draw_spline.c"
-
 void
-draw_spline(spline, op)
-    F_spline	   *spline;
-    int		    op;
+draw_spline(F_spline *spline, int op)
 {
     Boolean         success;
     int		    xmin, ymin, xmax, ymax;
@@ -2097,8 +2050,8 @@ draw_spline(spline, op)
     precision = (display_zoomscale < ZOOM_PRECISION) ? LOW_PRECISION 
                                                      : HIGH_PRECISION;
 
-    if (appres.shownums) {
-	for (i=1, p=spline->points; p; p=p->next) {
+    if (appres.shownums && active_layer(spline->depth)) {
+	for (i=0, p=spline->points; p; p=p->next) {
 	    /* label the point number above the point */
 	    sprintf(bufx,"%d",i++);
 	    pw_text(canvas_win, p->x, round(p->y-3.0/zoomscale), PAINT, spline->depth,
@@ -2112,7 +2065,7 @@ draw_spline(spline, op)
     if (success) {
 	/* setup clipping so that spline doesn't protrude beyond arrowhead */
 	/* also create the arrowheads */
-	clip_arrows(spline,O_SPLINE,op,4);
+	clip_arrows((F_line *)spline,O_SPLINE,op,4);
 
 	draw_point_array(canvas_win, op, spline->depth, spline->thickness,
 		       spline->style, spline->style_val,
@@ -2123,18 +2076,16 @@ draw_spline(spline, op)
 	set_clip_window(clip_xmin, clip_ymin, clip_xmax, clip_ymax);
 
 	if (spline->for_arrow)	/* forward arrow  */
-	    draw_arrow(spline, spline->for_arrow, farpts, nfpts, farfillpts, nffillpts, op);
+	    draw_arrow((F_line *)spline, spline->for_arrow, farpts, nfpts, farfillpts, nffillpts, op);
 	if (spline->back_arrow)	/* backward arrow  */
-	    draw_arrow(spline, spline->back_arrow, barpts, nbpts, barfillpts, nbfillpts, op);
+	    draw_arrow((F_line *)spline, spline->back_arrow, barpts, nbpts, barfillpts, nbfillpts, op);
 	/* write the depth on the object */
 	debug_depth(spline->depth,spline->points->x,spline->points->y);
     }
 }
 
 void
-quick_draw_spline(spline, operator)
-     F_spline      *spline;
-     int           operator;
+quick_draw_spline(F_spline *spline, int operator)
 {
   int        k;
   float     step;

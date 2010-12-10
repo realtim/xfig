@@ -49,7 +49,6 @@ in this Software without prior written authorization from the X Consortium.
 
 /* needed for abs() */
 #ifdef X_NOT_STDC_ENV
-extern int abs();
 #else
 #include <stdlib.h>
 #endif /* X_NOT_STDC_ENV */
@@ -98,17 +97,17 @@ static XtResource resources[] = {
  * Semi Public function definitions. 
  */
 
-static void Redisplay(), Destroy(), Initialize(), FlipColors();
-static void ClassInitialize();
-static Boolean SetValues();
-static XtGeometryResult QueryGeometry();
+static void Redisplay(Widget w, XEvent *event, Region region), Destroy(Widget w), Initialize(Widget request, Widget new, ArgList args, Cardinal *num_args), FlipColors(Widget w);
+static void ClassInitialize(void);
+static Boolean SetValues(Widget current, Widget request, Widget new, ArgList args, Cardinal *num_args);
+static XtGeometryResult QueryGeometry(Widget w, XtWidgetGeometry *intended, XtWidgetGeometry *return_val);
 
 /* 
  * Private Function Definitions.
  */
 
-static void GetDefaultSize(), DrawBitmaps(), GetBitmapInfo();
-static void CreateGCs(), DestroyGCs();
+static void GetDefaultSize(Widget w, Dimension *width, Dimension *height), DrawBitmaps(Widget w, GC gc), GetBitmapInfo(Widget w, Boolean is_left);
+static void CreateGCs(Widget w), DestroyGCs(Widget w);
     
 #ifdef XAW3D
 #define superclass (&smeThreeDClassRec)
@@ -184,7 +183,7 @@ WidgetClass smeBSBObjectClass = (WidgetClass) &smeBSBClassRec;
  */
 
 static void 
-ClassInitialize()
+ClassInitialize(void)
 {
     XawInitializeWidgetSet();
     XtAddConverter( XtRString, XtRJustify, XmuCvtStringToJustify, 
@@ -201,10 +200,7 @@ ClassInitialize()
 
 /* ARGSUSED */
 static void
-Initialize(request, new, args, num_args)
-Widget request, new;
-ArgList args;
-Cardinal *num_args;
+Initialize(Widget request, Widget new, ArgList args, Cardinal *num_args)
 {
     SmeBSBObject entry = (SmeBSBObject) new;
 
@@ -230,8 +226,7 @@ Cardinal *num_args;
  */
 
 static void
-Destroy(w)
-Widget w;
+Destroy(Widget w)
 {
     SmeBSBObject entry = (SmeBSBObject) w;
 
@@ -250,10 +245,7 @@ Widget w;
 
 /* ARGSUSED */
 static void
-Redisplay(w, event, region)
-Widget w;
-XEvent * event;
-Region region;
+Redisplay(Widget w, XEvent *event, Region region)
 {
     GC gc;
     SmeBSBObject entry = (SmeBSBObject) w;
@@ -377,10 +369,7 @@ Region region;
 
 /* ARGSUSED */
 static Boolean
-SetValues(current, request, new, args, num_args)
-Widget current, request, new;
-ArgList args;
-Cardinal *num_args;
+SetValues(Widget current, Widget request, Widget new, ArgList args, Cardinal *num_args)
 {
     SmeBSBObject entry = (SmeBSBObject) new;
     SmeBSBObject old_entry = (SmeBSBObject) current;
@@ -450,9 +439,7 @@ Cardinal *num_args;
  */
 
 static XtGeometryResult
-QueryGeometry(w, intended, return_val) 
-Widget w;
-XtWidgetGeometry *intended, *return_val;
+QueryGeometry(Widget w, XtWidgetGeometry *intended, XtWidgetGeometry *return_val)
 {
     SmeBSBObject entry = (SmeBSBObject) w;
     Dimension width, height;
@@ -493,8 +480,7 @@ XtWidgetGeometry *intended, *return_val;
  */
 
 static void 
-FlipColors(w)
-Widget w;
+FlipColors(Widget w)
 {
     SmeBSBObject entry = (SmeBSBObject) w;
     SmeBSBObjectClass oclass = (SmeBSBObjectClass) XtClass (w);
@@ -532,9 +518,7 @@ Widget w;
  */
 
 static void
-GetDefaultSize(w, width, height) 
-Widget w;
-Dimension * width, * height;
+GetDefaultSize(Widget w, Dimension *width, Dimension *height)
 {
     SmeBSBObject entry = (SmeBSBObject) w;
 
@@ -590,9 +574,7 @@ Dimension * width, * height;
  */
 
 static void
-DrawBitmaps(w, gc)
-Widget w;
-GC gc;
+DrawBitmaps(Widget w, GC gc)
 {
     int x_loc, y_loc;
     SmeBSBObject entry = (SmeBSBObject) w;
@@ -654,9 +636,7 @@ GC gc;
  */
 
 static void
-GetBitmapInfo(w, is_left)
-Widget w;
-Boolean is_left;
+GetBitmapInfo(Widget w, Boolean is_left)
 {
     SmeBSBObject entry = (SmeBSBObject) w;    
     unsigned int depth, bw;
@@ -712,8 +692,7 @@ Boolean is_left;
  */
 
 static void
-CreateGCs(w)
-Widget w;
+CreateGCs(Widget w)
 {
     SmeBSBObject entry = (SmeBSBObject) w;    
     XGCValues values;
@@ -769,8 +748,7 @@ Widget w;
  */
 
 static void
-DestroyGCs(w)
-Widget w;
+DestroyGCs(Widget w)
 {
     SmeBSBObject entry = (SmeBSBObject) w;    
 

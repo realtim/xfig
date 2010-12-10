@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -26,12 +26,17 @@
 #include "w_canvas.h"
 #include "w_mousefun.h"
 
-static void	init_break();
-static void	init_break_only();
-static void	init_break_tag();
+#include "u_markers.h"
+#include "w_cursor.h"
+
+static void	init_break(F_line *p, int type, int x, int y, int px, int py, int loc_tag);
+static void	init_break_only(F_line *p, int type, int x, int y, int px, int py);
+static void	init_break_tag(F_line *p, int type, int x, int y, int px, int py);
+
+
 
 void
-break_selected()
+break_selected(void)
 {
     set_mousefun("break compound", "break and tag", "", LOC_OBJ, LOC_OBJ, LOC_OBJ);
     canvas_kbd_proc = null_proc;
@@ -47,32 +52,19 @@ break_selected()
 }
 
 static void
-init_break_only(p, type, x, y, px, py)
-    F_line	   *p;
-    int		    type;
-    int		    x, y;
-    int		    px, py;
+init_break_only(F_line *p, int type, int x, int y, int px, int py)
 {
     init_break(p, type, x, y, px, py, 0);
 }
 
 static void
-init_break_tag(p, type, x, y, px, py)
-    F_line	   *p;
-    int		    type;
-    int		    x, y;
-    int		    px, py;
+init_break_tag(F_line *p, int type, int x, int y, int px, int py)
 {
     init_break(p, type, x, y, px, py, 1);
 }
 
 static void
-init_break(p, type, x, y, px, py, loc_tag)
-    F_line	   *p;
-    int		    type;
-    int		    x, y;
-    int		    px, py;
-    int 	    loc_tag;
+init_break(F_line *p, int type, int x, int y, int px, int py, int loc_tag)
 {
     if (type != O_COMPOUND)
 	return;

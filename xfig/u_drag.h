@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -15,9 +15,9 @@
  *
  */
 
-extern void	init_ellipsedragging();
-extern void	init_arcdragging();
-extern void	init_linedragging();
-extern void	init_textdragging();
-extern void	init_splinedragging();
-extern void	init_compounddragging();
+extern void	init_ellipsedragging(F_ellipse *e, int x, int y);
+extern void	init_arcdragging(F_arc *a, int x, int y);
+extern void	init_linedragging(F_line *l, int x, int y);
+extern void	init_textdragging(F_text *t, int x, int y);
+extern void	init_splinedragging(F_spline *s, int x, int y);
+extern void	init_compounddragging(F_compound *c, int x, int y);

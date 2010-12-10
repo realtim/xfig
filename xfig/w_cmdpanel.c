@@ -1,6 +1,6 @@
 /*
  * FIG : Facility for Interactive Generation of figures
- * Copyright (c) 1989-2002 by Brian V. Smith
+ * Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -48,12 +48,25 @@
 #include "w_setup.h"
 #include "w_style.h"
 #include "w_zoom.h"
+#include "w_snap.h"
+#include "e_delete.h"
+#include "f_load.h"
+#include "u_bound.h"
+#include "u_draw.h"
+#include "u_free.h"
+#include "u_list.h"
+#include "u_translate.h"
+#include "w_cursor.h"
+#include "w_modepanel.h"
+
 #ifndef XAW3D1_5E
 #include "w_menuentry.h"
 #endif
 #ifdef I18N
 #include "d_text.h"
 #endif  /* I18N */
+
+#include <X11/IntrinsicP.h> /* XtResizeWidget() */
 
 /* internal features and definitions */
 
@@ -86,24 +99,23 @@ Widget	global_panel;
 
 /* prototypes */
 
-static void	enter_cmd_but();
-void		delete_all_cmd();
-static void	init_move_paste_object(),move_paste_object();
-static void	place_object(),cancel_paste();
-static void	paste_draw();
-static void	place_object_orig_posn();
-static void	place_menu(), popup_menu();
-static void	load_recent_file();
+static void	enter_cmd_but(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch);
+void		delete_all_cmd(Widget w, int closure, int call_data);
+static void	init_move_paste_object(int x, int y),move_paste_object(int x, int y);
+static void	place_object(int x, int y, unsigned int shift),cancel_paste(void);
+static void	paste_draw(int paint_mode);
+static void	place_object_orig_posn(int x, int y, unsigned int shift);
+static void	place_menu(Widget w, XEvent *event, String *params, Cardinal *nparams), popup_menu(Widget w, XEvent *event, String *params, Cardinal *nparams);
+static void	load_recent_file(Widget w, XtPointer client_data, XtPointer call_data);
 
-static void	popup_global_panel();
-static void	global_panel_done();
-static void	global_panel_cancel();
-static void	popup_character_panel();
-static void	character_panel_close();
-static void	paste_char();
+static void	popup_global_panel(Widget w);
+static void	global_panel_done(Widget w, XButtonEvent *ev);
+static void	global_panel_cancel(Widget w, XButtonEvent *ev);
+static void	character_panel_close(void);
+static void	paste_char(Widget w, XtPointer client_data, XtPointer call_data);
 
-Widget		CreateLabelledAscii();
-static Widget	create_main_menu();
+Widget		CreateLabelledAscii(Widget *text_widg, char *label, char *widg_name, Widget parent, Widget below, char *str, int width);
+static Widget	create_main_menu(int menu_num, Widget beside);
 
 static int	off_paste_x,off_paste_y;
 static int	orig_paste_x,orig_paste_y;
@@ -112,19 +124,14 @@ static Widget	character_map_popup = (Widget) 0;
 static Widget	character_map_panel, close_but;
 
 #ifdef XAW3D1_5E
-extern update_indpanel();
-extern update_modepanel();
-extern update_layerpanel();
-extern update_mousepanel();
-extern update_rulerpanel();
 #else
 /* popup message over command button when mouse enters it */
-static void     cmd_balloon_trigger();
-static void     cmd_unballoon();
+static void     cmd_balloon_trigger(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch);
+static void     cmd_unballoon(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch);
 
 /* popup message over filename window when mouse enters it */
-static void     filename_balloon_trigger();
-static void     filename_unballoon();
+static void     filename_balloon_trigger(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch);
+static void     filename_unballoon(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch);
 #endif /* XAW3D1_5E */
 
 String  global_translations =
@@ -173,7 +180,7 @@ menu_def edit_menu_items[] = {
 	{"Delete All         (Meta-D) ", 0, delete_all_cmd, False},
 	{"-",				 0, NULL, False},	 /* divider line */
 	{"Global settings... (Meta-G) ", 0, show_global_settings, False},
-	{"Set units...                ", 5, popup_unit_panel, False},
+	{"Set units...       (Shift-U)", 5, popup_unit_panel, False},
 	{NULL, 0, NULL, False},
     };
 
@@ -220,29 +227,52 @@ menu_def help_menu_items[] = {
 	{NULL, 0, NULL, False},
     };
 
+menu_def snap_menu_items[] = {
+  {"Hold",	0, snap_hold},		/* hol snap mode until released					*/
+  {"Release",	0, snap_release},	/* release hold							*/
+  {"-",		0, NULL},		/* make a dividing line						*/
+                                /* selections that always work						*/
+  {"Endpoint",	0, snap_endpoint},	/* snap to vertices or other endpoints				*/
+  {"Midpoint",	0, snap_midpoint},	/* snap to segment or other midpoints				*/
+  {"Nearest",	0, snap_nearest},	/* snap to nearest object					*/
+  {"Focus",	0, snap_focus},		/* snap to ellipse focus or circle centerpoint			*/
+  {"-",		0, NULL},		/* make a dividing line						*/
+                                /* selections that only work as a polyline vertex (other stuff?)	*/
+  {"Normal",	0, snap_normal},	/* snap to point that results in a seg normal to snapped-to obj	*/
+  {"Tangent",	0, snap_tangent},	/* snap to point that results in a seg tangent to obj		*/
+  {"Intersection", 0, snap_intersect},	/* snap to intersection of picked objs				*/
+  {"Diameter",	0, snap_diameter},	/* snap to ellipse or circle opposite diameter			*/
+  {"-",		0, NULL},		/* make a dividing line						*/
+  {NULL, 0, NULL},
+};
+
 /* command panel of menus */
 
 main_menu_info main_menus[] = {
     {"File", "filemenu", "File menu", file_menu_items},
     {"Edit", "editmenu", "Edit menu", edit_menu_items},
     {"View", "viewmenu", "View menu", view_menu_items},
+    {"Snap", "snapmenu", "Snap menu", snap_menu_items},
     {"Help", "helpmenu", "Help menu", help_menu_items},
 };
 #define		NUM_CMD_MENUS  (sizeof(main_menus) / sizeof(main_menu_info))
 
 /* needed by setup_sizes() */
 
+
+void create_global_panel (Widget w);
+int locate_menu (String *params, Cardinal *nparams);
+
+
 int
-num_main_menus()
+num_main_menus(void)
 {
     return (NUM_CMD_MENUS);
 }
 
 /* command panel */
 void
-init_main_menus(tool, filename)
-    Widget	    tool;
-    char	   *filename;
+init_main_menus(Widget tool, char *filename)
 {
     register int    i;
     Widget	    beside = NULL;
@@ -289,15 +319,13 @@ init_main_menus(tool, filename)
 }
 
 void
-add_cmd_actions()
+add_cmd_actions(void)
 {
     XtAppAddActions(tool_app, menu_actions, XtNumber(menu_actions));
 }
 
 static Widget
-create_main_menu(menu_num, beside)
-	int    menu_num;
-	Widget beside;
+create_main_menu(int menu_num, Widget beside)
 {
 	register main_menu_info *menu;
 
@@ -332,8 +360,7 @@ create_main_menu(menu_num, beside)
 }
 
 void
-rebuild_file_menu(menu)
-     Widget menu;
+rebuild_file_menu(Widget menu)
 {
     static Boolean first = TRUE;
     Widget entry;
@@ -348,8 +375,8 @@ rebuild_file_menu(menu)
 	for (j = 0; j < MAX_RECENT_FILES; j++) {
 	    sprintf(id, "%1d", j + 1);
 	    FirstArg(XtNvertSpace, 10);
-	    NextArg(XtNunderline, 0); /* underline # digit */
 #ifndef XAW3D1_5E
+	    NextArg(XtNunderline, 0); /* underline # digit */
 	    entry = XtCreateWidget(id, figSmeBSBObjectClass, menu, Args, ArgCount);
 #else
 	    entry = XtCreateWidget(id, smeBSBObjectClass, menu, Args, ArgCount);
@@ -377,8 +404,7 @@ rebuild_file_menu(menu)
 }
 
 Widget
-create_menu_item(menup)
-	main_menu_info *menup;
+create_menu_item(main_menu_info *menup)
 {
 	int	i;
 	Widget	menu, entry;
@@ -406,8 +432,8 @@ create_menu_item(menup)
 		if (menup->menu[i].checkmark) {
 		    NextArg(XtNleftMargin, 12);
 		}
-		NextArg(XtNunderline, menup->menu[i].u_line); /* any underline */
 #ifndef XAW3D1_5E
+		NextArg(XtNunderline, menup->menu[i].u_line); /* any underline */
 		entry = XtCreateManagedWidget(menup->menu[i].name, figSmeBSBObjectClass, 
 					menu, Args, ArgCount);
 #else
@@ -422,7 +448,7 @@ create_menu_item(menup)
 }
 
 void
-setup_main_menus()
+setup_main_menus(void)
 {
     register int    i;
     register main_menu_info *menu;
@@ -447,14 +473,10 @@ static	XtIntervalId balloon_id = (XtIntervalId) 0;
 static	Widget balloon_w;
 static	XtPointer clos;
 
-static void cmd_balloon();
+static void cmd_balloon(Widget w, XtPointer closure, XtPointer call_data);
 
 static void
-cmd_balloon_trigger(widget, closure, event, continue_to_dispatch)
-    Widget        widget;
-    XtPointer	  closure;
-    XEvent*	  event;
-    Boolean*	  continue_to_dispatch;
+cmd_balloon_trigger(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch)
 {
 	if (!appres.showballoons)
 		return;
@@ -469,10 +491,7 @@ cmd_balloon_trigger(widget, closure, event, continue_to_dispatch)
 }
 
 static void
-cmd_balloon(w, closure, call_data)
-    Widget          w;
-    XtPointer	    closure;
-    XtPointer	    call_data;
+cmd_balloon(Widget w, XtPointer closure, XtPointer call_data)
 {
 	Position  x, y;
 	Dimension wid, ht;
@@ -510,11 +529,7 @@ cmd_balloon(w, closure, call_data)
 /* come here when the mouse leaves a button in the command panel */
 
 static void
-cmd_unballoon(widget, closure, event, continue_to_dispatch)
-    Widget          widget;
-    XtPointer	    closure;
-    XEvent*	    event;
-    Boolean*	    continue_to_dispatch;
+cmd_unballoon(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch)
 {
     if (balloon_id) {
 	XtRemoveTimeOut(balloon_id);
@@ -528,11 +543,7 @@ cmd_unballoon(widget, closure, event, continue_to_dispatch)
 #endif /* XAW3D1_5E */
 
 static void
-enter_cmd_but(widget, closure, event, continue_to_dispatch)
-    Widget	    widget;
-    XtPointer	    closure;
-    XEvent*	    event;
-    Boolean*	    continue_to_dispatch;
+enter_cmd_but(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch)
 {
     main_menu_info *menu = (main_menu_info *) closure;
     draw_mousefun(menu->hint, "", "");
@@ -541,10 +552,7 @@ enter_cmd_but(widget, closure, event, continue_to_dispatch)
 static char	quit_msg[] = "The current figure is modified.\nDo you want to save it before quitting?";
 
 void
-quit(w, closure, call_data)
-    Widget          w;
-    XtPointer	    closure;
-    XtPointer	    call_data;
+quit(Widget w, XtPointer closure, XtPointer call_data)
 {
     /* turn off Compose key LED */
     setCompLED(0);
@@ -569,8 +577,7 @@ quit(w, closure, call_data)
     goodbye(False);	/* finish up and exit */
 }
 
-goodbye(abortflag)
-    Boolean	    abortflag;
+void goodbye(Boolean abortflag)
 {
 #ifdef I18N
 #ifdef I18N_USE_PREEDIT
@@ -601,10 +608,7 @@ goodbye(abortflag)
 }
 
 void
-paste(w, closure, call_data)
-    Widget          w;
-    XtPointer	    closure;
-    XtPointer	    call_data;
+paste(Widget w, XtPointer closure, XtPointer call_data)
 {
 	fig_settings    settings;
 	int		x,y;
@@ -699,7 +703,7 @@ paste(w, closure, call_data)
 }
 
 static void
-cancel_paste()
+cancel_paste(void)
 {
     reset_action_on();
     canvas_leftbut_proc = null_proc;
@@ -718,8 +722,7 @@ cancel_paste()
 }
 
 static void
-paste_draw(paint_mode)
-int paint_mode;
+paste_draw(int paint_mode)
 {
    if (paint_mode==ERASE)
 	redisplay_compound(new_c);
@@ -728,8 +731,7 @@ int paint_mode;
 }
 
 static void
-move_paste_object(x, y)
-    int		    x, y;
+move_paste_object(int x, int y)
 {
     int dx,dy;
     void  (*save_canvas_locmove_proc) ();
@@ -752,8 +754,7 @@ move_paste_object(x, y)
 }
 
 static void
-init_move_paste_object(x, y)
-    int		    x, y;
+init_move_paste_object(int x, int y)
 {	
     cur_x=x;
     cur_y=y;
@@ -767,9 +768,7 @@ init_move_paste_object(x, y)
 /* button 1: paste object at current position of mouse */
 
 static void
-place_object(x, y, shift)
-    int		    x, y;
-    unsigned int    shift;
+place_object(int x, int y, unsigned int shift)
 {
     clean_up();
     add_compound(new_c);
@@ -781,9 +780,7 @@ place_object(x, y, shift)
 /* button 2: paste object in original location whence it came */
 
 static void
-place_object_orig_posn(x, y, shift)
-    int		    x, y;
-    unsigned int    shift;
+place_object_orig_posn(int x, int y, unsigned int shift)
 {
     int dx,dy;
 
@@ -801,10 +798,7 @@ place_object_orig_posn(x, y, shift)
 }
 
 void
-new(w, closure, call_data)
-    Widget          w;
-    XtPointer	    closure;
-    XtPointer	    call_data;
+new(Widget w, XtPointer closure, XtPointer call_data)
 {
     /* turn off Compose key LED */
     setCompLED(0);
@@ -828,8 +822,7 @@ new(w, closure, call_data)
 }
 
 void
-delete_all_cmd(w, closure, call_data)
-    Widget	    w;
+delete_all_cmd(Widget w, int closure, int call_data)
 {
     /* turn off Compose key LED */
     setCompLED(0);
@@ -850,8 +843,7 @@ delete_all_cmd(w, closure, call_data)
 /* Toggle canvas orientation from Portrait to Landscape or vice versa */
 
 void
-change_orient(w)
-    Widget	    w;
+change_orient()
 {
     Dimension	formw, formh;
     int		dx, dy;
@@ -950,8 +942,7 @@ typedef struct _global {
 globalStruct global;
 
 void
-show_global_settings(w)
-    Widget	    w;
+show_global_settings(Widget w)
 {
 	/* turn off Compose key LED */
 	setCompLED(0);
@@ -972,8 +963,7 @@ show_global_settings(w)
 static Widget show_bal, delay_label;
 
 static void
-popup_global_panel(w)
-    Widget	    w;
+popup_global_panel(Widget w)
 {
 	Dimension	 ht;
 
@@ -994,8 +984,7 @@ popup_global_panel(w)
 	XtPopup(global_popup, XtGrabNonexclusive);
 }
 
-create_global_panel(w)
-    Widget	    w;
+void create_global_panel(Widget w)
 {
 	DeclareArgs(10);
 	Widget	    	 beside, below, n_freehand, freehand, n_recent, recent;
@@ -1154,13 +1143,7 @@ create_global_panel(w)
 /* make a label and asciiText widget to its right */
 
 Widget
-CreateLabelledAscii(text_widg, label, widg_name, parent, below, str, width)
-    Widget	*text_widg;
-    char	*label;
-    char	*widg_name;
-    Widget	 parent, below;
-    char	*str;
-    int		 width;
+CreateLabelledAscii(Widget *text_widg, char *label, char *widg_name, Widget parent, Widget below, char *str, int width)
 {
     DeclareArgs(10);
     Widget	 lab_widg;
@@ -1195,9 +1178,7 @@ CreateLabelledAscii(text_widg, label, widg_name, parent, below, str, width)
 }
 
 static void
-global_panel_done(w, ev)
-    Widget	    w;
-    XButtonEvent   *ev;
+global_panel_done(Widget w, XButtonEvent *ev)
 {
 	Boolean	    asp, gsp, adz, gdz;
 	int	    temp;
@@ -1310,9 +1291,7 @@ global_panel_done(w, ev)
 }
 
 static void
-global_panel_cancel(w, ev)
-    Widget	    w;
-    XButtonEvent   *ev;
+global_panel_cancel(Widget w, XButtonEvent *ev)
 {
 	XtDestroyWidget(global_popup);
 	global_popup = (Widget) 0;
@@ -1326,14 +1305,10 @@ static	Widget filename_balloon_popup = (Widget) 0;
 static	XtIntervalId fballoon_id = (XtIntervalId) 0;
 static	Widget fballoon_w;
 
-static void file_balloon();
+static void file_balloon(void);
 
 static void
-filename_balloon_trigger(widget, closure, event, continue_to_dispatch)
-    Widget        widget;
-    XtPointer	  closure;
-    XEvent*	  event;
-    Boolean*	  continue_to_dispatch;
+filename_balloon_trigger(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch)
 {
 	if (!appres.showballoons)
 		return;
@@ -1343,7 +1318,7 @@ filename_balloon_trigger(widget, closure, event, continue_to_dispatch)
 }
 
 static void
-file_balloon()
+file_balloon(void)
 {
 	Position  x, y;
 	Dimension w, h;
@@ -1376,11 +1351,7 @@ file_balloon()
 /* come here when the mouse leaves the filename window */
 
 static void
-filename_unballoon(widget, closure, event, continue_to_dispatch)
-    Widget          widget;
-    XtPointer	    closure;
-    XEvent*	    event;
-    Boolean*	    continue_to_dispatch;
+filename_unballoon(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch)
 {
     if (fballoon_id) 
 	XtRemoveTimeOut(fballoon_id);
@@ -1397,11 +1368,9 @@ filename_unballoon(widget, closure, event, continue_to_dispatch)
  * Also update the current filename in the File popup (if it has been created).
  */
 
-update_cur_filename(newname)
-	char	*newname;
+void update_cur_filename(char *newname)
 {
-	strcpy(cur_filename,newname);
-
+        strcpy(cur_filename,newname);
 	/* store the new filename in the name_panel widget */
 	FirstArg(XtNlabel, newname);
 	SetValues(name_panel);
@@ -1416,11 +1385,7 @@ update_cur_filename(newname)
 }
 
 static void
-popup_menu(w, event, params, nparams)
-    Widget	 w;
-    XEvent	*event;
-    String	*params;
-    Cardinal	*nparams;
+popup_menu(Widget w, XEvent *event, String *params, Cardinal *nparams)
 {
     int		which;
 
@@ -1431,11 +1396,7 @@ popup_menu(w, event, params, nparams)
 }
 
 static void
-place_menu(w, event, params, nparams)
-    Widget	 w;
-    XEvent	*event;
-    String	*params;
-    Cardinal	*nparams;
+place_menu(Widget w, XEvent *event, String *params, Cardinal *nparams)
 {
     Position	x, y;
     Dimension	height;
@@ -1455,9 +1416,7 @@ place_menu(w, event, params, nparams)
 }
 
 int
-locate_menu(params, nparams)
-    String	*params;
-    Cardinal    *nparams;
+locate_menu(String *params, Cardinal *nparams)
 {
     int		which;
 
@@ -1476,10 +1435,7 @@ locate_menu(params, nparams)
 /* callback to load a recently used file (from the File menu) */
 
 static void
-load_recent_file(w, client_data, call_data)
-    Widget	 w;
-    XtPointer	 client_data;
-    XtPointer	 call_data;
+load_recent_file(Widget w, XtPointer client_data, XtPointer call_data)
 {
     int		 which = atoi((char *) client_data);
     char	*filename;
@@ -1508,11 +1464,7 @@ load_recent_file(w, client_data, call_data)
 /* this one is called by the accelerator (File) 1/2/3... */
 
 void
-acc_load_recent_file(w, event, params, nparams)
-    Widget	 w;
-    XEvent	*event;
-    String	*params;
-    Cardinal	*nparams;
+acc_load_recent_file(Widget w, XEvent *event, String *params, Cardinal *nparams)
 {
     /* get file number from passed arg */
     int		which = atoi(*params);
@@ -1533,7 +1485,7 @@ static Widget charmap_font_label;
 /* refresh character map (e.g. when user changes font) by changing the font label and font in the buttons */
 
 void
-refresh_character_panel()
+refresh_character_panel(void)
 {
 	int	     nchildren, i;
 	char	     fname[80];
@@ -1564,7 +1516,7 @@ refresh_character_panel()
 }
 
 static void
-character_panel_close()
+character_panel_close(void)
 {
 	XtDestroyWidget(character_map_popup);	
 	character_map_popup = (Widget) 0;
@@ -1579,7 +1531,7 @@ character_panel_close()
 #define LASTCHAR 255
 
 void
-popup_character_map()
+popup_character_map(void)
 {
 	Widget	    	 beside, below;
 	XFontStruct	*font;
@@ -1658,15 +1610,12 @@ popup_character_map()
 }
 
 static void
-paste_char(w, client_data, call_data)
-    Widget	 w;
-    XtPointer	 client_data;
-    XtPointer	 call_data;
+paste_char(Widget w, XtPointer client_data, XtPointer call_data)
 {
-    unsigned char *chr = (unsigned char *) client_data;
+    unsigned char chr = (unsigned char) client_data;
 
     /* only allow during text input */
-    if (canvas_kbd_proc != char_handler)
+    if (canvas_kbd_proc != (void (*)())char_handler)
 	return;
     char_handler((XKeyEvent *) 0, chr, (KeySym) 0);
 }
@@ -1675,9 +1624,7 @@ paste_char(w, client_data, call_data)
    is selected or unselected respectively */
 
 static void
-refresh_view_menu_item(name, state)
-     char	*name;
-     Boolean	 state;
+refresh_view_menu_item(char *name, Boolean state)
 {
     Widget	 menu, w;
     Pixmap	 bitmap;
@@ -1711,7 +1658,7 @@ refresh_view_menu_item(name, state)
 /* update the menu entries with or without an asterisk */
 
 void
-refresh_view_menu()
+refresh_view_menu(void)
 {
 #ifdef XAW3D1_5E
     int i;

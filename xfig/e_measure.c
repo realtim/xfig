@@ -26,36 +26,41 @@
 #include "w_msgpanel.h"
 #include "w_setup.h"
 
+#include "u_geom.h"
+#include "u_markers.h"
+#include "w_cursor.h"
+#include "w_drawprim.h"
+#include "w_indpanel.h"
+
 /* Measuring angles, lengths and areas */
 
-extern void	force_positioning(), force_nopositioning();
 
-static void init_anglemeas_object();
-static void init_anglemeas_object_m();
-static void init_anglemeas_object_r();
-static void init_anglemeas_threepoints();
+static void init_anglemeas_object(char *p, int type, int x, int y, F_point *pp, F_point *pq);
+static void init_anglemeas_object_m(char *p, int type, int x, int y, F_point *pp, F_point *pq);
+static void init_anglemeas_object_r(char *p, int type, int x, int y, F_point *pp, F_point *pq);
+static void init_anglemeas_threepoints(int px, int py);
 
-static void anglemeas_second();
-static void anglemeas_third();
-static void anglemeas_third_l();
-static void anglemeas_third_m();
-static void cancel_anglemeas();
-static void anglemeas_line();
-static void anglemeas_arc();
-static void angle_msg();
-static void angle_save();
+static void anglemeas_second(int x, int y);
+static void anglemeas_third(int x, int y);
+static void anglemeas_third_l(int x, int y);
+static void anglemeas_third_m(int x, int y);
+static void cancel_anglemeas(void);
+static void anglemeas_line(F_line *l, F_point *p);
+static void anglemeas_arc(F_arc *a);
+static void angle_msg(double value, char *msgtext);
+static void angle_save(double value);
 
-static void init_lenmeas_object();
-static void init_lenmeas_object_l();
-static void init_lenmeas_object_m();
-static void clear_lenmeas_memory();
+static void init_lenmeas_object(char *p, int type, int x, int y, int px, int py);
+static void init_lenmeas_object_l(char *p, int type, int x, int y, int px, int py);
+static void init_lenmeas_object_m(char *p, int type, int x, int y, int px, int py);
+static void clear_lenmeas_memory(void);
 
-static void init_areameas_object();
-static void init_areameas_object_l();
-static void init_areameas_object_m();
-static void clear_areameas_memory();
+static void init_areameas_object(char *p, int type, int x, int y, int px, int py);
+static void init_areameas_object_l(char *p, int type, int x, int y, int px, int py);
+static void init_areameas_object_m(char *p, int type, int x, int y, int px, int py);
+static void clear_areameas_memory(int x, int y, int arg);
 
-static void freehand_line_nomsg();
+static void freehand_line_nomsg(int x, int y);
 
 static F_point pa, pb, pc;
 static int np;
@@ -74,7 +79,9 @@ static float total_area = 0.0;
  ANGLE MEASURING 
  ***************************************************************************/
 
-anglemeas_selected()
+
+
+void anglemeas_selected(void)
 {
     set_mousefun("first point", "select & save", "select object", "", LOC_OBJ, LOC_OBJ);
     canvas_kbd_proc = null_proc;
@@ -90,16 +97,13 @@ anglemeas_selected()
 }
 
 static void
-angle_msg(value, msgtext)
-    double value;
-    char* msgtext;
+angle_msg(double value, char *msgtext)
 {
     put_msg("%s%.2f Degrees", msgtext, value*180.0/M_PI);
 }
 
 static void
-angle_save(value)
-    double value;
+angle_save(double value)
 {
     float degr;
     if (!save_rotnangle)
@@ -113,33 +117,21 @@ angle_save(value)
 /* OBJECT ANGLE MEASURING */
 
 static void
-init_anglemeas_object_m(p, type, x, y, pp, pq)
-    char	   *p;
-    int		    type;
-    int		    x, y;
-    F_point	   *pp, *pq;
+init_anglemeas_object_m(char *p, int type, int x, int y, F_point *pp, F_point *pq)
 {
     save_rotnangle = 1;
     init_anglemeas_object(p, type, x, y, pp, pq);
 }
 
 static void
-init_anglemeas_object_r(p, type, x, y, pp, pq)
-    char	   *p;
-    int		    type;
-    int		    x, y;
-    F_point	   *pp, *pq;
+init_anglemeas_object_r(char *p, int type, int x, int y, F_point *pp, F_point *pq)
 {
     save_rotnangle = 0;
     init_anglemeas_object(p, type, x, y, pp, pq);
 }
 
 static void
-init_anglemeas_object(p, type, x, y, pp, pq)
-    char	   *p;
-    int		    type;
-    int		    x, y;
-    F_point	   *pp, *pq;
+init_anglemeas_object(char *p, int type, int x, int y, F_point *pp, F_point *pq)
 {
     switch(type) {
     case O_POLYLINE:
@@ -158,9 +150,7 @@ init_anglemeas_object(p, type, x, y, pp, pq)
 /* line angle */
 
 static void 
-anglemeas_line(l, p)
-   F_line* l;
-   F_point* p;
+anglemeas_line(F_line *l, F_point *p)
 {
    double lineangle;
    if (compute_line_angle(l, p, &lineangle)) {
@@ -177,8 +167,7 @@ anglemeas_line(l, p)
 /* arc angle */
 
 static void 
-anglemeas_arc(a)
-   F_arc* a;
+anglemeas_arc(F_arc *a)
 {
    double dang;
    if (compute_arc_angle(a, &dang)) {
@@ -192,8 +181,7 @@ anglemeas_arc(a)
 /* THREE-POINT ANGLE MEASURING */
 
 static void
-init_anglemeas_threepoints(px, py)
-    int             px, py;
+init_anglemeas_threepoints(int px, int py)
 {
     set_cursor(arrow_cursor);
     set_mousefun("angle tip", "", "cancel", "", "", LOC_OBJ);
@@ -214,8 +202,7 @@ init_anglemeas_threepoints(px, py)
 }
 
 static void
-anglemeas_second(x, y)
-   int x, y;
+anglemeas_second(int x, int y)
 {
    if (x == fix_x && y == fix_y)
        return;
@@ -236,24 +223,21 @@ anglemeas_second(x, y)
 }
 
 static void
-anglemeas_third_l(x, y)
-   int x, y;
+anglemeas_third_l(int x, int y)
 {
    save_rotnangle = 0;
    anglemeas_third(x, y);
 }
 
 static void
-anglemeas_third_m(x, y)
-   int x, y;
+anglemeas_third_m(int x, int y)
 {
    save_rotnangle = 1;
    anglemeas_third(x, y);
 }
 
 static void
-anglemeas_third(x, y)
-   int x, y;
+anglemeas_third(int x, int y)
 {
    double uangle;
    if (x == fix_x && y == fix_y)
@@ -279,7 +263,7 @@ anglemeas_third(x, y)
 }
 
 static void
-cancel_anglemeas()
+cancel_anglemeas(void)
 {
     elastic_line();
     if (np == 2) {
@@ -294,8 +278,7 @@ cancel_anglemeas()
 }
 
 static void
-freehand_line_nomsg(x, y)
-    int		    x, y;
+freehand_line_nomsg(int x, int y)
 {
     elastic_line();
     cur_x = x;
@@ -307,7 +290,7 @@ freehand_line_nomsg(x, y)
  LENGTH MEASURING 
  ***************************************************************************/
 
-lenmeas_selected()
+void lenmeas_selected(void)
 {
     set_mousefun("select object", "select & add", "reset to 0", LOC_OBJ, LOC_OBJ, LOC_OBJ);
     canvas_kbd_proc = null_proc;
@@ -324,11 +307,7 @@ lenmeas_selected()
 }
 
 static void 
-init_lenmeas_object(p, type, x, y, px, py)
-    char	   *p;
-    int		    type;
-    int		    x, y;
-    int		    px, py;
+init_lenmeas_object(char *p, int type, int x, int y, int px, int py)
 {
     float	    len;
     double	    a,b,z;
@@ -394,29 +373,21 @@ init_lenmeas_object(p, type, x, y, px, py)
 }
 
 static void 
-init_lenmeas_object_l(p, type, x, y, px, py)
-    char	   *p;
-    int		    type;
-    int		    x, y;
-    int		    px, py;
+init_lenmeas_object_l(char *p, int type, int x, int y, int px, int py)
 {
   save_len = 0;
   init_lenmeas_object(p, type, x, y, px, py);
 }
 
 static void 
-init_lenmeas_object_m(p, type, x, y, px, py)
-    char	   *p;
-    int		    type;
-    int		    x, y;
-    int		    px, py;
+init_lenmeas_object_m(char *p, int type, int x, int y, int px, int py)
 {
   save_len = 1;
   init_lenmeas_object(p, type, x, y, px, py);
 }
 
 static void
-clear_lenmeas_memory()
+clear_lenmeas_memory(void)
 {
    total_len = 0.0;
    put_msg("length reset to 0");
@@ -426,7 +397,7 @@ clear_lenmeas_memory()
  AREA MEASURING 
  ***************************************************************************/
 
-areameas_selected()
+void areameas_selected(void)
 {
     set_mousefun("select object", "select & add", "reset to 0", LOC_OBJ, LOC_OBJ, "reset to +-0");
     canvas_kbd_proc = null_proc;
@@ -444,11 +415,7 @@ areameas_selected()
 
 
 static void 
-init_areameas_object(p, type, x, y, px, py)
-    char	   *p;
-    int		    type;
-    int		    x, y;
-    int		    px, py;
+init_areameas_object(char *p, int type, int x, int y, int px, int py)
 {
     float	    area;
     int		    ok;
@@ -459,7 +426,8 @@ init_areameas_object(p, type, x, y, px, py)
     switch (type) {
       case O_POLYLINE:
 	cur_l = (F_line*) p;
-	if (compute_poly_area(cur_l, &area)) {
+	if (1) {
+	    compute_poly_area(cur_l, &area);
 	    if (cur_l->type == T_BOX)
 		msgtext = "box";
 	    else if (cur_l->type == T_ARCBOX) {
@@ -508,30 +476,21 @@ init_areameas_object(p, type, x, y, px, py)
 }
 
 static void 
-init_areameas_object_l(p, type, x, y, px, py)
-    char	   *p;
-    int		    type;
-    int		    x, y;
-    int		    px, py;
+init_areameas_object_l(char *p, int type, int x, int y, int px, int py)
 {
   save_area = 0;
   init_areameas_object(p, type, x, y, px, py);
 }
 
 static void 
-init_areameas_object_m(p, type, x, y, px, py)
-    char	   *p;
-    int		    type;
-    int		    x, y;
-    int		    px, py;
+init_areameas_object_m(char *p, int type, int x, int y, int px, int py)
 {
   save_area = 1;
   init_areameas_object(p, type, x, y, px, py);
 }
 
 static void
-clear_areameas_memory(x, y, arg)
-   int x, y, arg;
+clear_areameas_memory(int x, int y, int arg)
 {
    total_area = 0.0;
    signed_area = (arg != 0);

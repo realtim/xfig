@@ -1,6 +1,6 @@
 /*
  * FIG : Facility for Interactive Generation of figures
- * Copyright (c) 1989-2002 by Brian V. Smith
+ * Copyright (c) 1989-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -30,12 +30,6 @@
 /* font number for the "nil" font (when user wants tiny text) */
 #define NILL_FONT NUM_FONTS
 
-extern int		psfontnum();
-extern int		latexfontnum();
-extern struct _xfstruct	x_fontinfo[], x_backup_fontinfo[];
-extern struct _fstruct	ps_fontinfo[];
-extern struct _fstruct	latex_fontinfo[];
-
 /* element of linked list for each font
    The head of list is for the different font NAMES,
    and the elements of this list are for each different
@@ -61,5 +55,12 @@ struct _xfstruct {
 				 * sizes */
 };
 
-int		x_fontnum();
+extern int		psfontnum(char *font);
+extern int		latexfontnum(char *font);
+
+extern struct _xfstruct	x_fontinfo[], x_backup_fontinfo[];
+extern struct _fstruct	ps_fontinfo[];
+extern struct _fstruct	latex_fontinfo[];
+
+int		x_fontnum(int psflag, int fnum);
 #endif /* U_FONTS_H */

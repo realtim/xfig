@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -21,3 +21,7 @@ extern int	setcenter_y;
 extern int	rotn_dirn;
 extern float	act_rotnangle;
 
+extern int rotate_compound (F_compound *c, int x, int y);
+extern int rotate_line (F_line *l, int x, int y);
+extern void rotate_ccw_selected (void);
+extern void rotate_cw_selected (void);

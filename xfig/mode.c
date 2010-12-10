@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -33,7 +33,7 @@ int		latexline_mode = 0;
 int		latexarrow_mode = 0;
 int		autoforwardarrow_mode = 0;
 int		autobackwardarrow_mode = 0;
-int		cur_gridmode, cur_gridunit, old_gridunit, grid_unit;
+int		cur_gridtype, cur_gridmode, cur_gridunit, old_gridunit, grid_unit;		// isometric grid
 int		cur_pointposn;
 int		posn_rnd[NUM_GRID_UNITS][P_GRID4 + 1] = {
 		   { 0, PPCM/10, PPCM/5, PPCM/2, PPCM, PPCM*2},	/*   mm  mode */
@@ -86,7 +86,7 @@ int		min_num_points;
 
 int		cur_exp_lang;		/* gets initialized in main.c */
 Boolean		batch_exists = False;
-char		batch_file[32];
+char		batch_file[PATH_MAX];
 
 /*******************************************************************/
 /* If you change the order of the lang_items[] you must change the */
@@ -96,7 +96,7 @@ char		batch_file[32];
 char	       *lang_items[] = {
 	"ps",    "eps",   "eps_ascii", "eps_mono_tiff", "eps_color_tiff",
 	"pdf",   "pspdf", "box", "latex", "epic", "eepic", "eepicemu",
-	"pstex", "pdftex","pictex", "hpl",  "textyl",
+	"pstex", "pdftex","pspdftex", "pictex", "hpl", "textyl",
 	"tpic",  "pic",   "map",    "mf",
 	"mp",    "mmp",   "cgm",    "bcgm", "emf",   "tk", "shape", "svg",
 /* bitmap formats start here */
@@ -123,6 +123,7 @@ char	       *lang_texts[] = {
 	"LaTeX picture + eepicemu macros     ",
 	"Combined PS/LaTeX (both parts)      ",
 	"Combined PDF/LaTeX (both parts)     ",
+	"Combined PS/PDF/LaTeX (3 parts)     ",
 	"PiCTeX macros                       ",
 	"HPGL/2 (or IBMGL)                   ",
 	"Textyl \\special commands            ",
@@ -237,25 +238,25 @@ char		xfigrc_name[PATH_MAX];		/* path of .xfigrc file */
 /*************************** routines ***********************/
 
 void
-reset_modifiedflag()
+reset_modifiedflag(void)
 {
     figure_modified = 0;
 }
 
 void
-set_modifiedflag()
+set_modifiedflag(void)
 {
     figure_modified = 1;
 }
 
 void
-set_action_on()
+set_action_on(void)
 {
     action_on = 1;
 }
 
 void
-reset_action_on()
+reset_action_on(void)
 {
     action_on = 0;
     /* reset this so next show_linelengths will work properly */

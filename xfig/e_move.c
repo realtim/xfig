@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -27,10 +27,17 @@
 #include "w_canvas.h"
 #include "w_mousefun.h"
 
-static void	init_move(), init_arb_move(), init_constrained_move();
+#include "mode.h"
+#include "u_markers.h"
+#include "u_redraw.h"
+#include "w_cursor.h"
+
+static void	init_move(F_line *p, int type, int x, int y, int px, int py), init_arb_move(F_line *p, int type, int x, int y, int px, int py), init_constrained_move(F_line *p, int type, int x, int y, int px, int py);
+
+
 
 void
-move_selected()
+move_selected(void)
 {
     set_mousefun("move object", "horiz/vert move", "", LOC_OBJ, LOC_OBJ, LOC_OBJ);
     canvas_kbd_proc = null_proc;
@@ -46,10 +53,7 @@ move_selected()
 }
 
 static void
-init_arb_move(p, type, x, y, px, py)
-    F_line	   *p;
-    int		    type;
-    int		    x, y, px, py;
+init_arb_move(F_line *p, int type, int x, int y, int px, int py)
 {
     constrained = MOVE_ARB;
     init_move(p, type, x, y, px, py);
@@ -59,10 +63,7 @@ init_arb_move(p, type, x, y, px, py)
 }
 
 static void
-init_constrained_move(p, type, x, y, px, py)
-    F_line	   *p;
-    int		    type;
-    int		    x, y, px, py;
+init_constrained_move(F_line *p, int type, int x, int y, int px, int py)
 {
     constrained = MOVE_HORIZ_VERT;
     init_move(p, type, x, y, px, py);
@@ -73,10 +74,7 @@ init_constrained_move(p, type, x, y, px, py)
 }
 
 static void
-init_move(p, type, x, y, px, py)
-    F_line	   *p;
-    int		    type;
-    int		    x, y, px, py;
+init_move(F_line *p, int type, int x, int y, int px, int py)
 {
     /* turn off all markers */
     update_markers(0);

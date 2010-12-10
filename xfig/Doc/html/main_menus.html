@@ -24,6 +24,9 @@ The following menus are at the top of the <b>xfig</b> window.
 <A HREF="#view-menu">View</A>: View menu
 
 <dt><img src="images/redball.png" align=bottom alt="-">
+<A HREF="#snap-menu">Snap</A>: Snap menu
+
+<dt><img src="images/redball.png" align=bottom alt="-">
 <A HREF="#help-menu">Help</A>: Help menu
 
 </dl>
@@ -305,6 +308,168 @@ drawing order.  This is only useful for diagnostic purposes.
 </DL>
 
 <hr>
+
+<img src="images/snap-accel.png" align=right alt="[ Snap menu ]">
+<H2><font color="blue"><A NAME="snap-menu">Snap Menu</A></font>
+</H2>
+
+The Snap operations are used to snap the next point clicked by the user to some
+location on a selected object.  For example, after invoking the Endpoint snap
+mode, the next point clicked by the user will be used to identify the nearest
+object and then, if that object has some feature that can be reasonably
+interpreted as an "endpoint" the input point will be translated to that
+endpoint.  If the selected object has more than one endpoint, the one closest
+the initial point will be used.
+<p>
+Snaps can be used either in drawing mode, as described above, or in edit mode.
+You could, for example, move an ellipse such that one of its foci coincides
+wiith the midpoint of a polyline segment:
+<ol>
+<li>Select "Move"
+<li>Select "Focus" from the Snap pulldown.
+<li>Select the ellipse at some point on it near the focus.
+<li>Select "Midpoint" from the Snap pulldown.
+<li>Select the polyline segment.
+</ol>
+<p>
+The following is a list of the available snap modes.
+
+<DL>
+
+<DT><img src="images/blueballdot.png" alt="-">
+<b>Hold</b>
+<dd>
+Usually, the selected snap operation is automatically deselected immediiately
+after the the next point is clicked.  This button suppresses that behaviour,
+keeping the selected snap operation in effect until it is manually released
+with the Release button, q.v.  The Hold capability allows, e.g., the connection
+of a series of polyline vertices by another polyline.
+
+<DT><img src="images/blueballdot.png" alt="-">
+<b>Release</b>
+<dd>
+Releases a locked snap mode being retained by the Hold button, or cancels a
+snap operation after it's been selected.
+
+<DT><img src="images/blueballdot.png" alt="-">
+<b>Endpoint</b>
+<dd>Endpoint snap mode snaps the input point to some feature
+of the selected object that may be interpreted as an endpoint.  The feature
+selected depends on the type of object selected:
+
+<p>
+<dl>
+<DT><img src="images/blueballdot.png" alt="-">
+Polylines (including boxes and polygons):
+<dd>Snaps to the nearest vertex.
+
+<DT><img src="images/blueballdot.png" alt="-">
+Ellipses (not including circles):
+<dd>Snaps to the nearest endpoint.of any of the semi-axes.  (This is not
+relevant to circles.)
+
+<DT><img src="images/blueballdot.png" alt="-">
+Text
+<dd>Snaps to the nearest vertex of the bounding box.
+
+<DT><img src="images/blueballdot.png" alt="-">
+Arcs
+<dd>Snaps to the nearest of the three arc definition points.
+
+</dl>
+
+<DT><img src="images/blueballdot.png" alt="-">
+<b>Midpoint</b>
+<dd>Midpoint snap mode snaps the input point to some feature
+of the selected object that may be interpreted as a midpoint.  The feature
+selected depends on the type of object selected:
+
+<p>
+<dl>
+<DT><img src="images/blueballdot.png" alt="-">
+Polylines (including boxes and polygons):
+<dd>Snaps to the midpoint of the nearest polyline segment.
+
+<DT><img src="images/blueballdot.png" alt="-">
+Ellipses (including circles):
+<dd>Snaps to the centerpoint.
+
+<DT><img src="images/blueballdot.png" alt="-">
+Text
+<dd>Snaps to the midpoint of the nearest side of the bounding box.
+
+<DT><img src="images/blueballdot.png" alt="-">
+Arcs
+<dd>Snaps to the arc centerpoint.
+
+</dl>
+
+<DT><img src="images/blueballdot.png" alt="-">
+<b>Nearest</b>
+<dd>While a polyline is being drawn, this operation simply snaps to the nearest
+point on the nearest object.  This works for target polyline, circle/ellipse,
+text (the bounding box), and arc objects.
+
+<DT><img src="images/blueballdot.png" alt="-">
+<b>Focus</b>
+<dd>Focus snap mode snaps the input point to some feature
+of the selected object that may be interpreted as a focus.  The feature
+selected depends on the type of object selected:
+
+<p>
+<dl>
+<DT><img src="images/blueballdot.png" alt="-">
+Polylines (including boxes and polygons):
+<dd>Snaps to the unweighted centroid of the vertices.
+
+<DT><img src="images/blueballdot.png" alt="-">
+Ellipses (including circles):
+<dd>Snaps to the nearest ellipse focus, or to the centerpoint of circles. 
+
+<DT><img src="images/blueballdot.png" alt="-">
+Text
+<dd>Snaps to the centroid of the bounding box.
+
+<DT><img src="images/blueballdot.png" alt="-">
+Arcs
+<dd>Snaps to the arc centerpoint.
+
+</dl>
+
+<DT><img src="images/blueballdot.png" alt="-">
+<b>Diameter</b> <dd>While a polyline is being drawn, this operation snaps to a
+point such that the midpoint of the segment specified by that point and the
+"current" point is at the centerpoint of the selected object.  This works for
+all objects except splines.
+
+<DT><img src="images/blueballdot.png" alt="-">
+<b>Normal</b>
+<dd>While a polyline is being drawn, this operation snaps to a point on the
+selected object such that the segment from the "current" point to the object is
+perpendicular to the object.  If there are multiple possible normal points
+(like to the near and far sides of a circle), the snap is to the one closest to
+where the user clicked.  This works for target polyline, circle/ellipse, text
+(the bounding box), and arc objects.
+
+<DT><img src="images/blueballdot.png" alt="-">
+<b>Tangent</b>
+<dd>While a polyline is being drawn, this operation snaps to a point on the
+selected object such that the segment from the "current" point to the object is
+tangent to the object.  If there are multiple possible tangent points
+(like to the sides of a circle), the snap is to the one closest to
+where the user clicked.  This works for target circle/ellipse  and arc objects.
+
+<DT><img src="images/blueballdot.png" alt="-">
+<b>Intersection</b>
+<dd>Lets the user select a second object and snaps to the nearest intersection
+of the two objects.  Works between all combinations of circles, ellipses,
+polylines, and arcs except (yet) the case of two ellipses at different angles
+
+</dl>
+
+
+<hr>
+
 <img src="images/help-accel.png" align=right alt="[ Help menu ]">
 <H2><font color="blue"><A NAME="help-menu">Help Menu</A></font>
 </H2>

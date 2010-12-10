@@ -1,6 +1,6 @@
 /*
  * FIG : Facility for Interactive Generation of figures
- * Copyright (c) 1989-2002 by Brian V. Smith
+ * Copyright (c) 1989-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -156,8 +156,7 @@ struct _fstruct latex_fontinfo[NUM_LATEX_FONTS] = {
     {"Typewriter",	12},
 };
 
-x_fontnum(psflag, fnum)
-    int		    psflag, fnum;
+int x_fontnum(int psflag, int fnum)
 {
     int x_font;
 
@@ -170,8 +169,7 @@ x_fontnum(psflag, fnum)
     return x_font;
 }
 
-psfontnum(font)
-char *font;
+int psfontnum(char *font)
 {
     int i;
 
@@ -183,8 +181,7 @@ char *font;
     return(DEF_PS_FONT);
 }
 
-latexfontnum(font)
-char *font;
+int latexfontnum(char *font)
 {
     int i;
 

@@ -1,6 +1,6 @@
 /*
  * FIG : Facility for Interactive Generation of figures
- * Copyright (c) 1989-2002 by Brian V. Smith
+ * Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -33,6 +33,13 @@
 #include "w_util.h"
 #include "w_icons.h"
 
+#include "u_bound.h"
+#include "u_redraw.h"
+#include "w_canvas.h"
+#include "w_cmdpanel.h"
+#include "w_color.h"
+#include "w_cursor.h"
+
 /* EXPORTS */
 
 char	default_export_file[PATH_MAX];
@@ -56,7 +63,7 @@ Widget	export_multiple_panel;
 Widget	export_overlap_panel;
 Widget	export_mag_text;
 Widget	mag_spinner;
-void	export_update_figure_size();
+void	export_update_figure_size(void);
 Widget	export_transp_panel;
 Widget	export_background_panel;
 
@@ -84,16 +91,16 @@ static String	file_name_translations =
 	"<Key>Return: ExportFile()\n\
 	<Key>Escape: CancelExport()";
 
-void		do_export();
+void		do_export(Widget w);
 static XtActionsRec	file_name_actions[] =
 {
     {"ExportFile", (XtActionProc) do_export},
 };
-static void     export_panel_cancel();
+static void     export_panel_cancel(Widget w, XButtonEvent *ev);
 
 /* callback list to keep track of magnification window */
 
-static void update_mag();
+static void update_mag(Widget widget, Widget *item, int *event);
 
 String  exp_translations =
         "<Message>WM_PROTOCOLS: DismissExport()";
@@ -121,19 +128,19 @@ static char	*smooth_choices[] = {
 
 static char	named_file[60];
 
-static void	orient_select();
+static void	orient_select(Widget w, XtPointer client_data, XtPointer call_data);
 
-static void	lang_select();
+static void	lang_select(Widget w, XtPointer new_lang, XtPointer call_data);
 static Widget	lang_panel, lang_lab;
 
 static Widget	layer_choice;
 
 static Widget	border_lab, border_text, border_spinner;
 
-static void	background_select();
+static void	background_select(Widget w, XtPointer client_data, XtPointer call_data);
 static Widget	background_lab, background_menu;
 
-static void	transp_select();
+static void	transp_select(Widget w, XtPointer client_data, XtPointer call_data);
 static Widget	transp_lab, transp_menu;
 
 static Widget	quality_lab, quality_text, quality_spinner;
@@ -143,22 +150,22 @@ static Widget	smooth_lab;
 
 static Widget	orient_lab;
 
-static void	just_select();
+static void	just_select(Widget w, XtPointer client_data, XtPointer call_data);
 static Widget	just_lab;
 
-static void	papersize_select();
+static void	papersize_select(Widget w, XtPointer client_data, XtPointer call_data);
 static Widget	papersize_lab;
 
-static void	multiple_select();
+static void	multiple_select(Widget w, XtPointer client_data, XtPointer call_data);
 static Widget	multiple_lab;
-static void	overlap_select();
+static void	overlap_select(Widget w, XtPointer client_data, XtPointer call_data);
 
-static void	get_magnif();
-static void	get_quality();
+static void	get_magnif(void);
+static void	get_quality(void);
 
-static void	update_figure_size();
+static void	update_figure_size(void);
 static Widget	fitpage;
-static void	fit_page();
+static void	fit_page(void);
 
 static Widget	cancel_but, export_but;
 static Widget	dfile_lab, dfile_text, nfile_lab;
@@ -178,8 +185,13 @@ static int	xoff_unit_setting, yoff_unit_setting;
 
 DeclareStaticArgs(15);
 
+
+void create_export_panel (Widget w);
+void manage_optional (void);
+void set_export_mask (int lang);
+
 static void
-export_panel_dismiss()
+export_panel_dismiss(void)
 {
     /* first get magnification from the widget into appres.magnification
        in case it changed */
@@ -197,17 +209,14 @@ export_panel_dismiss()
 }
 
 static void
-export_panel_cancel(w, ev)
-    Widget	    w;
-    XButtonEvent   *ev;
+export_panel_cancel(Widget w, XButtonEvent *ev)
 {
     export_panel_dismiss();
 }
 
 /* get x/y offsets from panel and convert to 1/72 inch for fig2dev */
 
-exp_getxyoff(ixoff,iyoff)
-    int		   *ixoff,*iyoff;
+void exp_getxyoff(int *ixoff, int *iyoff)
 {
     float xoff, yoff;
     *ixoff = *iyoff = 0;
@@ -227,8 +236,7 @@ static char	export_msg[] = "EXPORT";
 static char	exp_msg[] = "The current figure is modified.\nDo you want to save it before exporting?";
 
 void
-do_export(w)
-    Widget	    w;
+do_export(Widget w)
 {
 	char	   *fval;
 	int	    xoff, yoff;
@@ -237,7 +245,7 @@ do_export(w)
 	char	    msg[200];
 	int	    transp;
 	int	    border;
-	Boolean	    smooth, use_transp_backg;
+	Boolean	    use_transp_backg;
 
 	/* don't export if in the middle of drawing/editing */
 	if (check_action_on())
@@ -357,8 +365,8 @@ do_export(w)
 	if (print_to_file(fval, lang_items[cur_exp_lang],
 			      appres.magnification, xoff, yoff, backgrnd,
 			      (transp == TRANSP_NONE? NULL: transparent),
-			      use_transp_backg, print_all_layers,
-			      border, appres.smooth_factor, grid) == 0) {
+			      use_transp_backg, print_all_layers, bound_active_layers,
+			      border, appres.smooth_factor, grid, appres.overlap) == 0) {
 		FirstArg(XtNlabel, fval);
 		SetValues(dfile_text);		/* set the default filename */
 		if (strcmp(fval,default_export_file) != 0)
@@ -370,9 +378,7 @@ do_export(w)
 }
 
 static void
-orient_select(w, client_data, call_data)
-    Widget	    w;
-    XtPointer	    client_data, call_data;
+orient_select(Widget w, XtPointer client_data, XtPointer call_data)
 {
     if (appres.landscape != (int) client_data) {
 	change_orient();
@@ -383,9 +389,7 @@ orient_select(w, client_data, call_data)
 }
 
 static void
-just_select(w, client_data, call_data)
-    Widget	    w;
-    XtPointer	    client_data, call_data;
+just_select(Widget w, XtPointer client_data, XtPointer call_data)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(export_just_panel);
@@ -396,9 +400,7 @@ just_select(w, client_data, call_data)
 }
 
 static void
-papersize_select(w, client_data, call_data)
-    Widget	    w;
-    XtPointer	    client_data, call_data;
+papersize_select(Widget w, XtPointer client_data, XtPointer call_data)
 {
     int papersize = (int) client_data;
 
@@ -413,9 +415,7 @@ papersize_select(w, client_data, call_data)
 }
 
 static void
-multiple_select(w, client_data, call_data)
-    Widget	    w;
-    XtPointer	    client_data, call_data;
+multiple_select(Widget w, XtPointer client_data, XtPointer call_data)
 {
     int multiple = (int) client_data;
 
@@ -449,9 +449,7 @@ multiple_select(w, client_data, call_data)
 }
 
 static void
-overlap_select(w, client_data, call_data)
-    Widget	    w;
-    XtPointer	    client_data, call_data;
+overlap_select(Widget w, XtPointer client_data, XtPointer call_data)
 {
     int overlap = (int) client_data;
 
@@ -464,7 +462,7 @@ overlap_select(w, client_data, call_data)
 }
 
 static void
-set_postscript_options()
+set_postscript_options(void)
 {
 	/* enable or disable features available for PostScript */
 
@@ -489,9 +487,7 @@ set_postscript_options()
 }
 
 static void
-lang_select(w, new_lang, call_data)
-    Widget	    w;
-    XtPointer	    new_lang, call_data;
+lang_select(Widget w, XtPointer new_lang, XtPointer call_data)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(lang_panel);
@@ -516,8 +512,7 @@ lang_select(w, new_lang, call_data)
    e.g. make *.jpg for jpeg output
 ***/
 
-set_export_mask(lang)
-    int		    lang;
+void set_export_mask(int lang)
 {
     char	    mask[100];
 
@@ -547,9 +542,7 @@ set_export_mask(lang)
 /* user has chosen a smooth factor from the pulldown menu */
 
 static void
-smooth_select(w, client_data, call_data)
-    Widget	    w;
-    XtPointer	    client_data, call_data;
+smooth_select(Widget w, XtPointer client_data, XtPointer call_data)
 {
     int new_smooth = (int) client_data;
     appres.smooth_factor = new_smooth==0? 1: new_smooth*2;
@@ -560,9 +553,7 @@ smooth_select(w, client_data, call_data)
 /* user selected a background color from the menu */
 
 static void
-background_select(w, client_data, call_data)
-    Widget	    w;
-    XtPointer	    client_data, call_data;
+background_select(Widget w, XtPointer client_data, XtPointer call_data)
 {
     Pixel	    bgcolor, fgcolor;
 
@@ -588,9 +579,7 @@ background_select(w, client_data, call_data)
 /* user selected a transparent color from the menu */
 
 static void
-transp_select(w, client_data, call_data)
-    Widget	    w;
-    XtPointer	    client_data, call_data;
+transp_select(Widget w, XtPointer client_data, XtPointer call_data)
 {
     Pixel	    bgcolor, fgcolor;
 
@@ -613,9 +602,7 @@ transp_select(w, client_data, call_data)
 /* come here when user chooses minor grid interval from menu */
 
 void
-export_grid_minor_select(w, new_grid_choice, call_data)
-    Widget	    w;
-    XtPointer	    new_grid_choice, call_data;
+export_grid_minor_select(Widget w, XtPointer new_grid_choice, XtPointer call_data)
 {
     char *val;
     grid_minor = (int) new_grid_choice;
@@ -631,9 +618,7 @@ export_grid_minor_select(w, new_grid_choice, call_data)
 /* come here when user chooses major grid interval from menu */
 
 void
-export_grid_major_select(w, new_grid_choice, call_data)
-    Widget	    w;
-    XtPointer	    new_grid_choice, call_data;
+export_grid_major_select(Widget w, XtPointer new_grid_choice, XtPointer call_data)
 {
     char *val;
     grid_major = (int) new_grid_choice;
@@ -649,7 +634,7 @@ export_grid_major_select(w, new_grid_choice, call_data)
 
 /* enable/disable optional buttons etc depending on export language */
 
-manage_optional()
+void manage_optional(void)
 {
 	Widget below;
 
@@ -789,7 +774,7 @@ manage_optional()
 /* update the figure size window */
 
 void
-export_update_figure_size()
+export_update_figure_size(void)
 {
 	float	mult;
 	char	*unit;
@@ -797,7 +782,7 @@ export_update_figure_size()
 
 	if (!export_popup)
 	    return;
-	compound_bound(&objects, &lx, &ly, &ux, &uy);
+	active_compound_bound(&objects, &lx, &ly, &ux, &uy, bound_active_layers && !print_all_layers);
 	mult = appres.INCHES? PIX_PER_INCH : PIX_PER_CM;
 	unit = appres.INCHES? "in": "cm";
 	sprintf(buf, "Figure size: %.1f%s x %.1f%s",
@@ -810,7 +795,7 @@ export_update_figure_size()
 /* calculate the magnification needed to fit the figure to the page size */
 
 static void
-fit_page()
+fit_page(void)
 {
 	int	lx,ly,ux,uy;
 	float	wd,ht,pwd,pht;
@@ -858,7 +843,7 @@ fit_page()
 /* get the magnification from the widget and make it reasonable if not */
 
 static void
-get_magnif()
+get_magnif(void)
 {
 	char	buf[60];
 
@@ -874,10 +859,7 @@ get_magnif()
 /* as the user types in a magnification, update the figure size */
 
 static void
-update_mag(widget, item, event)
-    Widget	    widget;
-    Widget	   *item;
-    int		   *event;
+update_mag(Widget widget, Widget *item, int *event)
 {
     char	   *buf;
 
@@ -887,7 +869,7 @@ update_mag(widget, item, event)
 }
 
 static void
-update_figure_size()
+update_figure_size(void)
 {
     char buf[60];
 
@@ -904,7 +886,7 @@ update_figure_size()
 /* get the quality from the widget and make it reasonable if not */
 
 static void
-get_quality()
+get_quality(void)
 {
 	char	buf[60];
 
@@ -920,8 +902,7 @@ get_quality()
 /* create (if necessary) and popup the export panel */
 
 void
-popup_export_panel(w)
-    Widget	    w;
+popup_export_panel(Widget w)
 {
 	char	buf[60];
 
@@ -1000,9 +981,7 @@ popup_export_panel(w)
 }
 
 static void
-exp_xoff_unit_select(w, client_data, call_data)
-    Widget          w;
-    XtPointer       client_data, call_data;
+exp_xoff_unit_select(Widget w, XtPointer client_data, XtPointer call_data)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(exp_xoff_unit_panel);
@@ -1010,9 +989,7 @@ exp_xoff_unit_select(w, client_data, call_data)
 }
 
 static void
-exp_yoff_unit_select(w, client_data, call_data)
-    Widget          w;
-    XtPointer       client_data, call_data;
+exp_yoff_unit_select(Widget w, XtPointer client_data, XtPointer call_data)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(exp_yoff_unit_panel);
@@ -1038,6 +1015,8 @@ toggle_hpgl_pcl_switch(Widget w, XtPointer closure, XtPointer call_data)
 
     /* set global state */
     print_hpgl_pcl_switch = state;
+
+    return;
 }
 
 static XtCallbackProc
@@ -1058,10 +1037,11 @@ toggle_hpgl_font(Widget w, XtPointer closure, XtPointer call_data)
 
     /* set global state */
     hpgl_specified_font = state;
+
+    return;
 }
 
-create_export_panel(w)
-    Widget	    w;
+void create_export_panel(Widget w)
 {
 	Widget	    	 beside, below;
 	Widget		 entry, papersize_menu;
@@ -1135,7 +1115,7 @@ create_export_panel(w)
 	sprintf(buf, "%.1f", appres.magnification);
 	/* we want to track typing here to update figure size label */
 	mag_spinner = MakeFloatSpinnerEntry(export_panel, &export_mag_text, "magnification",
-			(Widget) NULL, mag_lab, update_mag, buf, 0.0, 10000.0, 1.0, 45);
+			(Widget) NULL, mag_lab, (XtCallbackProc)update_mag, buf, 0.0, 10000.0, 1.0, 45);
 	FirstArg(XtNfromVert, lang_panel);
 	NextArg(XtNtop, XtChainTop);
 	NextArg(XtNbottom, XtChainTop);
@@ -1823,7 +1803,7 @@ create_export_panel(w)
 
 /* update the default export filename using the Fig file name */
 
-update_def_filename()
+void update_def_filename(void)
 {
     int		    i;
 

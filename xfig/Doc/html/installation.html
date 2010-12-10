@@ -27,6 +27,7 @@ and export them to various languages and formats such as PostScript, GIF, JPEG, 
 <li><a href="#install-xfigwin">Xfig On Microsoft Windows</a>
 <li><a href="#install-xfigmac">Xfig On the MacIntosh</a>
 <li><a href="#install-misc">Installing Other Software</a>
+<li><a href="#install-ghostfonts">Installing Ghostscript's Type 1 fonts under X</a>
 </ul>
 <img src="images/blueballdot.png" align=bottom alt="-">
 <a href="#related-software">Related Software</a>
@@ -208,8 +209,8 @@ note that:
 the <tt>xfig</tt> executable should go in your command search path,
 <br>
 <dd><img src="images/blueballdot.png" align=bottom alt="-">
-<tt>Fig.ad</tt> and <tt>Fig-color.ad</tt> should go in the <tt>app-defaults</tt>
-directory with the names <tt>Fig</tt> and <tt>Fig-color</tt> respectively,
+<tt>Fig.ad</tt> should go in the <tt>app-defaults</tt>
+directory with the name <tt>Fig</tt>,
 <br>
 <dd><img src="images/blueballdot.png" align=bottom alt="-">
 The <tt>CompKeyDB</tt> file , the <tt>Doc/html</tt> directory, and the
@@ -344,15 +345,10 @@ to copy the manual pages to the appropriate directory.
 <h2>
 Xfig On Microsoft Windows</h2>
 There is a version of <b>xfig</b> ported to run under Microsoft Windows using the Cygnus X server.
-See:
-<a href="http://aquarius.franken.de/software/develop/gnuwin32/cygwin/porters/Hirmke_Michael/GNUWin32-links.html">
-Xfig for Windows</a>.
-
-Another version that was ported by Wayne (Wenguang) Wang is:
-<a href="http://www.cs.usask.ca/grads/wew036/latex/xfig.html" target=_top>Wayne Wang's xfig for Windows</a>.
+See <a href="http://www.cs.usask.ca/grads/wew036/latex/xfig.html" target=_top>Wayne Wang's xfig for Windows</a>.
 
 <p>
-<b>Both need an X server</b> (e.g. Hummingbird Exceed, or Cygwin to run.  See:
+<b>Both need an X server</b> (e.g. Hummingbird Exceed, or Cygwin/X to run.  See:
 <a href="http://www.cygwin.com/xfree/">http://www.cygwin.com/xfree/)</a>
 
 <a name="install-xfigmac"></a>
@@ -407,6 +403,47 @@ Be sure that it includes <b>ppmtojpeg</b>.  This may be found only in the newer
 releases, such as 9.0 and 9.1
 </ul>
 
+<a name="install-ghostfonts"></a>
+<img src="images/blueramp.png" alt="-">
+<h2>Installing Ghostscript's Type 1 fonts under X</h2>
+
+You can use Ghostscript's high quality Type 1 fonts on your X server (and therefore in xfig).
+
+Copy the necessary files from Ghostscript's fonts directory to /usr/X11R6/lib/X11/fonts/Type1/ (or wherever your X server Type 1 fonts are).
+
+<pre>
+$ cp /usr/share/ghostscript/fonts/*l.pfb /usr/X11R6/lib/X11/fonts/Type1
+</pre>
+
+Append the file
+<tt>/usr/share/ghostscript/fonts/fonts.scale</tt> to <tt>Type1/fonts.scale</tt>. 
+The first line in the latter file contains is the number of fonts listed in that file.
+Change that number to include the additional fonts.
+
+<p>
+Now run <tt>mkfontdir(1)</tt> to update the font database:
+
+<pre>
+$ mkfontdir
+</pre>
+
+<p>
+If your operating system has the <tt>chkfontpath</tt> command, alternative is to add
+the Ghostscript font directory to the X server font path:
+
+<pre>
+chkfontpath -a /usr/share/ghostscript/fonts/fonts/
+</pre>
+
+In either case, if your X-server is running already you have to tell it to reread the font databases with
+ <tt>xset(1)</tt>:
+
+<pre>
+$ xset fp rehash
+</pre>
+
+
+
 <a name="related-software"></a>
 <img src="images/blueramp.png" alt="-">
 <h2>Related Software</h2>
@@ -459,7 +496,7 @@ See also <a href="http://SAL.KachinaTech.COM">
 <i>Scientific Applications on Linux (SAL)</i></a>
 for more applications for <a href="http://www.linux.org">Linux</a>
 (many of them may also work on other UNIX-compatible platforms) and
-<a href="http://duke.usask.ca/~macphed/soft/fig/">http://duke.usask.ca/~macphed/soft/fig/</a>
+<a href="http://homepage.usask.ca/~ijm451/fig/">http://homepage.usask.ca/~ijm451/fig/</a>
 which a site maintained by Ian MacPhedran that has some other links for
 FIG-related applications.
 
@@ -486,6 +523,13 @@ and it is available from
 <a href="ftp://prep.ai.mit.edu/pub/gnu">ftp://prep.ai.mit.edu/pub/gnu</a>
 and its <a href="http://www.fsf.org/order/ftp.html">mirror sites</a>,
 or <a href="ftp://ftp.cs.wisc.edu/ghost/aladdin">ftp.cs.wisc.edu/ghost/aladdin</a>.
+
+<dt><img src="images/redball.png" align=bottom alt="-">
+<b>AutoTrace</b><br>
+<dd>
+Converts bitmap to vector graphics - has a Fig file output driver.
+Available from <a href="http://autotrace.sourceforge.net">http://autotrace.sourceforge.net</a>.
+Written by Martin Weber.
 
 <dt><img src="images/redball.png" align=bottom alt="-">
 <b>cdraw2fig</b><br>

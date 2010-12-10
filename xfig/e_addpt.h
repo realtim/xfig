@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -15,6 +15,7 @@
  *
  */
 
-extern void	splinepoint_adding();
-extern void	linepoint_adding();
-extern void	find_endpoints();
+extern void	splinepoint_adding(F_spline *spline, F_point *left_point, F_point *added_point, F_point *right_point, double sfactor);
+extern void	linepoint_adding(F_line *line, F_point *left_point, F_point *added_point);
+extern void	find_endpoints(F_point *p, int x, int y, F_point **fp, F_point **sp);
+extern void point_adding_selected (void);

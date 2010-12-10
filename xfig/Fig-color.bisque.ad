@@ -1,8 +1,8 @@
+#include "Fig"
+
 ! This file is called Fig-color.bisque although the button colors are 
 ! actually navajowhite.  I called it bisque because that is the color
 ! scheme for the older tcl/tk.
-
-#include "Fig"
 
 Fig*beNiceToColormap:				False
 

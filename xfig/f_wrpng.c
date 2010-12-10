@@ -1,6 +1,6 @@
 /*
  * FIG : Facility for Interactive Generation of figures
- * Copyright (c) 2001-2002 by Brian V. Smith
+ * Copyright (c) 2001-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -36,15 +36,7 @@
  */
 
 Boolean
-write_png(file, data, type, Red, Green, Blue, numcols, width, height)
-    FILE	   *file;
-    int		    type;
-    unsigned char  *data;
-    unsigned char   Red[],
-		    Green[],
-		    Blue[];
-    int		    numcols;
-    int		    width, height;
+write_png(FILE *file, unsigned char *data, int type, unsigned char *Red, unsigned char *Green, unsigned char *Blue, int numcols, int width, int height)
 {
     register int    i;
     png_structp	    png_ptr;

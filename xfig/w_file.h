@@ -1,6 +1,6 @@
 /*
  * FIG : Facility for Interactive Generation of figures
- * Copyright (c) 1989-2002 by Brian V. Smith
+ * Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -15,12 +15,12 @@
  */
 
 extern Boolean	colors_are_swapped;
-extern void	load_request();
-extern void	do_save();
-extern void	popup_open_panel();
-extern void	popup_merge_panel();
-extern void	popup_saveas_panel();
-extern Boolean	query_save();
+extern void	load_request(Widget w, XButtonEvent *ev);
+extern void	do_save(Widget w, XButtonEvent *ev);
+extern void	popup_open_panel(void);
+extern void	popup_merge_panel(void);
+extern void	popup_saveas_panel(void);
+extern Boolean	query_save(char *msg);
 
 extern Widget	preview_size, preview_widget, preview_name;
 extern Pixmap	preview_land_pixmap, preview_port_pixmap;
@@ -35,6 +35,9 @@ extern Widget	file_flist;
 extern Widget	file_dlist;
 extern Widget	file_popup;
 
-extern Boolean	check_cancel();
+extern Boolean	check_cancel(void);
 extern Boolean	cancel_preview;
 extern Boolean	preview_in_progress;
+extern void preview_figure (char *filename, Widget parent, Widget canvas, Widget size_widget, Pixmap port_pixmap, Pixmap land_pixmap);
+extern int renamefile (char *file);
+extern void file_panel_dismiss (void);

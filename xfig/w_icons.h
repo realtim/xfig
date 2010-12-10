@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -54,6 +54,7 @@ extern icon_struct	break_ic;
 extern icon_struct	library_ic;
 extern icon_struct	open_comp_ic;
 extern icon_struct	join_split_ic;
+extern icon_struct	chop_ic;
 extern icon_struct	joinmiter_ic;
 extern icon_struct	joinround_ic;
 extern icon_struct	joinbevel_ic;
@@ -73,6 +74,7 @@ extern icon_struct	flip_x_ic;
 extern icon_struct	flip_y_ic;
 extern icon_struct	forarrow_ic;
 extern icon_struct	grid1_ic, grid2_ic, grid3_ic, grid3_ic, grid4_ic;
+extern icon_struct	grid_iso1_ic, grid_iso2_ic, grid_iso3_ic, grid_iso4_ic;		// isometric grid
 extern icon_struct	intspl_ic;
 extern icon_struct	c_intspl_ic;
 extern icon_struct	line_ic;

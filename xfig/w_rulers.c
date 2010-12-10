@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -31,6 +31,15 @@
 #include "w_util.h"
 #include "w_zoom.h"
 #include "object.h"
+
+#include "f_util.h"
+#include "u_redraw.h"
+#include "u_scale.h"
+#include "w_canvas.h"
+#include "w_color.h"
+#include "w_export.h"
+#include "w_grid.h"
+#include "w_print.h"
 
 /*
  * The following will create rulers the same size as the initial screen size.
@@ -116,15 +125,15 @@ static Pixmap	topruler_pm = 0, sideruler_pm = 0;
 
 DeclareStaticArgs(14);
 
-static void	topruler_selected();
-static void	topruler_exposed();
-static void	sideruler_selected();
-static void	sideruler_exposed();
+static void	topruler_selected(Widget tool, XButtonEvent *event, String *params, Cardinal *nparams);
+static void	topruler_exposed(Widget tool, XButtonEvent *event, String *params, Cardinal *nparams);
+static void	sideruler_selected(Widget tool, XButtonEvent *event, String *params, Cardinal *nparams);
+static void	sideruler_exposed(Widget tool, XButtonEvent *event, String *params, Cardinal *nparams);
 
 #ifndef XAW3D1_5E
 /* popup message over button when mouse enters it */
-static void     unit_balloon_trigger();
-static void     unit_unballoon();
+static void     unit_balloon_trigger(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch);
+static void     unit_unballoon(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch);
 #endif /* XAW3D1_5E */
 
 /* turn these into macros so we can use them in
@@ -250,7 +259,7 @@ static Boolean	fig_unit_setting=False, fig_scale_setting=False;
 static Widget	rul_unit_panel, fig_unit_panel, fig_scale_panel;
 static Widget	user_unit_lab, user_unit_entry, fraction_checkbox;
 static Widget	scale_factor_lab, scale_factor_entry;
-static void     unit_panel_cancel(), unit_panel_set();
+static void     unit_panel_cancel(Widget w, XButtonEvent *ev), unit_panel_set(Widget w, XButtonEvent *ev);
 static Pixel	unit_bg, unit_fg;
 static Pixel	scale_bg, scale_fg;
 
@@ -287,22 +296,24 @@ static XtActionsRec     unit_actions[] =
     {"SetUnits", (XtActionProc) unit_panel_set},
 };
 
+
+
 void
-redisplay_rulers()
+redisplay_rulers(void)
 {
     redisplay_topruler();
     redisplay_sideruler();
 }
 
 void
-setup_rulers()
+setup_rulers(void)
 {
     setup_topruler();
     setup_sideruler();
 }
 
 void
-reset_rulers()
+reset_rulers(void)
 {
     reset_topruler();
     reset_sideruler();
@@ -310,8 +321,7 @@ reset_rulers()
 }
 
 void
-set_rulermark(x, y)
-    int		    x, y;
+set_rulermark(int x, int y)
 {
     if (appres.tracking) {
 	set_siderulermark(y);
@@ -320,7 +330,7 @@ set_rulermark(x, y)
 }
 
 void
-erase_rulermark()
+erase_rulermark(void)
 {
     if (appres.tracking) {
 	erase_siderulermark();
@@ -329,8 +339,7 @@ erase_rulermark()
 }
 
 void
-init_unitbox(tool)
-    Widget	    tool;
+init_unitbox(Widget tool)
 {
     char	    buf[20];
 
@@ -381,7 +390,7 @@ init_unitbox(tool)
 static Widget	unit_popup, unit_panel, cancel, set, beside, below, label;
 
 #ifdef XAW3D1_5E
-update_rulerpanel()
+void update_rulerpanel()
 {
     char msg[80];
 
@@ -409,14 +418,10 @@ static	Widget unit_balloon_popup = (Widget) 0;
 static	XtIntervalId balloon_id = (XtIntervalId) 0;
 static	Widget balloon_w, balloon_label;
 
-static void unit_balloon();
+static void unit_balloon(void);
 
 static void
-unit_balloon_trigger(widget, closure, event, continue_to_dispatch)
-    Widget        widget;
-    XtPointer	  closure;
-    XEvent*	  event;
-    Boolean*	  continue_to_dispatch;
+unit_balloon_trigger(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch)
 {
 	if (!appres.showballoons)
 		return;
@@ -426,7 +431,7 @@ unit_balloon_trigger(widget, closure, event, continue_to_dispatch)
 }
 
 static void
-unit_balloon()
+unit_balloon(void)
 {
 	Position  x, y;
 
@@ -492,11 +497,7 @@ unit_balloon()
 /* come here when the mouse leaves a button in the mode panel */
 
 static void
-unit_unballoon(widget, closure, event, continue_to_dispatch)
-    Widget          widget;
-    XtPointer	    closure;
-    XEvent*	    event;
-    Boolean*	    continue_to_dispatch;
+unit_unballoon(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch)
 {
     if (balloon_id) 
 	XtRemoveTimeOut(balloon_id);
@@ -511,24 +512,20 @@ unit_unballoon(widget, closure, event, continue_to_dispatch)
 /* handle unit/scale settings */
 
 static void
-unit_panel_dismiss()
+unit_panel_dismiss(void)
 {
     XtDestroyWidget(unit_popup);
     XtSetSensitive(unitbox_sw, True);
 }
 
 static void
-unit_panel_cancel(w, ev)
-    Widget	    w;
-    XButtonEvent   *ev;
+unit_panel_cancel(Widget w, XButtonEvent *ev)
 {
     unit_panel_dismiss();
 }
 
 static void
-unit_panel_set(w, ev)
-    Widget	    w;
-    XButtonEvent   *ev;
+unit_panel_set(Widget w, XButtonEvent *ev)
 {
     int		    old_rul_unit, pix;
     float	    scale_factor;
@@ -576,14 +573,13 @@ unit_panel_set(w, ev)
     export_update_figure_size();
     print_update_figure_size();
     /* finally, reset any grid specs in export or print panels to make consistent */
-    reset_grid_menus();
+    reset_grid_menus(appres.INCHES);
 
     unit_panel_dismiss();
 }
 
 void
-set_unit_indicator(use_userscale)
-    Boolean  use_userscale;
+set_unit_indicator(Boolean use_userscale)
 {
     char     buf[20];
 
@@ -622,9 +618,7 @@ set_unit_indicator(use_userscale)
 }
 
 static void
-fig_unit_select(w, new_unit, garbage)
-    Widget          w;
-    XtPointer       new_unit, garbage;
+fig_unit_select(Widget w, XtPointer new_unit, XtPointer garbage)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(fig_unit_panel);
@@ -644,9 +638,7 @@ fig_unit_select(w, new_unit, garbage)
 }
 
 static void
-fig_scale_select(w, new_scale, garbage)
-    Widget          w;
-    XtPointer       new_scale, garbage;
+fig_scale_select(Widget w, XtPointer new_scale, XtPointer garbage)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(fig_scale_panel);
@@ -666,9 +658,7 @@ fig_scale_select(w, new_scale, garbage)
 }
 
 static void
-rul_unit_select(w, closure, garbage)
-    Widget          w;
-    XtPointer       closure, garbage;
+rul_unit_select(Widget w, XtPointer closure, XtPointer garbage)
 {
     int		    new_unit = (int) closure;
 
@@ -706,7 +696,7 @@ rul_unit_select(w, closure, garbage)
 }
 
 void
-popup_unit_panel()
+popup_unit_panel(void)
 {
     Position	    x_val, y_val;
     Dimension	    width, height;
@@ -937,11 +927,7 @@ static String	topruler_translations =
     <Expose>:ExposeTopRuler()\n";
 
 static void
-topruler_selected(tool, event, params, nparams)
-    Widget	    tool;
-    XButtonEvent   *event;
-    String	   *params;
-    Cardinal	   *nparams;
+topruler_selected(Widget tool, XButtonEvent *event, String *params, Cardinal *nparams)
 {
     XButtonEvent   *be = (XButtonEvent *) event;
 
@@ -1006,15 +992,14 @@ topruler_selected(tool, event, params, nparams)
     }
 }
 
-erase_toprulermark()
+void erase_toprulermark(void)
 {
     XClearArea(tool_d, topruler_win, ZOOMX(lastx) + troffx,
 	       TOPRULER_HT + troffy, trm_pr.width,
 	       trm_pr.height, False);
 }
 
-set_toprulermark(x)
-    int		    x;
+void set_toprulermark(int x)
 {
     XClearArea(tool_d, topruler_win, ZOOMX(lastx) + troffx,
 	       TOPRULER_HT + troffy, trm_pr.width,
@@ -1026,25 +1011,20 @@ set_toprulermark(x)
 }
 
 static void
-topruler_exposed(tool, event, params, nparams)
-    Widget	    tool;
-    XButtonEvent   *event;
-    String	   *params;
-    Cardinal	   *nparams;
+topruler_exposed(Widget tool, XButtonEvent *event, String *params, Cardinal *nparams)
 {
     if (((XExposeEvent *) event)->count > 0)
 	return;
     redisplay_topruler();
 }
 
-redisplay_topruler()
+void redisplay_topruler(void)
 {
     XClearWindow(tool_d, topruler_win);
 }
 
 void
-init_topruler(tool)
-    Widget	    tool;
+init_topruler(Widget tool)
 {
     FirstArg(XtNwidth, TOPRULER_WD);
     NextArg(XtNheight, TOPRULER_HT);
@@ -1068,7 +1048,7 @@ init_topruler(tool)
 			   XtParseTranslationTable(topruler_translations));
 }
 
-setup_topruler()
+void setup_topruler(void)
 {
     unsigned long   bg, fg;
     XGCValues	    gcv;
@@ -1118,7 +1098,7 @@ setup_topruler()
     reset_topruler();
 }
 
-resize_topruler()
+void resize_topruler(void)
 {
     XFreePixmap(tool_d, topruler_pm);
     topruler_pm = XCreatePixmap(tool_d, topruler_win,
@@ -1131,7 +1111,7 @@ resize_topruler()
 static double factor;
 
 static void
-get_skip_prec()
+get_skip_prec(void)
 {
 	register ruler_skip	*rs;
 	ruler_info		*ri;
@@ -1169,7 +1149,7 @@ get_skip_prec()
 		/* look for values for current zoom */
 		if ((display_zoomscale/appres.userscale <= rs->max_zoom) ||
 			(rs->max_zoom == 0.0)) {
-		    skip = rs->skipt/appres.userscale;
+		    skip = rs->skipt > appres.userscale ? rs->skipt/appres.userscale : 1;
 		    skipx = skip * rs->skipx;
 		    sprintf(precstr, "%%.%df", rs->prec);
 		    break;
@@ -1181,12 +1161,12 @@ get_skip_prec()
  * such that (skip/ruler_unit) is an integer or (ruler_unit/skip) is an integer.
  */
 
-reset_topruler()
+void reset_topruler(void)
 {
     register int    i,k;
     register tick_info* tk;
     register Pixmap p = topruler_pm;
-    char	    number[6];
+    char	    number[20];
     int		    X0,len;
     int		    tickmod, tickskip;
 
@@ -1203,7 +1183,7 @@ reset_topruler()
 	tickmod = 1;
 
     /* see how big a label is to adjust spacing, if necessary */
-    sprintf(number, "%d%s", (X0+(int)((TOPRULER_WD/zoomscale)))/tickmod, cur_fig_units);
+    snprintf(number, sizeof(number), "%d%s", (X0+(int)((TOPRULER_WD/zoomscale)))/tickmod, cur_fig_units);
     len = XTextWidth(roman_font, number, strlen(number));
     while (skipx < (len + 5)/zoomscale) {
 	skip *= 2;
@@ -1217,11 +1197,11 @@ reset_topruler()
       /* string */
       if (i % skipx == 0) {
         if ((i/10) % tickmod == 0)
-          sprintf(number, "%d%s", i/tickmod, cur_fig_units);
+          snprintf(number, sizeof(number), "%d%s", i/tickmod, cur_fig_units);
 	else if (i % tickmod == 0)
-          sprintf(number, "%d", i/tickmod);
+          snprintf(number, sizeof(number), "%d", i/tickmod);
         else
-          sprintf(number, precstr, (float)(1.0 * i / tickmod));
+          snprintf(number, sizeof(number), precstr, (float)(1.0 * i / tickmod));
 	/* get length of string to position it */
 	len = XTextWidth(roman_font, number, strlen(number));
         /* we center on the number only, letting the minus sign hang out */
@@ -1274,11 +1254,7 @@ static String	sideruler_translations =
     <Expose>:ExposeSideRuler()\n";
 
 static void
-sideruler_selected(tool, event, params, nparams)
-    Widget	    tool;
-    XButtonEvent   *event;
-    String	   *params;
-    Cardinal	   *nparams;
+sideruler_selected(Widget tool, XButtonEvent *event, String *params, Cardinal *nparams)
 {
     XButtonEvent   *be = (XButtonEvent *) event;
 
@@ -1344,11 +1320,7 @@ sideruler_selected(tool, event, params, nparams)
 }
 
 static void
-sideruler_exposed(tool, event, params, nparams)
-    Widget	    tool;
-    XButtonEvent   *event;
-    String	   *params;
-    Cardinal	   *nparams;
+sideruler_exposed(Widget tool, XButtonEvent *event, String *params, Cardinal *nparams)
 {
     if (((XExposeEvent *) event)->count > 0)
 	return;
@@ -1356,8 +1328,7 @@ sideruler_exposed(tool, event, params, nparams)
 }
 
 void
-init_sideruler(tool)
-    Widget	    tool;
+init_sideruler(Widget tool)
 {
     FirstArg(XtNwidth, SIDERULER_WD);
     NextArg(XtNheight, SIDERULER_HT);
@@ -1380,12 +1351,12 @@ init_sideruler(tool)
 			   XtParseTranslationTable(sideruler_translations));
 }
 
-redisplay_sideruler()
+void redisplay_sideruler(void)
 {
     XClearWindow(tool_d, sideruler_win);
 }
 
-setup_sideruler()
+void setup_sideruler(void)
 {
     unsigned long   bg, fg;
     XGCValues	    gcv;
@@ -1441,7 +1412,7 @@ setup_sideruler()
     reset_sideruler();
 }
 
-resize_sideruler()
+void resize_sideruler(void)
 {
     XFreePixmap(tool_d, sideruler_pm);
     sideruler_pm = XCreatePixmap(tool_d, sideruler_win,
@@ -1449,12 +1420,12 @@ resize_sideruler()
     reset_sideruler();
 }
 
-reset_sideruler()
+void reset_sideruler(void)
 {
     register int    i,k;
     register tick_info* tk;
     register Pixmap p = sideruler_pm;
-    char	    number[6],len;
+    char	    number[20],len;
     int		    Y0;
     int		    tickmod, tickskip;
 
@@ -1485,11 +1456,11 @@ reset_sideruler()
       /* string */
       if (i % skipx == 0) {
         if ((i/10) % tickmod == 0)
-          sprintf(number, "%d%s", i/tickmod, cur_fig_units);
+          snprintf(number, sizeof(number), "%d%s", i/tickmod, cur_fig_units);
 	else if (i % tickmod == 0)
-          sprintf(number, "%d", i/tickmod);
+          snprintf(number, sizeof(number), "%d", i/tickmod);
         else
-          sprintf(number, precstr, (float)(1.0 * i / tickmod));
+          snprintf(number, sizeof(number), precstr, (float)(1.0 * i / tickmod));
 	/* get length of string to position it */
 	len = XTextWidth(roman_font, number, strlen(number));
 	/* vertically centered on inch/cm mark */
@@ -1526,7 +1497,7 @@ reset_sideruler()
     SetValues(sideruler_sw);
 }
 
-erase_siderulermark()
+void erase_siderulermark(void)
 {
     if (appres.RHS_PANEL)
 	XClearArea(tool_d, sideruler_win,
@@ -1538,8 +1509,7 @@ erase_siderulermark()
 		   srlm_pr.width, srlm_pr.height, False);
 }
 
-set_siderulermark(y)
-    int		    y;
+void set_siderulermark(int y)
 {
     if (appres.RHS_PANEL) {
 	/*

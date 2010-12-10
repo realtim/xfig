@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * This software is copyright (C) 1991-1996, Thomas G. Lane.
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * All Rights Reserved except as specified below.
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -60,12 +60,13 @@
 #include "resources.h"
 #include "object.h"
 #include "f_picobj.h"
+#include "f_util.h"
 #include "w_msgpanel.h"
 #include "w_setup.h"
 #include <setjmp.h>
 #include <jpeglib.h>
 
-static	Boolean	read_JPEG_file();
+static	Boolean	read_JPEG_file(FILE *file);
 
 static	F_pic	   *pict;
 static	unsigned char *bitmapptr;
@@ -75,10 +76,7 @@ static	unsigned char *bitmapptr;
 */
 
 int
-read_jpg(file,filetype,pic)
-    FILE	   *file;
-    int		    filetype;
-    F_pic	   *pic;
+read_jpg(FILE *file, int filetype, F_pic *pic)
 {
 	/* make scale factor smaller for metric */
 	float scale = (appres.INCHES ?
@@ -108,8 +106,8 @@ read_jpg(file,filetype,pic)
 /* These static variables are needed by the error routines. */
 
 static	jmp_buf setjmp_buffer;		/* for return to caller */
-static	void	error_exit();
-static	void	error_output();
+static	void	error_exit(j_common_ptr cinfo);
+static	void	error_output(j_common_ptr cinfo);
 
 struct error_mgr {
   struct jpeg_error_mgr pub;	/* "public" fields */
@@ -127,8 +125,7 @@ typedef struct error_mgr * error_ptr;
  */
 
 static Boolean
-read_JPEG_file (file)
-   FILE  *file;
+read_JPEG_file (FILE *file)
 {
 	int i;
 
@@ -181,8 +178,10 @@ read_JPEG_file (file)
 	pict->pic_cache->bit_size.x = cinfo.image_width;
 	pict->pic_cache->bit_size.y = cinfo.image_height;
 	if ((pict->pic_cache->bitmap = (unsigned char *) 
-	     malloc(cinfo.image_width * cinfo.image_height)) == NULL)
-		error_exit("Can't alloc memory for JPEG image");
+	  malloc(cinfo.image_width * cinfo.image_height)) == NULL) {
+	    file_msg("Can't alloc memory for JPEG image");
+	    longjmp(jerr.setjmp_buffer, 1);
+	}
 	bitmapptr = pict->pic_cache->bitmap;
 
 	/* Step 4: set parameters for decompression */
@@ -259,8 +258,7 @@ read_JPEG_file (file)
  */
 
 static void
-error_exit (cinfo)
-     j_common_ptr cinfo;
+error_exit (j_common_ptr cinfo)
 {
     char buffer[JMSG_LENGTH_MAX];
     /* cinfo->err really points to a error_mgr struct, so coerce pointer */
@@ -280,8 +278,7 @@ error_exit (cinfo)
 }
 
 static void
-error_output(cinfo)
-     j_common_ptr cinfo;
+error_output(j_common_ptr cinfo)
 {
   char	buffer[JMSG_LENGTH_MAX];
 

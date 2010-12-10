@@ -1,6 +1,6 @@
 /*
  * FIG : Facility for Interactive Generation of figures
- * Copyright (c) 1989-2002 by Brian V. Smith
+ * Copyright (c) 1989-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -23,11 +23,13 @@
 #include "w_msgpanel.h"
 #include "w_util.h"
 
+#include "w_canvas.h"
+
 char	*browsecommand;
-Boolean  check_docfile();
+Boolean  check_docfile(char *name);
 char	 filename[PATH_MAX];
 
-void	help_ok();
+void	help_ok(Widget w, XtPointer closure, XtPointer call_data);
 
 static String	about_translations =
 	"<Message>WM_PROTOCOLS: DismissAbout()\n";
@@ -36,11 +38,11 @@ static XtActionsRec	about_actions[] =
     {"DismissAbout", (XtActionProc) help_ok},
 };
 
+
+void launch_viewer (char *filename, char *message, char *viewer);
+
 void
-launch_refman(w, closure, call_data)
-    Widget    w;
-    XtPointer closure;
-    XtPointer call_data;
+launch_refman(Widget w, XtPointer closure, XtPointer call_data)
 {
 	/* first check if at least the index file is installed */
 	sprintf(filename, "%s/html/index.html", XFIGDOCDIR);
@@ -58,20 +60,14 @@ launch_refman(w, closure, call_data)
 }
 
 void
-launch_refpdf_en(w, closure, call_data)
-    Widget    w;
-    XtPointer closure;
-    XtPointer call_data;
+launch_refpdf_en(Widget w, XtPointer closure, XtPointer call_data)
 {
 	sprintf(filename,"%s/xfig_ref_en.pdf",XFIGDOCDIR);
 	launch_viewer(filename,"Launching PDF viewer for Xfig reference", cur_pdfviewer);
 }
 
 void
-launch_refpdf_jp(w, closure, call_data)
-    Widget    w;
-    XtPointer closure;
-    XtPointer call_data;
+launch_refpdf_jp(Widget w, XtPointer closure, XtPointer call_data)
 {
 	sprintf(filename,"%s/xfig_ref_jp.pdf",XFIGDOCDIR);
 	launch_viewer(filename,"Launching PDF viewer for Xfig reference", cur_pdfviewer);
@@ -79,27 +75,20 @@ launch_refpdf_jp(w, closure, call_data)
 
 
 void
-launch_howto(w, closure, call_data)
-    Widget    w;
-    XtPointer closure;
-    XtPointer call_data;
+launch_howto(Widget w, XtPointer closure, XtPointer call_data)
 {
 	sprintf(filename,"%s/xfig-howto.pdf",XFIGDOCDIR);
 	launch_viewer(filename,"Launching PDF viewer for How-to Tutorial", cur_pdfviewer);
 }
 
 void
-launch_man(w, closure, call_data)
-    Widget    w;
-    XtPointer closure;
-    XtPointer call_data;
+launch_man(Widget w, XtPointer closure, XtPointer call_data)
 {
 	sprintf(filename,"%s/xfig_man.html",XFIGDOCDIR);
 	launch_viewer(filename,"Launching Web browser for man pages", cur_browser);
 }
 
-launch_viewer(filename, message, viewer)
-    char     *filename, *message, *viewer;
+void launch_viewer(char *filename, char *message, char *viewer)
 {
 	/* turn off Compose key LED */
 	setCompLED(0);
@@ -115,8 +104,7 @@ launch_viewer(filename, message, viewer)
 }
 
 Boolean
-check_docfile(name)
-    char *name;
+check_docfile(char *name)
 {
 	struct	stat file_status;
 	if (stat(name, &file_status) != 0) {	/* something wrong */
@@ -134,19 +122,13 @@ check_docfile(name)
 static Widget    help_popup = (Widget) 0;
 
 void
-help_ok(w, closure, call_data)
-    Widget    w;
-    XtPointer closure;
-    XtPointer call_data;
+help_ok(Widget w, XtPointer closure, XtPointer call_data)
 {
 	XtPopdown(help_popup);
 }
 
 void 
-launch_about(w, closure, call_data)
-    Widget    w;
-    XtPointer closure;
-    XtPointer call_data;
+launch_about(Widget w, XtPointer closure, XtPointer call_data)
 {
     DeclareArgs(10);
     Widget    form, icon, ok;
@@ -182,7 +164,7 @@ launch_about(w, closure, call_data)
 	/* make up some information */
 	strcpy(info,xfig_version);
 	strcat(info,"\n  Copyright \251 1985-1988 by Supoj Sutanthavibul");
-	strcat(info,"\n  Parts Copyright \251 1989-2002 by Brian V. Smith (BVSmith@lbl.gov)");
+	strcat(info,"\n  Parts Copyright \251 1989-2007 by Brian V. Smith (BVSmith@lbl.gov)");
 	strcat(info,"\n  Parts Copyright \251 1991 by Paul King");
 	strcat(info,"\n  See source files and man pages for other copyrights");
 

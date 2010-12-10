@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -31,19 +31,27 @@
 #include "w_drawprim.h"
 #include "w_zoom.h"
 
-static void array_place_line(),     place_line(),     place_line_x(),     cancel_line();
-static void array_place_arc(),      place_arc(),      place_arc_x(),      cancel_drag_arc();
-static void array_place_spline(),   place_spline(),   place_spline_x(),   cancel_spline();
-static void array_place_ellipse(),  place_ellipse(),  place_ellipse_x(),  cancel_ellipse();
-static void array_place_text(),     place_text(),     place_text_x(),     cancel_text();
-static void array_place_compound(), place_compound(), place_compound_x(), cancel_drag_compound();
+#include "u_bound.h"
+#include "u_free.h"
+#include "u_markers.h"
+#include "u_redraw.h"
+#include "u_translate.h"
+#include "w_mousefun.h"
+#include "w_msgpanel.h"
+
+static void array_place_line(int x, int y),     place_line(int x, int y),     place_line_x(int x, int y),     cancel_line(void);
+static void array_place_arc(int x, int y),      place_arc(int x, int y),      place_arc_x(int x, int y),      cancel_drag_arc(void);
+static void array_place_spline(int x, int y),   place_spline(int x, int y),   place_spline_x(int x, int y),   cancel_spline(void);
+static void array_place_ellipse(int x, int y),  place_ellipse(int x, int y),  place_ellipse_x(int x, int y),  cancel_ellipse(void);
+static void array_place_text(int x, int y),     place_text(int x, int y),     place_text_x(int x, int y),     cancel_text(void);
+static void array_place_compound(int x, int y), place_compound(int x, int y), place_compound_x(int x, int y), cancel_drag_compound(void);
 
 /***************************** ellipse section ************************/
 
+
+
 void
-init_ellipsedragging(e, x, y)
-    F_ellipse	   *e;
-    int		    x, y;
+init_ellipsedragging(F_ellipse *e, int x, int y)
 {
     new_e = e;
     fix_x = cur_x = x;
@@ -63,7 +71,7 @@ init_ellipsedragging(e, x, y)
 }
 
 static void
-cancel_ellipse()
+cancel_ellipse(void)
 {
     canvas_ref_proc = canvas_locmove_proc = null_proc;
     elastic_moveellipse();
@@ -82,8 +90,7 @@ cancel_ellipse()
 }
 
 static void
-array_place_ellipse(x, y)
-    int		    x, y;
+array_place_ellipse(int x, int y)
 {
     int		    i, j, delta_x, delta_y, start_x, start_y;
     int		    nx, ny;
@@ -138,8 +145,7 @@ array_place_ellipse(x, y)
 }
 
 static void
-place_ellipse(x, y)
-    int		    x, y;
+place_ellipse(int x, int y)
 {
     elastic_moveellipse();
     /* erase last lengths if appres.showlengths is true */
@@ -148,8 +154,7 @@ place_ellipse(x, y)
 }
 
 static void
-place_ellipse_x(x, y)
-    int		    x, y;
+place_ellipse_x(int x, int y)
 {
     canvas_leftbut_proc = null_proc;
     canvas_middlebut_proc = null_proc;
@@ -179,9 +184,7 @@ place_ellipse_x(x, y)
 /*****************************	arc  section  *******************/
 
 void
-init_arcdragging(a, x, y)
-    F_arc	   *a;
-    int		    x, y;
+init_arcdragging(F_arc *a, int x, int y)
 {
     new_a = a;
     fix_x = cur_x = x;
@@ -196,7 +199,7 @@ init_arcdragging(a, x, y)
 }
 
 static void
-cancel_drag_arc()
+cancel_drag_arc(void)
 {
     canvas_ref_proc = canvas_locmove_proc = null_proc;
     elastic_movearc(new_a);
@@ -215,8 +218,7 @@ cancel_drag_arc()
 }
 
 static void
-array_place_arc(x, y)
-    int		    x, y;
+array_place_arc(int x, int y)
 {
     int		    i, j, delta_x, delta_y, start_x, start_y;
     int		    nx, ny;
@@ -270,8 +272,7 @@ array_place_arc(x, y)
 }
 
 static void
-place_arc(x, y)
-    int		    x, y;
+place_arc(int x, int y)
 {
     elastic_movearc(new_a);
     /* erase last lengths if appres.showlengths is true */
@@ -280,8 +281,7 @@ place_arc(x, y)
 }
 
 static void
-place_arc_x(x, y)
-    int		    x, y;
+place_arc_x(int x, int y)
 {
     canvas_leftbut_proc = null_proc;
     canvas_middlebut_proc = null_proc;
@@ -311,9 +311,7 @@ place_arc_x(x, y)
 /*************************  line  section  **********************/
 
 void
-init_linedragging(l, x, y)
-    F_line	   *l;
-    int		    x, y;
+init_linedragging(F_line *l, int x, int y)
 {
     int		    xmin, ymin, xmax, ymax;
 
@@ -334,7 +332,7 @@ init_linedragging(l, x, y)
 }
 
 static void
-cancel_line()
+cancel_line(void)
 {
     canvas_ref_proc = canvas_locmove_proc = null_proc;
     elastic_moveline(new_l->points);
@@ -354,8 +352,7 @@ cancel_line()
 }
 
 static void
-array_place_line(x, y)
-    int		    x, y;
+array_place_line(int x, int y)
 {
     int		    i, j, delta_x, delta_y, start_x, start_y;
     int		    nx, ny;
@@ -407,8 +404,7 @@ array_place_line(x, y)
 }
 
 static void
-place_line(x, y)
-    int		    x, y;
+place_line(int x, int y)
 {
     elastic_moveline(new_l->points);
     /* erase last lengths if appres.showlengths is true */
@@ -417,8 +413,7 @@ place_line(x, y)
 }
 
 static void
-place_line_x(x, y)
-    int		    x, y;
+place_line_x(int x, int y)
 {
     int		    dx, dy;
     canvas_leftbut_proc = null_proc;
@@ -458,9 +453,7 @@ place_line_x(x, y)
 static PR_SIZE	txsize;
 
 void
-init_textdragging(t, x, y)
-    F_text	   *t;
-    int		    x, y;
+init_textdragging(F_text *t, int x, int y)
 {
     float	   cw,cw2;
     int		   x1, y1;
@@ -470,8 +463,8 @@ init_textdragging(t, x, y)
     fix_y = cur_y = y;
     x1 = new_t->base_x;
     y1 = new_t->base_y;
-    /* adjust fix_x/y so that text will fall on grid if grid is on */
-    round_coords(x1,y1);
+    /* adjust fix_x/y so that text will fall on grid if grid is on */		// isometric grid
+    round_coords( &x1, &y1 );
     fix_x += new_t->base_x - x1;
     fix_y += new_t->base_y - y1;
     x1off = x1-x; /*new_t->base_x - x;*/
@@ -498,8 +491,7 @@ init_textdragging(t, x, y)
 }
 
 static void
-array_place_text(x, y)
-    int		    x, y;
+array_place_text(int x, int y)
 {
     int		    i, j, delta_x, delta_y, start_x, start_y;
     int		    nx, ny;
@@ -553,7 +545,7 @@ array_place_text(x, y)
 }
 
 static void
-cancel_text()
+cancel_text(void)
 {
     canvas_ref_proc = canvas_locmove_proc = null_proc;
     elastic_movetext();
@@ -572,8 +564,7 @@ cancel_text()
 }
 
 static void
-place_text(x, y)
-    int		    x, y;
+place_text(int x, int y)
 {
     elastic_movetext();
     /* erase last lengths if appres.showlengths is true */
@@ -582,8 +573,7 @@ place_text(x, y)
 }
 
 static void
-place_text_x(x, y)
-    int		    x, y;
+place_text_x(int x, int y)
 {
     canvas_leftbut_proc = null_proc;
     canvas_middlebut_proc = null_proc;
@@ -613,9 +603,7 @@ place_text_x(x, y)
 /*************************  spline  section  **********************/
 
 void
-init_splinedragging(s, x, y)
-    F_spline	   *s;
-    int		    x, y;
+init_splinedragging(F_spline *s, int x, int y)
 {
     new_s = s;
     cur_x = fix_x = x;
@@ -630,7 +618,7 @@ init_splinedragging(s, x, y)
 }
 
 static void
-cancel_spline()
+cancel_spline(void)
 {
     canvas_ref_proc = canvas_locmove_proc = null_proc;
     elastic_moveline(new_s->points);
@@ -649,8 +637,7 @@ cancel_spline()
 }
 
 static void
-array_place_spline(x, y)
-    int		    x, y;
+array_place_spline(int x, int y)
 {
     int		    i, j, delta_x, delta_y, start_x, start_y;
     int		    nx, ny;
@@ -704,8 +691,7 @@ array_place_spline(x, y)
 }
 
 static void
-place_spline(x, y)
-    int		    x, y;
+place_spline(int x, int y)
 {
     elastic_moveline(new_s->points);
     /* erase last lengths if appres.showlengths is true */
@@ -714,8 +700,7 @@ place_spline(x, y)
 }
 
 static void
-place_spline_x(x, y)
-    int		    x, y;
+place_spline_x(int x, int y)
 {
     canvas_leftbut_proc = null_proc;
     canvas_middlebut_proc = null_proc;
@@ -745,9 +730,7 @@ place_spline_x(x, y)
 /*****************************	Compound section  *******************/
 
 void
-init_compounddragging(c, x, y)
-    F_compound	   *c;
-    int		    x, y;
+init_compounddragging(F_compound *c, int x, int y)
 {
     new_c = c;
     fix_x = cur_x = x;
@@ -767,7 +750,7 @@ init_compounddragging(c, x, y)
 }
 
 static void
-cancel_drag_compound()
+cancel_drag_compound(void)
 {
     canvas_ref_proc = canvas_locmove_proc = null_proc;
     elastic_movebox();
@@ -787,8 +770,7 @@ cancel_drag_compound()
 }
 
 static void
-array_place_compound(x, y)
-    int		    x, y;
+array_place_compound(int x, int y)
 {
     int		    i, j, delta_x, delta_y, start_x, start_y;
     int		    nx, ny;
@@ -842,8 +824,7 @@ array_place_compound(x, y)
 }
 
 static void
-place_compound(x, y)
-    int		    x, y;
+place_compound(int x, int y)
 {
 
     elastic_movebox();
@@ -853,8 +834,7 @@ place_compound(x, y)
 }
 
 static void
-place_compound_x(x, y)
-    int		    x, y;
+place_compound_x(int x, int y)
 {
     int		    dx, dy;
 

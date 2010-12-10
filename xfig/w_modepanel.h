@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -15,10 +15,11 @@
  *
  */
 
-extern void	force_positioning();
-extern void	force_nopositioning();
-extern void	force_anglegeom();
-extern void	force_noanglegeom();
+extern void	force_positioning(void);
+extern void	force_nopositioning(void);
+extern void	force_anglegeom(void);
+extern void	force_noanglegeom(void);
+extern void	init_mode_panel(Widget tool);
 
 
 #include "w_icons.h"
@@ -36,3 +37,7 @@ typedef struct mode_switch_struct {
     Pixmap	    pixmap, reversePM;
 }               mode_sw_info;
 
+extern void change_mode (icon_struct *icon);
+extern void turn_off_current (void);
+extern void update_modepanel ();
+extern void setup_mode_panel(void);

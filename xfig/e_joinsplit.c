@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -31,20 +31,32 @@
 #include "w_modepanel.h"
 #include "w_zoom.h"
 
-static void	init_join();
-static void	init_split();
-static void	join_lines();
-static void	join_splines();
-static void	split_line();
-static void	split_spline();
-static void	cancel_join();
-static void	join_line2();
-static void	join_spline2();
-static Boolean	connect_line_points();
-static Boolean	connect_spline_points();
+#include "e_addpt.h"
+#include "f_util.h"
+#include "u_free.h"
+#include "u_markers.h"
+#include "u_redraw.h"
+#include "w_cursor.h"
+
+static void	init_join(F_line *obj, int type, int x, int y, F_point *p, F_point *q);
+static void	init_split(F_line *obj, int type, int x, int y, int px, int py);
+static void	join_lines(F_line *line, F_point *prev_point, F_point *selected_point);
+static void	join_splines(F_spline *spline, F_point *prev_point, F_point *selected_point);
+static void	split_line(int px, int py);
+static void	split_spline(int px, int py);
+static void	cancel_join(void);
+static void	join_line2(F_line *obj, int type, int x, int y, F_point *p, F_point *q);
+static void	join_spline2(F_line *obj, int type, int x, int y, F_point *p, F_point *q);
+static Boolean	connect_line_points(F_line *line1, Boolean first1, F_line *line2, Boolean first2, F_line *new_line);
+static Boolean	connect_spline_points(F_spline *spline1, Boolean first1, F_spline *spline2, Boolean first2, F_spline *new_spline);
+
+
+void draw_join_marker (F_point *point);
+void split_polygon (F_line *poly, F_line *line, F_point *point);
+void split_cspline (F_spline *cspline, F_spline *spline, F_point *point, F_sfactor *csf);
 
 void
-join_split_selected()
+join_split_selected(void)
 {
     set_mousefun("Join Lines/Splines", "Split Line/Spline", "", 
 			LOC_OBJ, LOC_OBJ, LOC_OBJ);
@@ -66,11 +78,7 @@ join_split_selected()
 }
 
 static void
-init_join(obj, type, x, y, p, q)
-    F_line	   *obj;
-    int		    type;
-    int		    x, y;
-    F_point	   *p, *q;
+init_join(F_line *obj, int type, int x, int y, F_point *p, F_point *q)
 {
     switch (type) {
       case O_POLYLINE:
@@ -87,11 +95,7 @@ init_join(obj, type, x, y, p, q)
 }
 
 static void
-init_split(obj, type, x, y, px, py)
-    F_line	   *obj;
-    int		    type;
-    int		    x, y;
-    int		    px, py;
+init_split(F_line *obj, int type, int x, int y, int px, int py)
 {
     switch (type) {
       case O_POLYLINE:
@@ -118,9 +122,7 @@ static F_point	*sel_point;
 static Boolean	 first1, first2;
 
 static void
-join_lines(line, prev_point, selected_point)
-    F_line	   *line;
-    F_point	   *prev_point, *selected_point;
+join_lines(F_line *line, F_point *prev_point, F_point *selected_point)
 {
 	/* can only join lines (not boxes or polygons) */
 	if (line->type != T_POLYLINE)
@@ -144,9 +146,7 @@ join_lines(line, prev_point, selected_point)
 }
 
 static void
-join_splines(spline, prev_point, selected_point)
-    F_spline	   *spline;
-    F_point	   *prev_point, *selected_point;
+join_splines(F_spline *spline, F_point *prev_point, F_point *selected_point)
 {
 	/* can only join open splines */
 	if (spline->type & 1)
@@ -172,8 +172,7 @@ join_splines(spline, prev_point, selected_point)
 	update_markers(M_SPLINE_O);
 }
 
-draw_join_marker(point)
-    F_point	   *point;
+void draw_join_marker(F_point *point)
 {
 	int x=ZOOMX(point->x), y=ZOOMY(point->y);
 	pw_vector(canvas_win, x-10, y-10, x-10, y+10, INV_PAINT,1,PANEL_LINE,0.0,MAGENTA);
@@ -182,8 +181,7 @@ draw_join_marker(point)
 	pw_vector(canvas_win, x+10, y-10, x-10, y-10, INV_PAINT,1,PANEL_LINE,0.0,MAGENTA);
 }
 
-erase_join_marker(point)
-    F_point	   *point;
+void erase_join_marker(F_point *point)
 {
     int x=ZOOMX(point->x), y=ZOOMY(point->y);
     if (point) {
@@ -197,7 +195,7 @@ erase_join_marker(point)
 
 
 static void
-cancel_join()
+cancel_join(void)
 {
     join_split_selected();
     /* erase any marker */
@@ -206,11 +204,7 @@ cancel_join()
 }
 
 static void
-join_line2(obj, type, x, y, p, q)
-    F_line	   *obj;
-    int		    type;
-    int		    x, y;
-    F_point	   *p, *q;
+join_line2(F_line *obj, int type, int x, int y, F_point *p, F_point *q)
 {
 	F_line	   *line;
 	F_point	   *lastp;
@@ -257,11 +251,7 @@ join_line2(obj, type, x, y, p, q)
 }
 
 static void
-join_spline2(obj, type, x, y, p, q)
-    F_line	   *obj;
-    int		    type;
-    int		    x, y;
-    F_point	   *p, *q;
+join_spline2(F_line *obj, int type, int x, int y, F_point *p, F_point *q)
 {
 	F_spline   *spline;
 
@@ -313,9 +303,7 @@ join_spline2(obj, type, x, y, p, q)
 */
 
 static Boolean
-connect_line_points(line1, first1, line2, first2, new_line)
-    F_line	   *line1, *line2, *new_line;
-    Boolean	    first1, first2;
+connect_line_points(F_line *line1, Boolean first1, F_line *line2, Boolean first2, F_line *new_line)
 {
 	F_point    *p1,*p2;
 
@@ -366,9 +354,7 @@ connect_line_points(line1, first1, line2, first2, new_line)
 */
 
 static Boolean
-connect_spline_points(spline1, first1, spline2, first2, new_spline)
-    F_spline	   *spline1, *spline2, *new_spline;
-    Boolean	    first1, first2;
+connect_spline_points(F_spline *spline1, Boolean first1, F_spline *spline2, Boolean first2, F_spline *new_spline)
 {
 	F_point    *p1, *p2;
 	F_sfactor  *sf1, *sf2;
@@ -444,8 +430,7 @@ connect_spline_points(spline1, first1, spline2, first2, new_spline)
 /**************************  split line or spline  *******************************/
 
 static void
-split_line(px, py)
-    int		    px, py;
+split_line(int px, int py)
 {
     F_point	   *p;
     F_line	   *new_l1, *new_l2, *save_l;
@@ -519,9 +504,7 @@ split_line(px, py)
 
 /* turn polygon or box "poly" into polyline "line" by breaking at point "point" */
 
-split_polygon(poly, line, point)
-    F_line	   *poly, *line;
-    F_point	   *point;
+void split_polygon(F_line *poly, F_line *line, F_point *point)
 {
     F_point	   *splitp, *p, *q;
 
@@ -557,8 +540,7 @@ split_polygon(poly, line, point)
 
 
 static void
-split_spline(px, py)
-    int		    px, py;
+split_spline(int px, int py)
 {
     F_spline	   *new_spl1, *new_spl2, *save_spl;
     F_point	   *p, *cp, *left_point, *right_point;
@@ -654,10 +636,7 @@ split_spline(px, py)
 
 /* turn closed spline "cspline" open spline "spline" by breaking at point "point" */
 
-split_cspline(cspline, spline, point, csf)
-    F_spline	   *cspline, *spline;
-    F_point	   *point;
-    F_sfactor	   *csf;
+void split_cspline(F_spline *cspline, F_spline *spline, F_point *point, F_sfactor *csf)
 {
     F_point	   *splitp, *p;
     F_sfactor	   *sf;

@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -22,12 +22,19 @@
 #include "patchlevel.h"
 #include "version.h"
 
+#include "object.h"
+#include "f_save.h"
+#include "f_util.h"
+#include "w_cmdpanel.h"
+
 #define MAXERRORS 6
 #define MAXERRMSGLEN 512
 
 static int	error_cnt = 0;
-error_handler(err_sig)
-    int		    err_sig;
+
+void emergency_quit (Boolean abortflag);
+
+void error_handler(int err_sig)
 {
     fprintf(stderr,"\nxfig%s.%s: ",FIG_VERSION,PATCHLEVEL);
     switch (err_sig) {
@@ -52,9 +59,7 @@ error_handler(err_sig)
     emergency_quit(True);
 }
 
-X_error_handler(d, err_ev)
-    Display	   *d;
-    XErrorEvent	   *err_ev;
+int X_error_handler(Display *d, XErrorEvent *err_ev)
 {
     char	    err_msg[MAXERRMSGLEN];
     char	    ernum[10];
@@ -70,10 +75,10 @@ X_error_handler(d, err_ev)
     XGetErrorDatabaseText(tool_d, "XRequest", ernum, "<Unknown>", err_msg, MAXERRMSGLEN);
     (void) fprintf(stderr, "Request code: %s\n",err_msg);
     emergency_quit(True);
+    return 0;
 }
 
-emergency_quit(abortflag)
-    Boolean    abortflag;
+void emergency_quit(Boolean abortflag)
 {
     if (++error_cnt > MAXERRORS) {
 	fprintf(stderr, "xfig: too many errors - giving up.\n");
@@ -100,11 +105,7 @@ emergency_quit(abortflag)
 
 /* ARGSUSED */
 void
-my_quit(w, event, params, num_params)
-    Widget     w;
-    XEvent    *event;
-    String    *params;
-    Cardinal  *num_params;
+my_quit(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     if (event && event->type == ClientMessage &&
 #ifdef WHEN_SAVE_YOURSELF_IS_FIXED

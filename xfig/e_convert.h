@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1995 by C. Blanc and C. Schlick
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -18,10 +18,11 @@
 #ifndef E_CONVERT_H
 #define E_CONVERT_H
 
-extern void     spline_line();
-extern void     line_spline();
-extern void     toggle_polyline_polygon();
-extern void     toggle_open_closed_spline();
-extern void	box_2_box();
+extern void     spline_line(F_spline *s);
+extern void     line_spline(F_line *l, int type_value);
+extern void     toggle_polyline_polygon(F_line *line, F_point *previous_point, F_point *selected_point);
+extern void     toggle_open_closed_spline(F_spline *spline, F_point *previous_point, F_point *selected_point);
+extern void	box_2_box(F_line *old_l);
+extern void convert_selected (void);
 
 #endif /* E_CONVERT_H */

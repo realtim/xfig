@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1992 by Brian Boyter
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -22,16 +22,20 @@
 #include "w_msgpanel.h"
 #include "w_setup.h"
 
-int         _read_pcx();
+#include "w_util.h"
+
+int         _read_pcx(FILE *pcxfile, F_pic *pic);
 Boolean	    bitmap_from_gs();
 
 /* read a PDF file */
 
+
+int read_epsf_pdf (FILE *file, int filetype, F_pic *pic, Boolean pdf_flag);
+void lower (char *buf);
+int hex (char c);
+
 int
-read_pdf(file, filetype, pic)
-    FILE       *file;
-    int         filetype;
-    F_pic      *pic;
+read_pdf(FILE *file, int filetype, F_pic *pic)
 {
     return read_epsf_pdf(file, filetype, pic, True);
 }
@@ -43,20 +47,13 @@ read_pdf(file, filetype, pic)
 */
 
 int
-read_epsf(file, filetype, pic)
-    FILE       *file;
-    int         filetype;
-    F_pic      *pic;
+read_epsf(FILE *file, int filetype, F_pic *pic)
 {
     return read_epsf_pdf(file, filetype, pic, False);
 }
 
 int
-read_epsf_pdf(file, filetype, pic, pdf_flag)
-    FILE       *file;
-    int         filetype;
-    F_pic      *pic;
-    Boolean     pdf_flag;
+read_epsf_pdf(FILE *file, int filetype, F_pic *pic, Boolean pdf_flag)
 {
     int         nbitmap;
     Boolean     bitmapz;
@@ -224,8 +221,7 @@ read_epsf_pdf(file, filetype, pic, pdf_flag)
 }
 
 int
-hex(c)
-    char        c;
+hex(char c)
 {
     if (isdigit(c))
 	return (c - 48);
@@ -233,8 +229,7 @@ hex(c)
 	return (c - 87);
 }
 
-lower(buf)
-    char       *buf;
+void lower(char *buf)
 {
     while (*buf) {
 	if (isupper(*buf))
@@ -258,7 +253,7 @@ bitmap_from_gs(file, filetype, pic, urx, llx, ury, lly, pdf_flag)
     char        buf[300];
     FILE       *tmpfp, *pixfile, *gsfile;
     char       *psnam, *driver;
-    int         status, wid, ht, nbitmap;
+    int         status, wid, ht, nbitmap, fd;
     char        tmpfile[PATH_MAX],
 		pixnam[PATH_MAX],
 		errnam[PATH_MAX],
@@ -274,8 +269,12 @@ bitmap_from_gs(file, filetype, pic, urx, llx, ury, lly, pdf_flag)
 	/* re-open the pipe */
 	close_picfile(file, filetype);
 	file = open_picfile(tmpfile, &filetype, PIPEOK, pixnam);
-	sprintf(tmpfile, "%s/%s%06d", TMPDIR, "xfig-eps", getpid());
-	if ((tmpfp = fopen(tmpfile, "wb")) == NULL) {
+   snprintf(tmpfile, sizeof(tmpfile), "%s/xfig-eps.XXXXXX", TMPDIR);
+   if ((fd = mkstemp(tmpfile)) == -1 || (tmpfp = fdopen(fd, "wb")) == NULL) {
+       if (fd != -1) {
+         unlink(tmpfile);
+         close(fd);
+       }
 	    file_msg("Couldn't open tmp file %s, %s", tmpfile, strerror(errno));
 	    return False;
 	}
@@ -283,10 +282,22 @@ bitmap_from_gs(file, filetype, pic, urx, llx, ury, lly, pdf_flag)
 	    fputs(buf, tmpfp);
 	fclose(tmpfp);
     }
-    /* make name /TMPDIR/xfig-pic.pix */
-    sprintf(pixnam, "%s/%s%06d.pix", TMPDIR, "xfig-pic", getpid());
+    /* make name /TMPDIR/xfig-pic######.pix */
+    snprintf(pixnam, sizeof(pixnam), "%s/xfig-pic.XXXXXX", TMPDIR);
+    if ((fd = mkstemp(pixnam)) == -1) {
+        file_msg("Couldn't open tmp file %s, %s", pixnam, strerror(errno));
+        return False;
+    }
+    close(fd);
+
     /* and file name for any error messages from gs */
-    sprintf(errnam, "%s/%s%06d.err", TMPDIR, "xfig-pic", getpid());
+    snprintf(errnam, sizeof(errnam), "%s/xfig-picerr.XXXXXX", TMPDIR);
+    if ((fd = mkstemp(errnam)) == -1) {
+       file_msg("Couldn't open tmp file %s, %s", errnam, strerror(errno));
+       return False;
+    }
+    close(fd);
+
     /* generate gs command line */
     /* for monochrome, use pbm */
     if (tool_cells <= 2 || appres.monochrome) {
@@ -352,6 +363,7 @@ bitmap_from_gs(file, filetype, pic, urx, llx, ury, lly, pdf_flag)
     fprintf(gsfile, "quit\n");
 
     status = pclose(gsfile);
+
     if (filetype == 1)
 	unlink(tmpfile);
     /* error return from ghostscript, look in error file */

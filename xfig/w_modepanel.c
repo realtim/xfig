@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1991 by Paul King
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -21,9 +21,39 @@
 #include "mode.h"
 #include "object.h"
 #include "paintop.h"
+#include "d_arc.h"
+#include "d_arcbox.h"
+#include "d_box.h"
+#include "d_ellipse.h"
+#include "d_line.h"
+#include "d_picobj.h"
+#include "d_regpoly.h"
+#include "d_spline.h"
 #include "d_text.h"
+#include "e_chop.h"
 #include "e_flip.h"
 #include "e_rotate.h"
+#include "e_placelib.h"
+#include "e_addpt.h"
+#include "e_align.h"
+#include "e_arrow.h"
+#include "e_break.h"
+#include "e_compound.h"
+#include "e_convert.h"
+#include "e_copy.h"
+#include "e_delete.h"
+#include "e_deletept.h"
+#include "e_edit.h"
+#include "e_glue.h"
+#include "e_joinsplit.h"
+#include "e_measure.h"
+#include "e_move.h"
+#include "e_movept.h"
+#include "e_scale.h"
+#include "e_tangent.h"
+#include "e_update.h"
+#include "u_list.h"
+#include "u_markers.h"
 #include "u_search.h"
 #include "w_drawprim.h"
 #include "w_library.h"
@@ -37,91 +67,55 @@
 
 /* EXPORTS */
 
-/* it is easier to put these extern declarations here than to create 
-   all the d_*.h and e_*.h files to do it */
-
-extern void	circle_ellipse_byradius_drawing_selected();
-extern void	circle_ellipse_bydiameter_drawing_selected();
-extern void	box_drawing_selected();
-extern void	arcbox_drawing_selected();
-extern void	line_drawing_selected();
-extern void	regpoly_drawing_selected();
-extern void	picobj_drawing_selected();
-extern void	text_drawing_selected();
-extern void	arc_drawing_selected();
-extern void	align_selected();
-extern void	compound_selected();
-extern void	open_compound_selected();
-extern void	break_selected();
-extern void	join_split_selected();
-extern void	scale_selected();
-extern void	point_adding_selected();
-extern void	delete_point_selected();
-extern void	sel_place_lib_obj();
-extern void	move_selected();
-extern void	move_point_selected();
-extern void	delete_selected();
-extern void	copy_selected();
-extern void	rotate_cw_selected();
-extern void	rotate_ccw_selected();
-extern void	flip_ud_selected();
-extern void	flip_lr_selected();
-extern void	convert_selected();
-extern void	arrow_head_selected();
-extern void	edit_item_selected();
-extern void	update_selected();
-extern void	anglemeas_selected();
-extern void	lenmeas_selected();
-extern void	areameas_selected();
-extern void	tangent_selected();
-
 /* LOCALS */
 
 /* drawing */
 
-static void	stub_circle_ellipse_byradius_drawing_selected();
-static void	stub_circle_ellipse_bydiameter_drawing_selected();
-static void	stub_box_drawing_selected();
-static void	stub_arcbox_drawing_selected();
-static void	stub_line_drawing_selected();
-static void	stub_poly_drawing_selected();
-static void	stub_regpoly_drawing_selected();
-static void	stub_picobj_drawing_selected();
-static void	stub_text_drawing_selected();
-static void	stub_arc_drawing_selected();
-static void	stub_spline_drawing_selected();
-static void	stub_cl_spline_drawing_selected();
-static void	stub_intspline_drawing_selected();
-static void	stub_cl_intspline_drawing_selected();
+static void	stub_circle_ellipse_byradius_drawing_selected(void);
+static void	stub_circle_ellipse_bydiameter_drawing_selected(void);
+static void	stub_box_drawing_selected(void);
+static void	stub_arcbox_drawing_selected(void);
+static void	stub_line_drawing_selected(void);
+static void	stub_poly_drawing_selected(void);
+static void	stub_regpoly_drawing_selected(void);
+static void	stub_picobj_drawing_selected(void);
+static void	stub_text_drawing_selected(void);
+static void	stub_arc_drawing_selected(void);
+static void	stub_spline_drawing_selected(void);
+static void	stub_cl_spline_drawing_selected(void);
+static void	stub_intspline_drawing_selected(void);
+static void	stub_cl_intspline_drawing_selected(void);
 
 /* editing */
 
-static void	stub_align_selected();
-static void	stub_compound_selected();
-static void	stub_break_selected();
-static void	stub_open_compound_selected();
-static void	stub_join_split_selected();
-static void	stub_scale_selected();
-static void	stub_point_adding_selected();
-static void	stub_delete_point_selected();
-static void	stub_move_selected();
-static void	stub_popup_library();
-static void	stub_move_point_selected();
-static void	stub_delete_selected();
-static void	stub_copy_selected();
-static void	stub_rotate_cw_selected();
-static void	stub_rotate_ccw_selected();
-static void	stub_flip_ud_selected();
-static void	stub_flip_lr_selected();
-static void	stub_convert_selected();
-static void	stub_arrow_head_selected();
-static void	stub_edit_item_selected();
-static void	stub_update_selected();
-static void	stub_enter_mode_btn();
-static void	stub_anglemeas_selected();
-static void	stub_lenmeas_selected();
-static void	stub_areameas_selected();
-static void	stub_tangent_selected();
+static void	stub_align_selected(void);
+static void	stub_compound_selected(void);
+static void	stub_break_selected(void);
+static void	stub_open_compound_selected(void);
+static void	stub_join_split_selected(void);
+static void	stub_chop_selected(void);
+static void	stub_scale_selected(void);
+static void	stub_point_adding_selected(void);
+static void	stub_delete_point_selected(void);
+static void	stub_move_selected(void);
+static void	stub_popup_library(void);
+static void	stub_move_point_selected(void);
+static void	stub_delete_selected(void);
+static void	stub_copy_selected(void);
+static void	stub_rotate_cw_selected(void);
+static void	stub_rotate_ccw_selected(void);
+static void	stub_flip_ud_selected(void);
+static void	stub_flip_lr_selected(void);
+static void	stub_convert_selected(void);
+static void	stub_chop_selected(void);
+static void	stub_arrow_head_selected(void);
+static void	stub_edit_item_selected(void);
+static void	stub_update_selected(void);
+static void	stub_enter_mode_btn(Widget widget, XEvent *event, String *params, Cardinal *num_params);
+static void	stub_anglemeas_selected(void);
+static void	stub_lenmeas_selected(void);
+static void	stub_areameas_selected(void);
+static void	stub_tangent_selected(void);
 
 /**************	    local variables and routines   **************/
 
@@ -130,16 +124,16 @@ DeclareStaticArgs(13);
 static mode_sw_info *current = NULL;
 
 /* button selection event handler */
-static void     sel_mode_but();
+static void     sel_mode_but(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch);
 
 #ifndef XAW3D1_5E
 /* popup message over button when mouse enters it */
-static void     mode_balloon_trigger();
-static void     mode_unballoon();
+static void     mode_balloon_trigger(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch);
+static void     mode_unballoon(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch);
 #endif /* XAW3D1_5E */
 
 /* popdown message */
-static void     turn_on();
+static void     turn_on(mode_sw_info *msw);
 
 /* The M_XXX indicate which objects are selectable when the mode is on, and
    the I_XXX say which indicator buttons will appear on the indicator panel */
@@ -213,6 +207,9 @@ mode_sw_info mode_switches[] = {
     {&join_split_ic, F_JOIN, join_split_selected, M_POLYLINE | M_SPLINE_O |M_SPLINE_C,
        0,
        "Join or Split lines/splines   (j)", False},
+    {&chop_ic, F_CHOP, chop_selected, M_POLYLINE | M_ARC |M_ELLIPSE,  /* maybe spline someday */
+       I_CHOP,
+       "Chop objects   (x)", False},
     {&scale_ic, F_SCALE, scale_selected, M_NO_TEXT,
        I_MIN2,
        "SCALE objects   (Ctrl-s)", False},
@@ -295,12 +292,10 @@ static Arg      button_args[] =
      /* 6 */ {XtNbackgroundPixmap, (XtArgVal) NULL},
 };
 
+
+
 static void
-stub_enter_mode_btn(widget, event, params, num_params)
-    Widget	 widget;
-    XEvent	*event;
-    String	*params;
-    Cardinal	*num_params;
+stub_enter_mode_btn(Widget widget, XEvent *event, String *params, Cardinal *num_params)
 {
     draw_mousefun_mode();
 }
@@ -345,6 +340,7 @@ static XtActionsRec mode_actions[] =
     {"ModeFlipObjectUD", (XtActionProc) stub_flip_ud_selected},
     {"ModeFlipObjectLR", (XtActionProc) stub_flip_lr_selected},
     {"ModeConvertObject", (XtActionProc) stub_convert_selected},
+    {"ModeChopObject", (XtActionProc) stub_chop_selected},
     {"ModeArrow", (XtActionProc) stub_arrow_head_selected},
     {"ModeEditObject", (XtActionProc) stub_edit_item_selected},
     {"ModeUpdateObject", (XtActionProc) stub_update_selected},
@@ -364,9 +360,8 @@ static String   mode_translations =
     <Btn3Up>:ReleaseRight()\n\
     <LeaveWindow>:LeaveModeSw()unhighlight()\n";
 
-int
-init_mode_panel(tool)
-    Widget           tool;
+void
+init_mode_panel(Widget tool)
 {
     register int    i;
     register mode_sw_info *sw;
@@ -438,7 +433,7 @@ init_mode_panel(tool)
  * after panel widget is realized (in main) put some bitmaps etc. in it
  */
 
-setup_mode_panel()
+void setup_mode_panel(void)
 {
     register int    i;
     register mode_sw_info *msw;
@@ -477,7 +472,7 @@ setup_mode_panel()
 }
 
 #ifdef XAW3D1_5E
-update_modepanel()
+void update_modepanel()
 {
     register int    i;
     register mode_sw_info *sw;
@@ -505,14 +500,10 @@ static	XtIntervalId balloon_id = (XtIntervalId) 0;
 static	Widget balloon_w;
 static	XtPointer clos;
 
-static void mode_balloon();
+static void mode_balloon(void);
 
 static void
-mode_balloon_trigger(widget, closure, event, continue_to_dispatch)
-    Widget        widget;
-    XtPointer	  closure;
-    XEvent*	  event;
-    Boolean*	  continue_to_dispatch;
+mode_balloon_trigger(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch)
 {
 	if (!appres.showballoons)
 		return;
@@ -527,7 +518,7 @@ mode_balloon_trigger(widget, closure, event, continue_to_dispatch)
 }
 
 static void
-mode_balloon()
+mode_balloon(void)
 {
 	Position  x, y;
 	mode_sw_info *msw = (mode_sw_info *) clos;
@@ -574,11 +565,7 @@ mode_balloon()
 /* come here when the mouse leaves a button in the mode panel */
 
 static void
-mode_unballoon(widget, closure, event, continue_to_dispatch)
-    Widget          widget;
-    XtPointer	    closure;
-    XEvent*	    event;
-    Boolean*	    continue_to_dispatch;
+mode_unballoon(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch)
 {
     if (balloon_id) 
 	XtRemoveTimeOut(balloon_id);
@@ -593,11 +580,7 @@ mode_unballoon(widget, closure, event, continue_to_dispatch)
 /* come here when a button is pressed in the mode panel */
 
 static void
-sel_mode_but(widget, closure, event, continue_to_dispatch)
-    Widget          widget;
-    XtPointer	    closure;
-    XEvent*	    event;
-    Boolean*	    continue_to_dispatch;
+sel_mode_but(Widget widget, XtPointer closure, XEvent *event, Boolean *continue_to_dispatch)
 {
     XButtonEvent    xbutton;
     mode_sw_info    *msw = (mode_sw_info *) closure;
@@ -680,46 +663,45 @@ sel_mode_but(widget, closure, event, continue_to_dispatch)
 }
 
 void
-force_positioning()
+force_positioning(void)
 {
     update_indpanel(current->indmask | I_POINTPOSN);
     anypointposn = 0;
 }
 
 void
-force_nopositioning()
+force_nopositioning(void)
 {
     update_indpanel(current->indmask & ~I_POINTPOSN);
     anypointposn = 1;
 }
 
 void
-force_anglegeom()
+force_anglegeom(void)
 {
     update_indpanel(current->indmask | I_ANGLEGEOM);
 }
 
 void
-force_noanglegeom()
+force_noanglegeom(void)
 {
     update_indpanel(current->indmask & ~I_ANGLEGEOM);
 }
 
 static void
-turn_on(msw)
-    mode_sw_info   *msw;
+turn_on(mode_sw_info *msw)
 {
     FirstArg(XtNbackgroundPixmap, msw->reversePM);
     SetValues(msw->widget);
 }
 
-turn_on_current()
+void turn_on_current(void)
 {
     if (current)
 	turn_on(current);
 }
 
-turn_off_current()
+void turn_off_current(void)
 {
     if (current) {
 	XtOverrideTranslations(current->widget,
@@ -729,8 +711,7 @@ turn_off_current()
     }
 }
 
-change_mode(icon)
-icon_struct *icon;
+void change_mode(icon_struct *icon)
 {
     int i;
     XButtonEvent ev; /* To fake an event with */
@@ -746,235 +727,241 @@ icon_struct *icon;
 }
 
 static void
-stub_circle_ellipse_byradius_drawing_selected()
+stub_circle_ellipse_byradius_drawing_selected(void)
 {
 	change_mode(&ellrad_ic);
 }
 
 static void
-stub_circle_ellipse_bydiameter_drawing_selected()
+stub_circle_ellipse_bydiameter_drawing_selected(void)
 {
 	change_mode(&elldia_ic);
 }
 
 static void
-stub_box_drawing_selected()
+stub_box_drawing_selected(void)
 {
 	change_mode(&box_ic);
 }
 
 static void
-stub_arcbox_drawing_selected()
+stub_arcbox_drawing_selected(void)
 {
 	change_mode(&arc_box_ic);
 }
 
 static void
-stub_poly_drawing_selected()
+stub_poly_drawing_selected(void)
 {
 	change_mode(&polygon_ic);
 }
 
 static void
-stub_line_drawing_selected()
+stub_line_drawing_selected(void)
 {
 	change_mode(&line_ic);
 }
 
 static void
-stub_regpoly_drawing_selected()
+stub_regpoly_drawing_selected(void)
 {
 	change_mode(&regpoly_ic);
 }
 
 static void
-stub_picobj_drawing_selected()
+stub_picobj_drawing_selected(void)
 {
 	change_mode(&picobj_ic);
 }
 
 static void
-stub_text_drawing_selected()
+stub_text_drawing_selected(void)
 {
 	change_mode(&text_ic);
 }
 
 static void
-stub_arc_drawing_selected()
+stub_arc_drawing_selected(void)
 {
 	change_mode(&arc_ic);
 }
 
 static void
-stub_cl_spline_drawing_selected()
+stub_cl_spline_drawing_selected(void)
 {
 	change_mode(&c_spl_ic);
 }
 
 static void
-stub_spline_drawing_selected()
+stub_spline_drawing_selected(void)
 {
 	change_mode(&spl_ic);
 }
 
 static void
-stub_cl_intspline_drawing_selected()
+stub_cl_intspline_drawing_selected(void)
 {
 	change_mode(&c_intspl_ic);
 }
 
 static void
-stub_intspline_drawing_selected()
+stub_intspline_drawing_selected(void)
 {
 	change_mode(&intspl_ic);
 }
 
 static void
-stub_align_selected()
+stub_align_selected(void)
 {
 	change_mode(&align_ic);
 }
 
 static void
-stub_compound_selected()
+stub_compound_selected(void)
 {
 	change_mode(&glue_ic);
 }
 
 static void
-stub_break_selected()
+stub_break_selected(void)
 {
 	change_mode(&break_ic);
 }
 
 static void
-stub_join_split_selected()
+stub_join_split_selected(void)
 {
 	change_mode(&join_split_ic);
 }
 
 static void
-stub_open_compound_selected()
+stub_open_compound_selected(void)
 {
 	change_mode(&open_comp_ic);
 }
 
 static void
-stub_scale_selected()
+stub_scale_selected(void)
 {
 	change_mode(&scale_ic);
 }
 
 static void
-stub_point_adding_selected()
+stub_point_adding_selected(void)
 {
 	change_mode(&addpt_ic);
 }
 
 static void
-stub_delete_point_selected()
+stub_delete_point_selected(void)
 {
 	change_mode(&deletept_ic);
 }
 
 static void
-stub_move_selected()
+stub_move_selected(void)
 {
 	change_mode(&move_ic);
 }
 static void
-stub_popup_library()
+stub_popup_library(void)
 {
 	change_mode(&library_ic);
 }
 
 
 static void
-stub_move_point_selected()
+stub_move_point_selected(void)
 {
 	change_mode(&movept_ic);
 }
 
 static void
-stub_delete_selected()
+stub_delete_selected(void)
 {
 	change_mode(&delete_ic);
 }
 
 static void
-stub_copy_selected()
+stub_copy_selected(void)
 {
 	change_mode(&copy_ic);
 }
 
 static void
-stub_rotate_cw_selected()
+stub_rotate_cw_selected(void)
 {
 	change_mode(&rotCW_ic);
 }
 
 static void
-stub_rotate_ccw_selected()
+stub_rotate_ccw_selected(void)
 {
 	change_mode(&rotCCW_ic);
 }
 
 static void
-stub_flip_ud_selected()
+stub_flip_ud_selected(void)
 {
 	change_mode(&flip_y_ic);
 }
 
 static void
-stub_flip_lr_selected()
+stub_flip_lr_selected(void)
 {
 	change_mode(&flip_x_ic);
 }
 
 static void
-stub_convert_selected()
+stub_convert_selected(void)
 {
 	change_mode(&convert_ic);
 }
 
 static void
-stub_arrow_head_selected()
+stub_chop_selected(void)
+{
+	change_mode(&chop_ic);
+}
+
+static void
+stub_arrow_head_selected(void)
 {
 	change_mode(&autoarrow_ic);
 }
 
 static void
-stub_edit_item_selected()
+stub_edit_item_selected(void)
 {
 	change_mode(&edit_ic);
 }
 
 static void
-stub_update_selected()
+stub_update_selected(void)
 {
 	change_mode(&update_ic);
 }
 
 static void
-stub_tangent_selected()
+stub_tangent_selected(void)
 {
 	change_mode(&tangent_ic);
 }
 
 static void
-stub_anglemeas_selected()
+stub_anglemeas_selected(void)
 {
 	change_mode(&anglemeas_ic);
 }
 
 static void
-stub_lenmeas_selected()
+stub_lenmeas_selected(void)
 {
 	change_mode(&lenmeas_ic);
 }
 
 static void
-stub_areameas_selected()
+stub_areameas_selected(void)
 {
 	change_mode(&areameas_ic);
 }

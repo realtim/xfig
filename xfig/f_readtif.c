@@ -1,6 +1,6 @@
 /*
  * FIG : Facility for Interactive Generation of figures
- * Copyright (c) 1999-2002 by Brian V. Smith
+ * Copyright (c) 1999-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -18,25 +18,31 @@
 #include "object.h"
 #include "w_msgpanel.h"
 
+#include "f_readpcx.h"
+
 /* return codes:  PicSuccess (1) : success
 		  FileInvalid (-2) : invalid file
 */
 
 /* for some reason, tifftopnm requires a file and can't work in a pipe */
 
+
+
 int
-read_tif(filename,filetype,pic)
-    char	   *filename;
-    int		    filetype;
-    F_pic	   *pic;
+read_tif(char *filename, int filetype, F_pic *pic)
 {
 	char	 buf[2*PATH_MAX+40],pcxname[PATH_MAX];
 	FILE	*tiftopcx;
-	int	 stat;
+	int	 stat, fd;
 
 	/* make name for temp output file */
-	sprintf(pcxname, "%s/%s%06d.pix", TMPDIR, "xfig-pcx", getpid());
-
+	snprintf(pcxname, sizeof(pcxname), "%s/xfig-pcx.XXXXXX", TMPDIR);
+	if ((fd = mkstemp(pcxname)) == -1) {
+	    file_msg("Cannot open temp file %s: %s\n", pcxname, strerror(errno));
+		return FileInvalid;
+	}
+	close(fd);
+	
 	/* make command to convert tif to pnm then to pcx into temp file */
 	/* for some reason, tifftopnm requires a file and can't work in a pipe */
 	sprintf(buf, "tifftopnm %s 2> /dev/null | ppmtopcx > %s 2> /dev/null",

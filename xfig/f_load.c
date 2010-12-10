@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -35,9 +35,17 @@
 #include "w_util.h"
 #include "w_setup.h"
 
+#include "e_compound.h"
+#include "u_bound.h"
+#include "u_draw.h"
+#include "u_list.h"
+#include "u_redraw.h"
+#include "w_cursor.h"
+#include "w_grid.h"
+
 /* LOCAL declarations */
 
-void	read_fail_message();
+void	read_fail_message(char *file, int err);
 
 /* load Fig file.
 
@@ -46,10 +54,12 @@ void	read_fail_message();
 	xoff, yoff	= offset from 0 (Fig units)
 */
 
+
+void update_settings (fig_settings *settings);
+void update_recent_list (char *file);
+
 int
-load_file(file, xoff, yoff)
-    char	   *file;
-    int		    xoff, yoff;
+load_file(char *file, int xoff, int yoff)
 {
     int		    s;
     F_compound	    c;
@@ -92,6 +102,8 @@ load_file(file, xoff, yoff)
 
 	/* update the settings in appres.xxx from the settings struct returned from read_fig */
 	update_settings(&settings);
+	/* reset the grid menus in print/export panels */
+	reset_grid_menus(appres.INCHES);
 
 	/* and draw the figure on the canvas*/
 	redisplay_canvas();
@@ -124,16 +136,16 @@ load_file(file, xoff, yoff)
 	reset_modifiedflag();
 	return 0;
     }
+
     read_fail_message(file, s);
     reset_modifiedflag();
     reset_cursor();
     return 1;
 }
 
-update_settings(settings)
-    fig_settings  *settings;
+void update_settings(fig_settings *settings)
 {
-	DeclareArgs(4);
+	DeclareArgs(2);
 	char    buf[30];
 
 	/* set landscape flag oppositely and change_orient() will toggle it */
@@ -147,7 +159,7 @@ update_settings(settings)
 	}
 	/* set the printer and export justification labels */
 	appres.flushleft = settings->flushleft;
-	FirstArg(XtNlabel, just_items[settings->flushleft]);
+	FirstArg(XtNlabel, just_items[(int)settings->flushleft]);
 	if (export_popup)
 	    SetValues(export_just_panel);
 	if (print_popup)
@@ -203,7 +215,7 @@ update_settings(settings)
 
 	/* multi-page setting */
 	appres.multiple = settings->multiple;
-	FirstArg(XtNlabel, multiple_pages[appres.multiple]);
+	FirstArg(XtNlabel, multiple_pages[(int)appres.multiple]);
 	if (export_popup)
 	    SetValues(export_multiple_panel);
 	if (print_popup)
@@ -218,9 +230,7 @@ update_settings(settings)
 	    SetValues(export_transp_panel);
 }
 
-merge_file(file, xoff, yoff)
-    char	   *file;
-    int		    xoff, yoff;
+void merge_file(char *file, int xoff, int yoff)
 {
     F_compound	   *c, *c2;
     int		    s;
@@ -284,8 +294,7 @@ merge_file(file, xoff, yoff)
 
 /* update the recent list */
 
-update_recent_list(file)
-    char  *file;
+void update_recent_list(char *file)
 {
     int    i;
     char   *name, path[PATH_MAX], num[3];
@@ -340,9 +349,7 @@ update_recent_list(file)
 }
 
 void
-read_fail_message(file, err)
-    char	   *file;
-    int		    err;
+read_fail_message(char *file, int err)
 {
     if (err == 0)		/* Successful read */
 	return;

@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -28,14 +28,19 @@
 #include "w_msgpanel.h"
 #include "w_mousefun.h"
 
+#include "f_util.h"
+#include "u_redraw.h"
+
 /*************************** local procedures *********************/
 
-static void	create_arc_boxobject();
-static void	cancel_arc_boxobject();
-static void	init_arc_box_drawing();
+static void	create_arc_boxobject(int x, int y);
+static void	cancel_arc_boxobject(void);
+static void	init_arc_box_drawing(int x, int y);
+
+
 
 void
-arcbox_drawing_selected()
+arcbox_drawing_selected(void)
 {
     set_mousefun("corner point", "", "", "", "", "");
     canvas_kbd_proc = null_proc;
@@ -43,13 +48,12 @@ arcbox_drawing_selected()
     canvas_leftbut_proc = init_arc_box_drawing;
     canvas_middlebut_proc = null_proc;
     canvas_rightbut_proc = null_proc;
-    set_cursor(arrow_cursor);
+    set_cursor(crosshair_cursor);
     reset_action_on();
 }
 
 static void
-init_arc_box_drawing(x, y)
-    int		    x, y;
+init_arc_box_drawing(int x, int y)
 {
     cur_x = fix_x = x;
     cur_y = fix_y = y;
@@ -65,7 +69,7 @@ init_arc_box_drawing(x, y)
 }
 
 static void
-cancel_arc_boxobject()
+cancel_arc_boxobject(void)
 {
     elastic_box(fix_x, fix_y, cur_x, cur_y);
     arcbox_drawing_selected();
@@ -73,8 +77,7 @@ cancel_arc_boxobject()
 }
 
 static void
-create_arc_boxobject(x, y)
-    int		    x, y;
+create_arc_boxobject(int x, int y)
 {
     F_line	   *box;
     F_point	   *point;

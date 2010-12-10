@@ -4,9 +4,173 @@ Version 3.2
 =============================================================================
 
 IMPORTANT NOTE:
-	As of April 2004, the email address xfig-bugs@epb1.lbl.gov no longer exists.
 	Please use bvsmith@lbl.gov to report xfig problems or questions.
 
+	Also please note that I don't have much time anymore to work on xfig/transfig,
+	  so while you may have a great contribution to make, unfortunately I
+	  won't have time to work it into a release.  However, I will still try
+	  to fix bugs.
+
+-----------------------------------
+Patchlevel 5b (Jun 1, 2009)
+
+BUGS FIXED:
+	o Dimension line indicator incorrectly showed arrow length/width
+	o Several patches from Fedora xfig maintainer
+	o divide by 0 under certain circumstances in ruler code
+	  From Libor Pechacek
+	o Segfault if PRINTER env variable was not defined
+-----------------------------------
+Patchlevel 5a (Mar 16, 2009):
+
+NEW FEATURES:
+	o Fig-color merged into Fig app-defaults file because almost no one knows about
+	  the "*customization: -color" option to make X programs read the color def file.
+	o 22 new arrowhead types
+	o changed default browser to firefox and default pdf viewer to xpdf
+	o HTML MAP export (fig2dev) produces reference to .png file instead of .gif now
+	o A note added to i18n.html that says if you run fig2dev standalone, you must
+	  pass the -j option to it
+	o No need to have the C99 complex functions in the math library.
+	o New computers from Andre Esser (Libraries/Computers)
+	o Some network icons colored and/or combined by Roland Rosenfeld.
+	o When exporting only active layers have choice of bounding area of whole
+	  figure or only the active layers
+	o Two new library figures - piano_keyboard.fig, top view of a piano keyboard
+	  by Reinaert Albrecht, and piano_keyboard_perspect.fig, a perspective
+	  view of a piano keyboard by Brian Smith, both in the Libraries/Music
+	  directory.
+	o New library figure - scissors.fig in Libraries/OfficeEquip from Kasie
+	  Breezer Talbot
+	o Search tolerance increased from 4 pixels to 10 for zoom < 20
+	o Isometric grid to ease making isometric drawings
+	  From Jasper Wesselingh
+	o New 37-pin D connector and 50-pin ribbon connector in Libraries/Electronic/Physical
+
+BUGS FIXED:
+	o dimension line arrowhead width and length used %d instead of %f in
+	  dialog, always displaying 0
+	o leftover debugging printf(...color = ) in startup
+	o finally fixed size of mode panel so it doesn't cover indicator panel
+	  under certain circumstances
+	o removed "Alpha" from splash
+	o updated copyright date in Help/About
+	o problem with depth panel height due to snap mode indicator
+	o snap indicator indicated "Focus" when "Diameter" was selected
+	o w_keyboard.c had pointer assignment reversed
+	o extraneous "done" in Imakefile in "install.jhtml" section
+	  From Eric Scott
+	o many protoytpe cleanups from Eric Scott
+	o #ifndef __FreeBSD__ added around #include <alloca.h> from Eric Scott
+	o uses rint() instead of lrint() for those with non-C99 compilers
+	o Solaris doesn't have REG_NOERROR for regex, so have new #define for that
+	o added dependency on version.h and patchlevel.h for f_util.c and f_save.c to
+	  Imakefile
+	o In imperial fractional scale mode, if the user scale factor wasn't 1.0, xfig
+	  would switch to decimal mode.  This has been fixed to remain in fractional mode.
+	o Added condition for GLIBC to not declare srandom(int)
+	o Better resizing of message popup panel
+	o Map of Spain included Portugal. From Eugen Dedu.
+	o Double-clicking on either style or family would crash xfig
+	o Export/Print grid units were not reset when loading Fig file of different units
+	o When converting empty export/print grid units to fractional inches would make 0/2
+	o Escaped hyphens in man page
+	  From Roland Rosendfeld
+	o When exporting to all three: PostScript, PDF and TeX, incorrectly generated
+	  PostScript and PDF that included LaTeX-only (special) text
+	o Bug when doing Save As to a shorter filename - would corrupt name sometimes
+	o Note about 450 pixels/cm didn't make it from the FORMAT3.1 file to FORMAT3.2
+	o Print command was using -P instead of -d for lp
+	o On Cygwin, needed to double-escape PRINTER environment when backslashes in name
+	o w_library.c had incompatible poiner type in call to ScanLibraryDirectory
+	o Not enough characters allocated for ruler inch/cm indicators.  Would cause segfault
+	  on zooming out because of longer ruler text, e.g. -10210cm
+
+-----------------------------------
+Patchlevel 5 (Feb 22, 2007):
+
+NEW FEATURES:
+	o Shift-U accelerator added to popup units panel
+	o The library menu button sizes with the library panel, to show longer
+	  path names if the user wants.
+	o The cursor for drawing lines, splines, etc. is a crosshair now instead
+	  of an arrow.
+	o Snap features to allow snapping points to endpoints, midpoints and
+	  intersections of other objects.
+	  From Chris Moller.
+	o Keyboard input of object coordinates for precise positioning.
+	  From Chris Moller.
+	o Can grab arc anywhere along the curve instead of just at grab points
+	  From Chris Moller.
+	o Added -noflipvisualhints for cases where, due to "different" pointer
+	  devices, they aren't really flipped, but the mapping indicates they are.
+	o Export to all of PS, PDF and LaTeX in one operation
+	  From Alistair Ramsey
+	o Reorganized Networks library and new devices: ASX-200, 1000, and 4000
+	  by Bill Chimiak
+	o New figures "betty.fig" (Betty Boop) and "nikke.fig" (German detective
+	  Nick Knatter) in Libraries/Examples drawn by Markku Reunanen
+	o Can finish text input by pressing Escape.  This removes the cancellation
+	  of a compose sequence (e.g. a-umlaut)
+	o Actually a bug fix, import of PDF files is now possible.  The code was
+	  there since version 3.2.3, but the user interface was not.
+	o Nearly-full ANSI protoization of code by Harald Koenig
+	o Installation of Libraries and doc files faster with tar instead of shell loop
+	o New Gregorian chant music symbols from Bill Chimiak.  Also, Music library
+	  divided into "chant" and "modern"
+	o Popup edit panel slightly more compact vertically
+	o New library "Fasteners" containing various bolts and screws
+	  From Jim Yuzwalk
+	o Increased size of numeric entry fields in indicator panels
+	o N-channel IGBT in Electronic/Schematics Library from Art Blair
+	o starting values for arrow type, width, length, thickness may be specified
+	  on command-line or in X resources:
+	  -startarrowtype, -startarrowwidth, -startarrowlength, -startarrowthick
+
+BUGS FIXED:
+	o xfig would crash on 64-bit processors because of a missing include, which 
+	  causes new_string() to be declared implicitly as returning an integer.
+	  This may cause the top 32 bits to get lost and hence the crash.
+	o Blanks not preserved in imported picture filename when reading Fig file
+	o When in metric mode, decimal precision was ignored for dimension lines
+	o When showing vertex numbers on objects, first vertex is now 0 to match
+	  edit window vertex numbers
+	o Also, vertex numbers are not shown on inactive (grayed) layers
+	o Widget shadow resources moved from Fig-color to Fig because they don't
+	  really have anything to do with color. There was a problem when running
+	  KDE because it set a global resource *Scrollbar*height: which made xfig 
+	  freeze when *customization: -color was NOT used.
+	o The point positioning indicator is turned on when editing a compound
+	  object to show the user that it is used
+	o Increased the maximum size of images that can be imported.  There was
+	  a limit in the PostScript image encoder of 4096x4096 pixels.  This was
+	  increased to 8192x8192.
+	o Centered text was changed to left-justified when flipped horizontally
+	  inside a compound object.
+	o With -v option, after reporting the version, xfig would say that -v
+	  was an unknown option 
+	o Local locale was being used when writing the xfig cut buffer file
+	  instead of switching to "C" locale.  This created commas instead of
+	  decimal (.) for numbers in those particular locales.
+	  From Dirk Osswald 
+	o Local locale was used when forming command for calling fig2dev,
+	  resulting in commas instead of decimals for floating point numbers.
+	o count_user_colors buffer overflow fixed
+	o Under Cygwin, temporary file stayed around after unlink(), causing
+	  error when importing more than one ps/eps/pdf file
+	o Segfault when using -update because appres resources were NULL
+	o -update option failed when not first option passed to xfig
+	o Clicking window manager "close window" button in library titlebar
+	  didn't close the window
+	o Wasn't distributing objects in compounds when there were only 2 objects
+	o Some compilers complain about the order of declaration in u_fonts.h - fixed
+	o Northern part of map of India was incorrect (Libraries/Maps/Asia/india.fig)
+	o Map of Serbia was misnamed "yugoslavia.fig" (Libraries/Maps/Europe/yugoslavia.fig)
+	o Map of Central Europe had old Yugoslavia instead of Croatia, Serbia, Bosnia-
+	  Herzegovina, and Macedonia (also, Slovenia was mistakenly inside the border)
+	o Editing a compound object with more than 200 texts would crash xfig
+
+-----------------------------------
 Patchlevel 5-alpha5 (April, 26, 2004):
 
 NEW FEATURES:
@@ -144,8 +308,11 @@ BUGS FIXED:
 	o Bug when breaking a compound object - depths were added twice to the
 	  counts
 	o When implicitly cancelling the placement of a library object by
-	  choosing another mode, xfig would tell user to cancel or finish the
-	  current operation, but there was no way to do that
+	  choosing another mode, xfig would do one of two things:
+	    1. tell user to cancel or finish the current operation, but there
+	       was no way to do that
+	    2. create the object that was being cancelled with extremely large,
+	       negative coordinates
 	o Picture Reread button was active before file was read the first time
 	o Rereading picture in edit popup produced bad colors
 	o When using multiple copies of an imported picture, h/w ratio was not

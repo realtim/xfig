@@ -1,6 +1,6 @@
 /*
  * FIG : Facility for Interactive Generation of figures
- * Copyright (c) 1999-2002 by Brian V. Smith
+ * Copyright (c) 1999-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -19,24 +19,31 @@
 #include "f_picobj.h"
 #include "w_msgpanel.h"
 
+#include "f_readpcx.h"
+
 #define BUFLEN 1024
 
 /* return codes:  PicSuccess (1) : success
 		  FileInvalid (-2) : invalid file
 */
 
+
+
 int
-read_ppm(file,filetype,pic)
-    FILE	   *file;
-    int		    filetype;
-    F_pic	   *pic;
+read_ppm(FILE *file, int filetype, F_pic *pic)
 {
 	char	 buf[BUFLEN],pcxname[PATH_MAX];
 	FILE	*giftopcx;
-	int	 stat, size;
+	int	 stat, size, fd;
 
 	/* make name for temp output file */
-	sprintf(pcxname, "%s/%s%06d.pix", TMPDIR, "xfig-pcx", getpid());
+	snprintf(pcxname, sizeof(pcxname), "%s/xfig-pcx.XXXXXX", TMPDIR);
+	if ((fd = mkstemp(pcxname)) == -1) {
+	    file_msg("Cannot open temp file %s: %s\n", pcxname, strerror(errno));
+	    return FileInvalid;
+	}
+	close(fd);
+
 	/* make command to convert gif to pcx into temp file */
 	sprintf(buf, "ppmtopcx > %s 2> /dev/null", pcxname);
 	if ((giftopcx = popen(buf,"w" )) == 0) {

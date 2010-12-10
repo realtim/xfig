@@ -3,7 +3,7 @@
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
  * Change function implemented by Frank Schmuck (schmuck@svax.cs.cornell.edu)
  * X version by Jon Tombs <jon@uk.ac.oxford.robots>
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  * Parts Copyright (c) 1995 by C. Blanc and C. Schlick
  *
@@ -50,6 +50,21 @@
 #include "w_util.h"
 #include "w_zoom.h"
 
+#include "d_line.h"
+#include "e_placelib.h"
+#include "e_scale.h"
+#include "f_picobj.h"
+#include "u_bound.h"
+#include "u_free.h"
+#include "u_geom.h"
+#include "u_redraw.h"
+#include "u_translate.h"
+#include "w_color.h"
+#include "w_cursor.h"
+#include "w_dir.h"
+
+#include <sys/wait.h>  /* waitpid() */
+
 /* EXPORTS */
 
 Widget	pic_name_panel;  	/* global to be visible in w_browse */
@@ -71,72 +86,72 @@ static	int what_rotation(int dx, int dy);
 #define NO_ARROWS	False
 
 static Position rootx, rooty;
-static void	new_generic_values();
-static void	new_arrow_values();
-static void	get_new_line_values();
-static void	generic_window();
-static void     spline_point_window();
-static void	font_image_panel();
-static Widget	pen_color_selection_panel();
-static Widget	fill_color_selection_panel();
-static void	float_label();
-static void	int_label();
-static void	str_panel();
-static void	xy_panel();
-static void	f_pair_panel();
-static void	get_f_pos();
-static void	points_panel();
-static void	get_points();
-static void	arc_type_select();
-static void	cap_style_select();
-static void	join_style_select();
-static void	line_style_select();
-static void	for_arrow_type_select();
-static void	back_arrow_type_select();
-static void	textjust_select();
-static void	fill_style_select();
-static void	flip_pic_select();
-static void	rotation_select();
-static void	hidden_text_select();
-static void	rigid_text_select();
-static void	special_text_select();
-static void	pen_color_select();
-static void	fill_color_select();
-static int	panel_get_dim_value();
-static void	panel_clear_value();
-static void	get_new_compound_values();
-static void	panel_set_scaled_int();
-static void	unit_select();
-static void	init_convert_array();
-static void	add_to_convert();
-static double	cvt_to_units();
-static void	cvt_to_units_str();
-static int	cvt_to_fig();
+static void	new_generic_values(void);
+static void	new_arrow_values(void);
+static void	get_new_line_values(void);
+static void	generic_window(char *object_type, char *sub_type, icon_struct *icon, void (*d_proc) (/* ??? */), Boolean generics, Boolean arrows, char *comments);
+static void     spline_point_window(int x, int y);
+static void	font_image_panel(Pixmap pixmap, char *label, Widget *pi_x);
+static Widget	pen_color_selection_panel(void);
+static Widget	fill_color_selection_panel(void);
+static void	float_label(float x, char *label, Widget *pi_x);
+static void	int_label(int x, char *label, Widget *pi_x);
+static void	str_panel(char *string, char *name, Widget *pi_x, int width, Boolean size_to_width, Boolean international);
+static void	xy_panel(int x, int y, char *label, Widget *pi_x, Widget *pi_y, Boolean make_unit_menu);
+static void	f_pair_panel(F_pos *fp, char *label, Widget *pi_x, char *xlabel, Widget *pi_y, char *ylabel, Boolean make_unit_menu);
+static void	get_f_pos(F_pos *fp, Widget pi_x, Widget pi_y);
+static void	points_panel(struct f_point *p);
+static void	get_points(struct f_point *p);
+static void	arc_type_select(Widget w, XtPointer new_style, XtPointer call_data);
+static void	cap_style_select(Widget w, XtPointer new_type, XtPointer call_data);
+static void	join_style_select(Widget w, XtPointer new_type, XtPointer call_data);
+static void	line_style_select(Widget w, XtPointer new_style, XtPointer call_data);
+static void	for_arrow_type_select(Widget w, XtPointer new_type, XtPointer call_data);
+static void	back_arrow_type_select(Widget w, XtPointer new_type, XtPointer call_data);
+static void	textjust_select(Widget w, XtPointer new_textjust, XtPointer call_data);
+static void	fill_style_select(Widget w, XtPointer new_fillflag, XtPointer call_data);
+static void	flip_pic_select(Widget w, XtPointer new_flipflag, XtPointer call_data);
+static void	rotation_select(Widget w, XtPointer new_rotation, XtPointer call_data);
+static void	hidden_text_select(Widget w, XtPointer new_hidden_text, XtPointer call_data);
+static void	rigid_text_select(Widget w, XtPointer new_rigid_text, XtPointer call_data);
+static void	special_text_select(Widget w, XtPointer new_special_text, XtPointer call_data);
+static void	pen_color_select(Widget w, XtPointer new_color, XtPointer call_data);
+static void	fill_color_select(Widget w, XtPointer new_color, XtPointer call_data);
+static int	panel_get_dim_value(Widget widg);
+static void	panel_clear_value(Widget widg);
+static void	get_new_compound_values(void);
+static void	panel_set_scaled_int(Widget widg, int intval);
+static void	unit_select(Widget w, XtPointer new_unit, XtPointer call_data);
+static void	init_convert_array(void);
+static void	add_to_convert(Widget widget);
+static double	cvt_to_units(int fig_unit);
+static void	cvt_to_units_str(int x, char *buf);
+static int	cvt_to_fig(double real_unit);
 
-static void	reposition_picture();
-static void	resize_picture();
+static void	reposition_picture(Widget w);
+static void	resize_picture(Widget w);
 
-static void	modify_compound();
-static void	reposition_top();
-static void	reposition_bottom();
-static void	rescale_compound();
-static void	collapse_depth();
+static void	modify_compound(Widget w);
+static void	reposition_top(void);
+static void	reposition_bottom(void);
+static void	rescale_compound(void);
+static void	collapse_depth(Widget panel_local, XtPointer closure, XtPointer call_data);
 
-static void	done_line();
-static void	done_text();
-static void	done_arc();
-static void	done_ellipse();
-static void	done_spline();
-static void	done_spline_point();
-static void	done_compound();
-static void	done_figure_comments();
+static void	done_line(void);
+static void	done_text(void);
+static void	done_arc(void);
+static void	done_ellipse(void);
+static void	done_spline(void);
+static void	done_spline_point(void);
+static void	done_compound(void);
+static void	done_figure_comments(void);
 
-static void	done_button(), apply_button(), cancel_button();
-static void	toggle_sfactor_type();
-static void	change_sfactor_value();
-static void	scroll_sfactor_value();
-static void	grab_button(), browse_button(), image_edit_button();
-static void	update_fill_image();
+static void	done_button(Widget panel_local, XtPointer closure, XtPointer call_data), apply_button(Widget panel_local, XtPointer closure, XtPointer call_data), cancel_button(Widget panel_local, XtPointer closure, XtPointer call_data);
+static void	toggle_sfactor_type(Widget panel_local, XtPointer _sfactor_index, XtPointer call_data);
+static void	change_sfactor_value(Widget panel_local, XtPointer closure, XtPointer _top);
+static void	scroll_sfactor_value(Widget panel_local, XtPointer closure, XtPointer _num_pixels);
+static void	grab_button(Widget panel_local, XtPointer closure, XtPointer call_data), browse_button(Widget panel_local, XtPointer closure, XtPointer call_data), image_edit_button(Widget panel_local, XtPointer closure, XtPointer call_data);
+static void	update_fill_image(Widget w, XtPointer dummy, XtPointer dummy2);
 
 static Widget	popup, form;
 static Widget	below, beside;
@@ -144,8 +159,9 @@ static Widget	above_arrows;
 static Widget	comment_popup;
 static Widget	arc_points_form;
 
-static Widget	float_panel();
-static Widget	int_panel(), int_panel_callb();
+static Widget	float_panel(float x, Widget parent, char *label, Widget pbeside, Widget *pi_x, float min, float max, float inc, int prec);
+static Widget	int_panel(int x, Widget parent, char *label, Widget beside, Widget *pi_x, int min, int max, int inc);
+static Widget	int_panel_callb(int x, Widget parent, char *label, Widget pbeside, Widget *pi_x, int min, int max, int inc, XtCallbackProc callback);
 static Widget	reread, shrink, expand, origsize;
 static Widget	percent_button, percent, percent_entry;
 static Widget	label;
@@ -187,10 +203,10 @@ static Widget	cur_fontsize_panel;
 static Widget	fill_style_button;
 static Widget	radius, num_objects;
 static Widget	comments_panel;
-static Widget	arrow_label,for_aform,back_aform;
+static Widget	for_aform,back_aform;
 static Widget	but1;
 static Widget	unit_menu_button;
-static Widget	unit_pulldown_menu();
+static Widget	unit_pulldown_menu(Widget below, Widget beside);
 static Widget	min_depth_w, max_depth_w;
 
 /* for PIC object type */
@@ -224,7 +240,7 @@ static Widget	convert_array[MAXDISPTS*2]; /* array for those widgets */
 
 /* For edit all texts inside compound function */
 
-#define MAX_COMPOUND_TEXT_PANELS 200	/* max number of texts that can be edited in compound */
+#define MAX_COMPOUND_TEXT_PANELS 2000	/* max number of texts that can be edited in compound */
 static	Widget	compound_text_panels[MAX_COMPOUND_TEXT_PANELS];
 Boolean	edit_remember_lib_mode = False;		/* Remember that we were in library mode */
 Boolean	edit_remember_dimline_mode = False;	/* Remember that we were in dimension line mode */
@@ -263,9 +279,9 @@ static Boolean	changed, reread_file;
 static Boolean  file_changed=False;
 static Boolean	actions_added=False;
 
-static void     edit_cancel();
-static void     edit_done(), edit_apply();
-static void	popdown_comments();
+static void     edit_cancel(Widget w, XButtonEvent *ev, String *params, Cardinal *num_params);
+static void     edit_done(Widget w, XButtonEvent *ev, String *params, Cardinal *num_params), edit_apply(Widget w, XButtonEvent *ev, String *params, Cardinal *num_params);
+static void	popdown_comments(void);
 
 /*
  * the following pix_table and xxxx_pixmaps entries are guaranteed to be 
@@ -385,7 +401,7 @@ static XtActionsRec compound_actions[] =
 #define SFACTOR_TO_PERCENTAGE(x) ((-(x) + 1.0) / 2.0)
 #define PERCENTAGE_TO_CONTROL(x) (-(SFACTOR_BAR_HEIGHT/100) * (x) + 1.0)
 
-static int update_sfactor_value();
+static void update_sfactor_value(double new_value);
 static struct sfactor_def
 {
   char label[13];
@@ -398,7 +414,7 @@ static struct sfactor_def
   { "Interpolated", S_SPLINE_INTERP  }
 };
 
-static void      make_window_spline_point();
+static void      make_window_spline_point(F_spline *s, int x, int y);
 
 static Widget    sfactor_bar;
 static F_sfactor *edited_sfactor, *sub_sfactor;
@@ -465,8 +481,28 @@ static struct {
 #define put_arc_type(x) \
 	generic_vals.arc_type = x->type;
 
-get_arc_type(arc)
-   F_arc	*arc;
+
+void make_window_line (F_line *l);
+void make_window_text (F_text *t);
+void make_window_ellipse (F_ellipse *e);
+void make_window_arc (F_arc *a);
+void make_window_spline (F_spline *s);
+void make_window_compound (F_compound *c);
+void make_window_figure (void);
+void check_depth (void);
+void text_transl (Widget w);
+void check_thick (void);
+void reset_edit_cursor (void);
+void arc_type_menu (void);
+void fill_style_menu (int fill, int fill_flag);
+void cap_style_panel_menu (void);
+void join_style_panel_menu (void);
+void set_image_pm (int val);
+void fill_style_sens (Boolean state);
+void fill_pat_sens (Boolean state);
+void collapse_depths (F_compound *compound);
+
+void get_arc_type(F_arc *arc)
 {
     arc->type = generic_vals.arc_type; 
     /* remove any arrowheads from pie-wedge style arc */
@@ -485,8 +521,7 @@ get_arc_type(arc)
 /* NOTE: This procedure requires that the structure components for f_arc, f_line
 	and f_spline are in the same order up to and including the arrows */
 
-put_generic_arrows(x)
-   F_line	*x;
+void put_generic_arrows(F_line *x)
 {
     for_arrow = (x->for_arrow != NULL);
     back_arrow = (x->back_arrow != NULL);
@@ -537,8 +572,7 @@ put_generic_arrows(x)
 /* NOTE: This procedure requires that the structure components for f_arc, f_line
 	and f_spline are in the same order up to and including the arrows */
 
-get_generic_arrows(x)
-   F_line	*x;
+void get_generic_arrows(F_line *x)
 {
 	new_arrow_values();
 	if (for_arrow) {
@@ -569,11 +603,11 @@ get_generic_arrows(x)
 	}
 }
 
-int	edit_item();
-int	edit_spline_point();
-void	edit_figure_comments();
+void	edit_item(void *p, int type, int x, int y);
+void	edit_spline_point(F_spline *spline, int type, int x, int y, F_point *previous_point, F_point *the_point);
+void	edit_figure_comments(int x, int y, unsigned int shift);
 
-edit_item_selected()
+void edit_item_selected(void)
 {
     set_mousefun("edit object", "edit Main comment", "edit point", 
 			LOC_OBJ, "show comments", LOC_OBJ);
@@ -594,12 +628,12 @@ edit_item_selected()
    editing of the whole figure comments (shift=0)
 */
 
-int	popup_show_comments();
+void	popup_show_comments(F_line *p, int type, int x, int y);
 
 void
-edit_figure_comments(x, y, shift)
-    int		    x, y;
-    unsigned int    shift;	/* Shift Key Status from XEvent */
+edit_figure_comments(int x, int y, unsigned int shift)
+       		         
+                          	/* Shift Key Status from XEvent */
 {
     if (shift) {
 	/* locate the object and popup the comments panel */
@@ -613,10 +647,7 @@ edit_figure_comments(x, y, shift)
     }
 }
 
-popup_show_comments(p, type, x, y)
-    F_line	   *p;
-    int		    type;
-    int		    x, y;
+void popup_show_comments(F_line *p, int type, int x, int y)
 {
 	Widget	    form;
 	static Boolean  actions_added = False;
@@ -702,18 +733,15 @@ popup_show_comments(p, type, x, y)
 }
 
 static void
-popdown_comments()
+popdown_comments(void)
 {
 	XtDestroyWidget(comment_popup);
 }
 
-edit_item(p, type, x, y)
-    F_line	   *p;
-    int		    type;
-    int		    x, y;
+void edit_item(void *p, int type, int x, int y)
 {
     XtWidgetGeometry xtgeom,comp;
-    int		    i, llx, lly, urx, ury, dum;
+    int		    llx, lly, urx, ury, dum;
     Dimension	    w, h;
     Position	    rootlx, rootly, rootux, rootuy;
 
@@ -763,11 +791,13 @@ edit_item(p, type, x, y)
 	break;
       case O_COMPOUND:
 	compound_bound((F_compound *) p, &llx, &lly, &urx, &ury);
+	/* turn on the point positioning indicator since it is used for editing compound */
+	update_indpanel(I_MIN2);
 	make_window_compound((F_compound *) p);
 	break;
       case O_FIGURE:
 	compound_bound((F_compound *) p, &llx, &lly, &urx, &ury);
-	make_window_figure((F_compound *) p);
+	make_window_figure();
 	break;
     }
 
@@ -821,10 +851,7 @@ edit_item(p, type, x, y)
 }
 
 static void
-reread_picfile(panel_local, closure, call_data)
-    Widget	    panel_local;
-    XtPointer	    closure;
-    XtPointer	    call_data;
+reread_picfile(Widget panel_local, XtPointer closure, XtPointer call_data)
 {
     Boolean	    dum;
 
@@ -845,11 +872,7 @@ reread_picfile(panel_local, closure, call_data)
 }
 
 
-edit_spline_point(spline, type, x, y, previous_point, the_point)
-    F_spline	   *spline;
-    int		    type;
-    int		    x, y;
-    F_point        *previous_point, *the_point;
+void edit_spline_point(F_spline *spline, int type, int x, int y, F_point *previous_point, F_point *the_point)
 {
     if (type!=O_SPLINE) {
 	put_msg("Only spline points can be edited");
@@ -874,11 +897,7 @@ edit_spline_point(spline, type, x, y, previous_point, the_point)
 }
 
 static void
-expand_pic(w, ev, params, num_params)
-    Widget	    w;
-    XButtonEvent   *ev;
-    String	   *params;
-    Cardinal	   *num_params;
+expand_pic(Widget w, XButtonEvent *ev, String *params, Cardinal *num_params)
 {
     struct f_point  p1, p2;
     int		    dx, dy, rotation;
@@ -917,11 +936,7 @@ expand_pic(w, ev, params, num_params)
 }
 
 static void
-shrink_pic(w, ev, params, num_params)
-    Widget	    w;
-    XButtonEvent   *ev;
-    String	   *params;
-    Cardinal	   *num_params;
+shrink_pic(Widget w, XButtonEvent *ev, String *params, Cardinal *num_params)
 {
     struct f_point  p1, p2;
     int		    dx, dy, rotation;
@@ -961,11 +976,7 @@ shrink_pic(w, ev, params, num_params)
 }
 
 static void
-origsize_pic(w, ev, params, num_params)
-    Widget	    w;
-    XButtonEvent   *ev;
-    String	   *params;
-    Cardinal	   *num_params;
+origsize_pic(Widget w, XButtonEvent *ev, String *params, Cardinal *num_params)
 {
     struct f_point  p1, p2;
     int		    dx, dy;
@@ -994,11 +1005,7 @@ origsize_pic(w, ev, params, num_params)
 }
 
 static void
-scale_percent_pic(w, ev, params, num_params)
-    Widget	    w;
-    XButtonEvent   *ev;
-    String	   *params;
-    Cardinal	   *num_params;
+scale_percent_pic(Widget w, XButtonEvent *ev, String *params, Cardinal *num_params)
 {
     struct f_point  p1, p2;
     int		    dx, dy;
@@ -1037,14 +1044,14 @@ scale_percent_pic(w, ev, params, num_params)
 
 /* make a panel for the user to change the comments for the whole figure */
 
-make_window_figure()
+void make_window_figure(void)
 {
     generic_window("Whole Figure", "", &figure_ic, done_figure_comments,
 		NO_GENERICS, NO_ARROWS, objects.comments);
 }
 
 static void
-done_figure_comments()
+done_figure_comments(void)
 {
     char	*s;
 
@@ -1065,13 +1072,11 @@ done_figure_comments()
     }
 }
 
-make_window_compound(c)
-    F_compound	   *c;
+void make_window_compound(F_compound *c)
 {
     F_text	*t;
     int		 i;
     Widget	 save_form, viewp;
-    Widget	 button;
     F_pos	 dimen;		/* need temp storage for width, height panel */
 
     set_cursor(panel_cursor);
@@ -1219,8 +1224,7 @@ make_window_compound(c)
 /* come here when user presses return in any compound corner/size entry */
 
 static void
-modify_compound(w)
-    Widget	w;
+modify_compound(Widget w)
 {
     if (w == x1_panel || w == y1_panel)
 	reposition_top();
@@ -1233,8 +1237,7 @@ modify_compound(w)
 /* come here when user presses return in picture X/Y position */
 
 static void
-reposition_picture(w)
-    Widget	w;
+reposition_picture(Widget w)
 {
     int x1, y1, x2, y2;
     int width, height, rotation;
@@ -1277,8 +1280,7 @@ reposition_picture(w)
 /* come here when user presses return in picture width or height */
 
 static void
-resize_picture(w)
-    Widget	w;
+resize_picture(Widget w)
 {
     int x1, y1, x2, y2;
     int width, height;
@@ -1323,7 +1325,7 @@ resize_picture(w)
 /* reposition the compound using the user's new upper-left values */
 
 static void
-reposition_top()
+reposition_top(void)
 {
     int		 nw_x, nw_y, se_x, se_y, dx, dy;
 
@@ -1351,7 +1353,7 @@ reposition_top()
 /* reposition the compound using the user's new lower-right values */
 
 static void
-reposition_bottom()
+reposition_bottom(void)
 {
     int		 nw_x, nw_y, se_x, se_y, dx, dy;
 
@@ -1380,7 +1382,7 @@ reposition_bottom()
 /* it is rescaled relative to the upper-left corner */
 
 static void
-rescale_compound()
+rescale_compound(void)
 {
     int		 width, height, se_x, se_y;
 
@@ -1402,7 +1404,7 @@ rescale_compound()
 }
 
 static void
-get_new_compound_values()
+get_new_compound_values(void)
 {
     int		 dx, dy, nw_x, nw_y, se_x, se_y;
     float	 scalex, scaley;
@@ -1449,7 +1451,7 @@ get_new_compound_values()
 }
 
 static void
-done_compound()
+done_compound(void)
 {
     switch (button_result) {
 
@@ -1534,8 +1536,7 @@ done_compound()
     }
 }
 
-make_window_line(l)
-    F_line	   *l;
+void make_window_line(F_line *l)
 {
     struct f_point  p1, p2;
     int		    dx, dy, rotation;
@@ -1592,7 +1593,7 @@ make_window_line(l)
 			GENERICS, NO_ARROWS, l->comments);
 	p1 = *new_l->points;
 	p2 = *new_l->points->next->next;
-	(void) int_panel(new_l->radius, form, "Corner radius", &radius,
+	(void) int_panel(new_l->radius, form, "Corner radius", (Widget) 0, &radius,
 					MIN_BOX_RADIUS, MAX_BOX_RADIUS, 1);
 	xy_panel(p1.x, p1.y, "First corner", &x1_panel, &y1_panel, True);
 	xy_panel(p2.x, p2.y, "Opposite corner", &x2_panel, &y2_panel, False);
@@ -1607,7 +1608,7 @@ make_window_line(l)
 	if (new_l->pic != 0 && new_l->pic->pic_cache && new_l->pic->pic_cache->subtype != T_PIC_XBM)
 	    XtSetSensitive(pen_col_button, False);
 
-	(void) int_panel(new_l->depth, form, "     Depth", &depth_panel,
+	(void) int_panel(new_l->depth, form, "     Depth", (Widget) 0, &depth_panel,
 				MIN_DEPTH, MAX_DEPTH, 1);
 	str_panel(new_l->pic->pic_cache? new_l->pic->pic_cache->file: "", "Picture filename", 
 				&pic_name_panel, 290, False, False);
@@ -1947,7 +1948,7 @@ make_window_line(l)
 }
 
 static void
-get_new_line_values()
+get_new_line_values(void)
 {
     struct f_point  p1, p2, *p;
     char	   *string;
@@ -2169,7 +2170,7 @@ get_new_line_values()
 }
 
 static void
-done_line()
+done_line(void)
 {
     int		prev_depth;
     switch (button_result) {
@@ -2232,8 +2233,7 @@ done_line()
 
 }
 
-make_window_text(t)
-    F_text	   *t;
+void make_window_text(F_text *t)
 {
     static char	   *textjust_items[] = {
     "Left justified ", "Centered       ", "Right justified"};
@@ -2265,13 +2265,13 @@ make_window_text(t)
 	new_latex_font = new_t->font;	/* get current font */
     generic_window("TEXT", "", &text_ic, done_text, NO_GENERICS, NO_ARROWS, t->comments);
 
-    (void) int_panel(new_t->size, form, "      Size", &cur_fontsize_panel, 
+    (void) int_panel(new_t->size, form, "      Size", (Widget) 0, &cur_fontsize_panel, 
 				MIN_FONT_SIZE, MAX_FONT_SIZE, 1);
     below = pen_color_selection_panel();
-    (void) int_panel(new_t->depth, form, "     Depth", &depth_panel, 
+    (void) int_panel(new_t->depth, form, "     Depth", (Widget) 0, &depth_panel, 
 				MIN_DEPTH, MAX_DEPTH, 1);
     (void) float_panel(180.0 / M_PI * new_t->angle, form, "Angle (degrees)",
-	      &angle_panel, -360.0, 360.0, 1.0, 2);
+	      (Widget) 0, &angle_panel, -360.0, 360.0, 1.0, 2);
 
     /* make text justification menu */
 
@@ -2393,7 +2393,7 @@ make_window_text(t)
 }
 
 static void
-get_new_text_values()
+get_new_text_values(void)
 {
     PR_SIZE	    size;
 
@@ -2436,7 +2436,7 @@ get_new_text_values()
 }
 
 static void
-done_text()
+done_text(void)
 {
     int		prev_depth;
     switch (button_result) {
@@ -2481,8 +2481,7 @@ done_text()
     }
 }
 
-make_window_ellipse(e)
-    F_ellipse	   *e;
+void make_window_ellipse(F_ellipse *e)
 {
     char	   *s1, *s2;
     icon_struct	   *image;
@@ -2524,7 +2523,7 @@ make_window_ellipse(e)
     generic_window(s1, s2, image, done_ellipse, GENERICS, NO_ARROWS, e->comments);
     if (new_e->type == T_ELLIPSE_BY_RAD || new_e->type == T_ELLIPSE_BY_DIA) {
 	(void) int_panel(round(180 / M_PI * new_e->angle), form, "Angle (degrees)",
-	      &angle_panel, -360, 360, 1);
+	      (Widget) 0, &angle_panel, -360, 360, 1);
     }
 
     /* tell the pulldown unit menu which panels to convert */
@@ -2564,7 +2563,7 @@ make_window_ellipse(e)
 }
 
 static void
-get_new_ellipse_values()
+get_new_ellipse_values(void)
 {
     get_generic_vals(new_e);
     if (new_e->type == T_ELLIPSE_BY_RAD || new_e->type == T_ELLIPSE_BY_DIA) {
@@ -2589,7 +2588,7 @@ get_new_ellipse_values()
 }
 
 static void
-done_ellipse()
+done_ellipse(void)
 {
     int		prev_depth;
     switch (button_result) {
@@ -2637,8 +2636,7 @@ done_ellipse()
 
 Pixel arrow_panel_bg;
 
-make_window_arc(a)
-    F_arc	   *a;
+void make_window_arc(F_arc *a)
 {
     Widget	    save_form, save_below;
 
@@ -2692,13 +2690,12 @@ make_window_arc(a)
 	XtUnmanageChild(form);
 	XtUnmanageChild(for_aform);
 	XtUnmanageChild(back_aform);
-	XtUnmanageChild(arrow_label);
 	XtManageChild(form);
     }
 }
 
 static void
-get_new_arc_values()
+get_new_arc_values(void)
 {
     F_pos	    p0, p1, p2;
     float	    cx, cy;
@@ -2722,7 +2719,7 @@ get_new_arc_values()
 }
 
 static void
-done_arc()
+done_arc(void)
 {
     int		prev_depth;
     switch (button_result) {
@@ -2768,8 +2765,7 @@ done_arc()
 
 }
 
-make_window_spline(s)
-    F_spline	   *s;
+void make_window_spline(F_spline *s)
 {
     set_cursor(panel_cursor);
     toggle_splinemarker(s);
@@ -2817,7 +2813,7 @@ make_window_spline(s)
 
 
 static void
-done_spline()
+done_spline(void)
 {
     int		prev_depth;
     switch (button_result) {
@@ -2870,9 +2866,7 @@ done_spline()
 
 
 static void
-make_window_spline_point(s, x, y)
-    F_spline	   *s;
-    int            x, y;
+make_window_spline_point(F_spline *s, int x, int y)
 {
     set_cursor(panel_cursor);
     new_s = copy_spline(s);
@@ -2902,7 +2896,7 @@ make_window_spline_point(s, x, y)
 }
 
 static void
-done_spline_point()
+done_spline_point(void)
 {
     old_s = new_s->next;
     /* restore original attributes */
@@ -2932,7 +2926,7 @@ done_spline_point()
 
 
 static void
-new_generic_values()
+new_generic_values(void)
 {
     int		    fill;
     char	   *val;
@@ -2995,7 +2989,7 @@ new_generic_values()
 }
 
 static void
-new_arrow_values()
+new_arrow_values(void)
 {
 	if (for_arrow) {
 	    generic_vals.for_arrow.thickness =
@@ -3016,10 +3010,7 @@ new_arrow_values()
 }
 
 static void
-done_button(panel_local, closure, call_data)
-    Widget	    panel_local;
-    XtPointer	    closure;
-    XtPointer	    call_data;
+done_button(Widget panel_local, XtPointer closure, XtPointer call_data)
 {
     button_result = DONE;
     done_proc();
@@ -3028,10 +3019,7 @@ done_button(panel_local, closure, call_data)
 }
 
 static void
-apply_button(panel_local, closure, call_data)
-    Widget	    panel_local;
-    XtPointer	    closure;
-    XtPointer	    call_data;
+apply_button(Widget panel_local, XtPointer closure, XtPointer call_data)
 {
     button_result = DONE;
     button_result = APPLY;
@@ -3041,10 +3029,7 @@ apply_button(panel_local, closure, call_data)
 }
 
 static void
-cancel_button(panel_local, closure, call_data)
-    Widget	    panel_local;
-    XtPointer	    closure;
-    XtPointer	    call_data;
+cancel_button(Widget panel_local, XtPointer closure, XtPointer call_data)
 {
     button_result = CANCEL;
     done_proc();
@@ -3053,36 +3038,24 @@ cancel_button(panel_local, closure, call_data)
 }
 
 static void
-edit_done(w, ev, params, num_params)
-    Widget          w;
-    XButtonEvent   *ev;
-    String	   *params;
-    Cardinal	   *num_params;
+edit_done(Widget w, XButtonEvent *ev, String *params, Cardinal *num_params)
 {
     done_button(w, NULL, NULL);
 }
 
 static void
-edit_apply(w, ev, params, num_params)
-    Widget          w;
-    XButtonEvent   *ev;
-    String	   *params;
-    Cardinal	   *num_params;
+edit_apply(Widget w, XButtonEvent *ev, String *params, Cardinal *num_params)
 {
     apply_button(w, NULL, NULL);
 }
 
 static void
-edit_cancel(w, ev, params, num_params)
-    Widget          w;
-    XButtonEvent   *ev;
-    String	   *params;
-    Cardinal	   *num_params;
+edit_cancel(Widget w, XButtonEvent *ev, String *params, Cardinal *num_params)
 {
     cancel_button(w, NULL, NULL);
 }
 
-reset_edit_cursor()
+void reset_edit_cursor(void)
 {
     if (lib_cursor)
 	set_cursor(null_cursor);
@@ -3095,18 +3068,11 @@ reset_edit_cursor()
 }
 
 static void
-generic_window(object_type, sub_type, icon, d_proc, generics, arrows, comments)
-    char	   *object_type, *sub_type;
-    icon_struct	   *icon;
-    void	    (*d_proc) ();
-    Boolean	    generics;
-    Boolean	    arrows;
-    char	   *comments;
-
+generic_window(char *object_type, char *sub_type, icon_struct *icon, void (*d_proc) (/* ??? */), Boolean generics, Boolean arrows, char *comments)
 {
     Dimension	    label_height, image_height;
     int		    button_distance;
-    int		    i, fill, dist;
+    int		    i, fill;
     Widget	    image, cancel;
     Pixmap	    image_pm;
     XFontStruct	   *temp_font;
@@ -3135,20 +3101,7 @@ generic_window(object_type, sub_type, icon, d_proc, generics, arrows, comments)
 
     /***************** LABEL and IMAGE of the object *****************/
 
-    /* no need for colon (:) if no sub-type */
-    if (strlen(sub_type) == 0)
-	sprintf(buf, "%s", object_type);
-    else
-	sprintf(buf, "%s: %s", object_type, sub_type);
-    FirstArg(XtNborderWidth, 0);
-    NextArg(XtNtop, XtChainTop);
-    NextArg(XtNbottom, XtChainTop);
-    NextArg(XtNleft, XtChainLeft);
-    NextArg(XtNright, XtChainLeft);
-    label = XtCreateManagedWidget(buf, labelWidgetClass, form, Args, ArgCount);
-
-    FirstArg(XtNfromHoriz, label);
-    NextArg(XtNtop, XtChainTop);
+    FirstArg(XtNtop, XtChainTop);
     NextArg(XtNbottom, XtChainTop);
     NextArg(XtNleft, XtChainLeft);
     NextArg(XtNright, XtChainLeft);
@@ -3166,6 +3119,19 @@ generic_window(object_type, sub_type, icon, d_proc, generics, arrows, comments)
 	    break;
 	}
     }
+
+    /* no need for colon (:) if no sub-type */
+    if (strlen(sub_type) == 0)
+	sprintf(buf, "%s", object_type);
+    else
+	sprintf(buf, "%s: %s", object_type, sub_type);
+    FirstArg(XtNfromHoriz, image);
+    NextArg(XtNborderWidth, 0);
+    NextArg(XtNtop, XtChainTop);
+    NextArg(XtNbottom, XtChainTop);
+    NextArg(XtNleft, XtChainLeft);
+    NextArg(XtNright, XtChainLeft);
+    label = XtCreateManagedWidget(buf, labelWidgetClass, form, Args, ArgCount);
 
     /* doesn't already exist, create a pixmap from the data (ala panel.c) */
     /* OpenWindows bug doesn't handle a 1-plane bitmap on a n-plane display */
@@ -3194,16 +3160,11 @@ generic_window(object_type, sub_type, icon, d_proc, generics, arrows, comments)
     FirstArg(XtNheight, &image_height);
     GetValues(image);
 
-    if (image_height > label_height)
-	dist = image_height - label_height + button_distance;
-    else
-	dist = button_distance;
-
     /***************** BUTTONS *****************/
 
     FirstArg(XtNlabel, " Done ");
+    NextArg(XtNfromHoriz, image);
     NextArg(XtNfromVert, label);
-    NextArg(XtNvertDistance, dist);
     NextArg(XtNtop, XtChainTop);
     NextArg(XtNbottom, XtChainTop);
     NextArg(XtNleft, XtChainLeft);
@@ -3217,7 +3178,6 @@ generic_window(object_type, sub_type, icon, d_proc, generics, arrows, comments)
 	FirstArg(XtNlabel, "Apply ");
 	NextArg(XtNfromHoriz, but1);
 	NextArg(XtNfromVert, label);
-	NextArg(XtNvertDistance, dist);
 	NextArg(XtNtop, XtChainTop);
 	NextArg(XtNbottom, XtChainTop);
 	NextArg(XtNleft, XtChainLeft);
@@ -3229,7 +3189,6 @@ generic_window(object_type, sub_type, icon, d_proc, generics, arrows, comments)
     FirstArg(XtNlabel, "Cancel");
     NextArg(XtNfromHoriz, but1);
     NextArg(XtNfromVert, label);
-    NextArg(XtNvertDistance, dist);
     NextArg(XtNtop, XtChainTop);
     NextArg(XtNbottom, XtChainTop);
     NextArg(XtNleft, XtChainLeft);
@@ -3243,7 +3202,6 @@ generic_window(object_type, sub_type, icon, d_proc, generics, arrows, comments)
 	FirstArg(XtNlabel,"Screen Capture");
 	NextArg(XtNfromHoriz, but1);
 	NextArg(XtNfromVert, label);
-	NextArg(XtNvertDistance, dist);
 	NextArg(XtNtop, XtChainTop);
 	NextArg(XtNbottom, XtChainTop);
 	NextArg(XtNleft, XtChainLeft);
@@ -3257,7 +3215,6 @@ generic_window(object_type, sub_type, icon, d_proc, generics, arrows, comments)
 	    FirstArg(XtNlabel,"Edit Image");
 	    NextArg(XtNfromHoriz, but1);
 	    NextArg(XtNfromVert, label);
-	    NextArg(XtNvertDistance, dist);
 	    NextArg(XtNtop, XtChainTop);
 	    NextArg(XtNbottom, XtChainTop);
 	    NextArg(XtNleft, XtChainLeft);
@@ -3312,7 +3269,7 @@ generic_window(object_type, sub_type, icon, d_proc, generics, arrows, comments)
     /***************** COMMON PARAMETERS *****************/
 
     if (generics) {
-	Widget lbelow;
+	Widget lbelow, lbeside;
 
 	/***************** ARC TYPE MENU *****************/
 
@@ -3321,12 +3278,15 @@ generic_window(object_type, sub_type, icon, d_proc, generics, arrows, comments)
 
 	/***************** LINE WIDTH *****************/
 
-	(void) int_panel(generic_vals.thickness, form, "     Width", 
-				&thickness_panel, 0, 1000, 1);
+	lbelow = below;
+	(void) int_panel(generic_vals.thickness, form, "Width", 
+				(Widget) 0, &thickness_panel, 0, 1000, 1);
 
+	lbeside = below;
+	below = lbelow;
 	/***************** OBJECT DEPTH *****************/
-	(void) int_panel(generic_vals.depth,     form, "     Depth", 
-				&depth_panel, MIN_DEPTH, MAX_DEPTH, 1);
+	(void) int_panel(generic_vals.depth,     form, "Depth", 
+				lbeside, &depth_panel, MIN_DEPTH, MAX_DEPTH, 1);
 
 	/***************** COLOR MENUS *****************/
 
@@ -3372,11 +3332,9 @@ generic_window(object_type, sub_type, icon, d_proc, generics, arrows, comments)
 	make_pulldown_menu_images(linestyle_choices, NUM_LINESTYLE_TYPES,
 			linestyle_pixmaps, NULL, line_style_panel, line_style_select);
 
-	below = line_style_panel;
-
 	/* new field for style_val */
-	style_val = float_panel(generic_vals.style_val, form, "Dash length/Dot gap",
-		    &style_val_panel, 0.0, 1000.0, 1.0, 1);
+	style_val = float_panel(generic_vals.style_val, form, "Dash length/\nDot gap",
+		    line_style_panel, &style_val_panel, 0.0, 1000.0, 1.0, 1);
 	/* save pointer to dash/dot gap label panel */
 	style_val_label = beside;
 	FirstArg(XtNhorizDistance, 20);
@@ -3387,7 +3345,7 @@ generic_window(object_type, sub_type, icon, d_proc, generics, arrows, comments)
 	    /* and clear any value from the dash length panel */
 	    panel_clear_value(style_val_panel);
 	}
-	below = style_val;
+	below = line_style_panel;
 
 	/***************** CAP STYLE MENU *****************/
 
@@ -3417,21 +3375,11 @@ generic_window(object_type, sub_type, icon, d_proc, generics, arrows, comments)
 	/***************** ARROW panels *****************/
 
 	if (arrows) {
-	    Widget	w;
 	    int		type;
-
-	    FirstArg(XtNfromVert, below);
-	    NextArg(XtNborderWidth, 0);
-	    NextArg(XtNtop, XtChainBottom);
-	    NextArg(XtNbottom, XtChainBottom);
-	    NextArg(XtNleft, XtChainLeft);
-	    NextArg(XtNright, XtChainLeft);
-	    arrow_label = XtCreateManagedWidget("Arrows", labelWidgetClass,
-				       form, Args, ArgCount);
 
 	    /****** FIRST THE FORWARD ARROW ******/
 
-	    FirstArg(XtNfromVert, arrow_label);
+	    FirstArg(XtNfromVert, above_arrows);
 	    NextArg(XtNvertDistance, 2);
 	    NextArg(XtNhorizDistance, 20);
 	    NextArg(XtNtop, XtChainBottom);
@@ -3446,7 +3394,7 @@ generic_window(object_type, sub_type, icon, d_proc, generics, arrows, comments)
 	    NextArg(XtNbottom, XtChainBottom);
 	    NextArg(XtNleft, XtChainLeft);
 	    NextArg(XtNright, XtChainLeft);
-	    beside = XtCreateManagedWidget("Forward", labelWidgetClass,
+	    beside = XtCreateManagedWidget("Forward\nArrow", labelWidgetClass,
 				       for_aform, Args, ArgCount);
 	    /* make pulldown arrow style menu */
 	    if (generic_vals.for_arrow.type == -1) {
@@ -3477,18 +3425,18 @@ generic_window(object_type, sub_type, icon, d_proc, generics, arrows, comments)
 			for_arrow_type_panel, for_arrow_type_select);
 
 	    for_thick = float_panel(generic_vals.for_arrow.thickness, for_aform,
-			"Thick ", &for_arrow_thick, 0.0, 10000.0, 1.0, 1);
+			"Thick ", (Widget) 0, &for_arrow_thick, 0.0, 10000.0, 1.0, 1);
 	    for_thick_label = beside;
 	    for_width = float_panel(generic_vals.for_arrow.wd, for_aform,
-			"Width ", &for_arrow_width, 0.0, 10000.0, 1.0, 1);
+			"Width ", (Widget) 0, &for_arrow_width, 0.0, 10000.0, 1.0, 1);
 	    for_width_label = beside;
 	    for_height = float_panel(generic_vals.for_arrow.ht, for_aform,
-			"Length", &for_arrow_height, 0.0, 10000.0, 1.0, 1);
+			"Length", (Widget) 0, &for_arrow_height, 0.0, 10000.0, 1.0, 1);
 	    for_height_label = beside;
 
 	    /****** NOW THE BACK ARROW ******/
 
-	    FirstArg(XtNfromVert, arrow_label);
+	    FirstArg(XtNfromVert, above_arrows);
 	    NextArg(XtNvertDistance, 2);
 	    NextArg(XtNfromHoriz, for_aform);
 	    NextArg(XtNtop, XtChainBottom);
@@ -3502,7 +3450,7 @@ generic_window(object_type, sub_type, icon, d_proc, generics, arrows, comments)
 	    NextArg(XtNbottom, XtChainBottom);
 	    NextArg(XtNleft, XtChainLeft);
 	    NextArg(XtNright, XtChainLeft);
-	    beside = XtCreateManagedWidget("Backward", labelWidgetClass,
+	    beside = XtCreateManagedWidget("Backward\nArrow", labelWidgetClass,
 				       back_aform, Args, ArgCount);
 
 	    /* make pulldown arrow style menu */
@@ -3533,13 +3481,13 @@ generic_window(object_type, sub_type, icon, d_proc, generics, arrows, comments)
 			back_arrow_type_panel, back_arrow_type_select);
 
 	    back_thick = float_panel(generic_vals.back_arrow.thickness, back_aform,
-			"Thick ", &back_arrow_thick, 0.0, 10000.0, 1.0, 1);
+			"Thick ", (Widget) 0, &back_arrow_thick, 0.0, 10000.0, 1.0, 1);
 	    back_thick_label = beside;
 	    back_width = float_panel(generic_vals.back_arrow.wd, back_aform,
-			"Width ", &back_arrow_width, 0.0, 10000.0, 1.0, 1);
+			"Width ", (Widget) 0, &back_arrow_width, 0.0, 10000.0, 1.0, 1);
 	    back_width_label = beside;
 	    back_height = float_panel(generic_vals.back_arrow.ht, back_aform,
-			"Length", &back_arrow_height, 0.0, 10000.0, 1.0, 1);
+			"Length", (Widget) 0, &back_arrow_height, 0.0, 10000.0, 1.0, 1);
 	    back_height_label = beside;
 	    below = for_aform;	/* for the widget that follows us in the panel */
 	}
@@ -3549,11 +3497,8 @@ generic_window(object_type, sub_type, icon, d_proc, generics, arrows, comments)
 
 
 static void
-spline_point_window(x, y)
-    int            x, y;
+spline_point_window(int x, int y)
 {
-    Position	    x_val, y_val;
-    Dimension	    width, height;
     Widget          but_spline[3];
     Dimension	    label_height, label_width;
     int		    i, dist;
@@ -3661,10 +3606,7 @@ spline_point_window(x, y)
 
 
 static void
-toggle_sfactor_type(panel_local, _sfactor_index, call_data)
-    Widget	    panel_local;
-    XtPointer	    _sfactor_index;
-    XtPointer	    call_data;
+toggle_sfactor_type(Widget panel_local, XtPointer _sfactor_index, XtPointer call_data)
 {
   int             sfactor_index = (int) _sfactor_index;
 
@@ -3675,10 +3617,7 @@ toggle_sfactor_type(panel_local, _sfactor_index, call_data)
 
 
 static void
-change_sfactor_value(panel_local, closure, _top)
-    Widget	    panel_local;
-    XtPointer       closure;
-    XtPointer 	    _top;
+change_sfactor_value(Widget panel_local, XtPointer closure, XtPointer _top)
 {
   float 	   *top = (float *) _top;
 
@@ -3688,10 +3627,7 @@ change_sfactor_value(panel_local, closure, _top)
 }
 
 static void
-scroll_sfactor_value(panel_local, closure, _num_pixels)
-    Widget	    panel_local;
-    XtPointer       closure;
-    XtPointer       _num_pixels;
+scroll_sfactor_value(Widget panel_local, XtPointer closure, XtPointer _num_pixels)
 {
   int 		   *num_pixels = (int *) _num_pixels;
 
@@ -3701,9 +3637,8 @@ scroll_sfactor_value(panel_local, closure, _num_pixels)
 		       THUMB_H);
 }
 
-static int
-update_sfactor_value(new_value)
-double              new_value;
+static void
+update_sfactor_value(double new_value)
 {
   if (new_value < S_SPLINE_INTERP || new_value > S_SPLINE_APPROX)
     return;
@@ -3728,7 +3663,7 @@ double              new_value;
 /* come here when the user changes either the fill or pen color */
 /* update the fill intensity/pattern images */
 
-recolor_fill_image()
+void recolor_fill_image(void)
 {
     if (fill_style_exists) {
 	update_fill_image((Widget) 0, (XtPointer) 0, (XtPointer) 0);
@@ -3738,10 +3673,7 @@ recolor_fill_image()
 /* update the image of the fill intensity or pattern when user presses up/down in spinner */
 
 static void
-update_fill_image(w, dummy, dummy2)
-    Widget	   w;
-    XtPointer	   dummy;
-    XtPointer	   dummy2;
+update_fill_image(Widget w, XtPointer dummy, XtPointer dummy2)
 {
     char	  *sval;
     int		   val;
@@ -3815,8 +3747,7 @@ update_fill_image(w, dummy, dummy2)
 
 /* update the pixmap in the proper widget */
 
-set_image_pm(val)
-	int	   val;
+void set_image_pm(int val)
 {
 	/* set stipple from the one-bit bitmap */
 	XSetStipple(tool_d, fill_image_gc, fill_image_bm[val]);
@@ -3832,8 +3763,7 @@ set_image_pm(val)
 /* make fill style menu and associated stuff */
 /* fill = fill value, fill_flag = 0 means no fill, 1=intensity, 2=pattern */
 
-fill_style_menu(fill, fill_flag)
-	int	fill, fill_flag;
+void fill_style_menu(int fill, int fill_flag)
 {
 	static	char *fill_style_items[] = {
 			"No fill", "Filled ", "Pattern"};
@@ -3886,12 +3816,12 @@ fill_style_menu(fill, fill_flag)
 	make_pulldown_menu(fill_style_items, XtNumber(fill_style_items), -1, "",
 			       fill_style_button, fill_style_select);
 
-	fill_intens = int_panel_callb(fill, form, "Fill intensity %", &fill_intens_panel, 
-				0, 200, 5, update_fill_image);
+	fill_intens = int_panel_callb(fill, form, "Fill intensity %",
+				(Widget) 0, &fill_intens_panel, 0, 200, 5, update_fill_image);
 	fill_intens_label = beside;	/* save pointer to fill label */
 
-	fill_pat = int_panel_callb(fill, form, "Fill pattern    ", &fill_pat_panel, 
-				0, NUMPATTERNS-1, 1, update_fill_image);
+	fill_pat = int_panel_callb(fill, form, "Fill pattern    ",
+				(Widget) 0, &fill_pat_panel, 0, NUMPATTERNS-1, 1, update_fill_image);
 
 	fill_pat_label = beside;	/* save pointer to fill label */
 
@@ -3940,7 +3870,7 @@ fill_style_menu(fill, fill_flag)
 }
 
 /* make a popup arc type menu */
-arc_type_menu()
+void arc_type_menu(void)
 {
 	static char   *arc_type_items[] = {
 			 "Open     ", "Pie Wedge"};
@@ -3969,9 +3899,10 @@ arc_type_menu()
 			       arc_type_panel, arc_type_select);
 }
 
-join_style_panel_menu()
+void join_style_panel_menu(void)
 {
 	FirstArg(XtNfromVert, below);
+	NextArg(XtNhorizDistance, 10);	/* space it a bit from the cap style */
 	NextArg(XtNfromHoriz, beside);
 	NextArg(XtNborderWidth, 0);
 	NextArg(XtNtop, XtChainBottom);
@@ -3997,10 +3928,9 @@ join_style_panel_menu()
 }
 
 /* make a popup cap style menu */
-cap_style_panel_menu()
+void cap_style_panel_menu(void)
 {
 	FirstArg(XtNfromVert, below);
-	NextArg(XtNhorizDistance, 10);	/* space it a bit from the join style */
 	NextArg(XtNborderWidth, 0);
 	NextArg(XtNtop, XtChainBottom);
 	NextArg(XtNbottom, XtChainBottom);
@@ -4029,16 +3959,15 @@ cap_style_panel_menu()
 /* make a button panel with the image 'pixmap' in it */
 /* for the font selection */
 
-void		f_menu_popup();
+void		f_menu_popup(void);
 
 static XtCallbackRec f_sel_callback[] =
 {
-    {f_menu_popup, NULL},
+    {(XtCallbackProc)f_menu_popup, NULL},
     {NULL, NULL},
 };
 
-set_font_image(widget)
-    Widget	    widget;
+void set_font_image(Widget widget)
 {
     FirstArg(XtNbitmap, new_psflag ?
 	     psfont_menu_bitmaps[new_ps_font + 1] :
@@ -4047,10 +3976,7 @@ set_font_image(widget)
 }
 
 static void
-font_image_panel(pixmap, label, pi_x)
-    Pixmap	    pixmap;
-    char	   *label;
-    Widget	   *pi_x;
+font_image_panel(Pixmap pixmap, char *label, Widget *pi_x)
 {
     FirstArg(XtNfromVert, below);
     NextArg(XtNlabel, label);
@@ -4078,14 +4004,14 @@ font_image_panel(pixmap, label, pi_x)
 /* come here when user presses font image button */
 
 void
-f_menu_popup()
+f_menu_popup(void)
 {
     fontpane_popup(&new_ps_font, &new_latex_font, &new_psflag,
 		   set_font_image, font_panel);
 }
 
 static Widget
-pen_color_selection_panel()
+pen_color_selection_panel(void)
 {
     color_selection_panel(" Pen color","border_colors", "Pen color", form, below, beside,
    			&pen_col_button, &pen_color_popup, 
@@ -4094,7 +4020,7 @@ pen_color_selection_panel()
 }
 
 static Widget
-fill_color_selection_panel()
+fill_color_selection_panel(void)
 {
     color_selection_panel("Fill color","fill_colors", "Fill color", form, below, beside,
 			&fill_col_button, &fill_color_popup,
@@ -4103,12 +4029,7 @@ fill_color_selection_panel()
 }
 
 Widget
-color_selection_panel(label, wname, name, parent, below, beside, button, popup, color, callback)
-    char	   *label, *wname, *name;
-    Widget	    parent, below, beside;
-    Widget	   *button, *popup;
-    Color	    color;
-    XtCallbackProc  callback;
+color_selection_panel(char *label, char *wname, char *name, Widget parent, Widget below, Widget beside, Widget *button, Widget *popup, int color, XtCallbackProc callback)
 {
 
     FirstArg(XtNfromVert, below);
@@ -4143,26 +4064,16 @@ color_selection_panel(label, wname, name, parent, below, beside, button, popup, 
 }
 
 static Widget
-int_panel(x, parent, label, pi_x, min, max, inc)
-    int		    x;
-    Widget	    parent;
-    char	   *label;
-    Widget	   *pi_x;
-    int		    min, max, inc;
+int_panel(int x, Widget parent, char *label, Widget beside, Widget *pi_x, int min, int max, int inc)
 {
-    return int_panel_callb(x, parent, label, pi_x, min, max, inc, (XtCallbackProc) 0);
+    return int_panel_callb(x, parent, label, beside, pi_x, min, max, inc, (XtCallbackProc) 0);
 }
 
 static Widget
-int_panel_callb(x, parent, label, pi_x, min, max, inc, callback)
-    int		    x;
-    Widget	    parent;
-    char	   *label;
-    Widget	   *pi_x;
-    int		    min, max, inc;
-    XtCallbackProc  callback;
+int_panel_callb(int x, Widget parent, char *label, Widget pbeside, Widget *pi_x, int min, int max, int inc, XtCallbackProc callback)
 {
     FirstArg(XtNfromVert, below);
+    NextArg(XtNfromHoriz, pbeside);
     NextArg(XtNlabel, label);
     NextArg(XtNborderWidth, 0);
     NextArg(XtNtop, XtChainBottom);
@@ -4183,17 +4094,12 @@ int_panel_callb(x, parent, label, pi_x, min, max, inc, callback)
 }
 
 static Widget
-float_panel(x, parent, label, pi_x, min, max, inc, prec)
-    float	    x;
-    Widget	    parent;
-    char	   *label;
-    Widget	   *pi_x;
-    float	    min, max, inc;
-    int		    prec;
+float_panel(float x, Widget parent, char *label, Widget pbeside, Widget *pi_x, float min, float max, float inc, int prec)
 {
     char	    fmt[10];
 
     FirstArg(XtNfromVert, below);
+    NextArg(XtNfromHoriz, pbeside);
     NextArg(XtNlabel, label);
     NextArg(XtNborderWidth, 0);
     NextArg(XtNtop, XtChainBottom);
@@ -4217,10 +4123,7 @@ float_panel(x, parent, label, pi_x, min, max, inc, prec)
 }
 
 static void
-float_label(x, label, pi_x)
-    float	    x;
-    char	   *label;
-    Widget	   *pi_x;
+float_label(float x, char *label, Widget *pi_x)
 {
     FirstArg(XtNfromVert, below);
     NextArg(XtNlabel, label);
@@ -4247,10 +4150,7 @@ float_label(x, label, pi_x)
 }
 
 static void
-int_label(x, label, pi_x)
-    int		    x;
-    char	   *label;
-    Widget	   *pi_x;
+int_label(int x, char *label, Widget *pi_x)
 {
     FirstArg(XtNfromVert, below);
     NextArg(XtNlabel, label);
@@ -4277,13 +4177,7 @@ int_label(x, label, pi_x)
 }
 
 static void
-str_panel(string, name, pi_x, width, size_to_width, international)
-    char	   *string;
-    char	   *name;
-    Widget	   *pi_x;
-    int		    width;
-    Boolean	    size_to_width;
-    Boolean	    international;
+str_panel(char *string, char *name, Widget *pi_x, int width, Boolean size_to_width, Boolean international)
 {
     int		    nlines, i;
     Dimension	    pwidth;
@@ -4376,11 +4270,7 @@ str_panel(string, name, pi_x, width, size_to_width, international)
 /* call with make_unit_menu = True to make pulldown unit menu beside first label */
 
 static void
-xy_panel(x, y, label, pi_x, pi_y, make_unit_menu)
-    int		    x, y;
-    char	   *label;
-    Widget	   *pi_x, *pi_y;
-    Boolean	    make_unit_menu;
+xy_panel(int x, int y, char *label, Widget *pi_x, Widget *pi_y, Boolean make_unit_menu)
 {
     Widget	    save_below = below;
 
@@ -4454,11 +4344,7 @@ xy_panel(x, y, label, pi_x, pi_y, make_unit_menu)
 /* Label for X and Y are variables */
 
 static void
-f_pair_panel(fp, label, pi_x, xlabel, pi_y, ylabel, make_unit_menu)
-    F_pos	   *fp;
-    char	   *label, *xlabel, *ylabel;
-    Widget	   *pi_x, *pi_y;
-    Boolean	    make_unit_menu;
+f_pair_panel(F_pos *fp, char *label, Widget *pi_x, char *xlabel, Widget *pi_y, char *ylabel, Boolean make_unit_menu)
 {
     Widget	    save_below = below;
 
@@ -4534,9 +4420,7 @@ f_pair_panel(fp, label, pi_x, xlabel, pi_y, ylabel, make_unit_menu)
 }
 
 static void
-get_f_pos(fp, pi_x, pi_y)
-    F_pos	   *fp;
-    Widget	    pi_x, pi_y;
+get_f_pos(F_pos *fp, Widget pi_x, Widget pi_y)
 {
     fp->x = panel_get_dim_value(pi_x);
     fp->y = panel_get_dim_value(pi_y);
@@ -4546,8 +4430,7 @@ get_f_pos(fp, pi_x, pi_y)
 	Fig object are displayed */
 
 static void
-points_panel(p)
-    struct f_point *p;
+points_panel(struct f_point *p)
 {
     struct f_point *pts;
     char	    buf[32];
@@ -4674,8 +4557,7 @@ points_panel(p)
 }
 
 static void
-get_points(p)
-    struct f_point *p;
+get_points(struct f_point *p)
 {
     struct f_point *q;
     int		    i;
@@ -4692,8 +4574,7 @@ get_points(p)
 /* make a unit pulldown menubutton and menu */
 
 static Widget
-unit_pulldown_menu(below, beside)
-    Widget	    below, beside;
+unit_pulldown_menu(Widget below, Widget beside)
 {
 	/* put the current user units in unit_items[0] */
 	unit_items[0] = cur_fig_units;
@@ -4724,14 +4605,13 @@ unit_pulldown_menu(below, beside)
 	return unit_menu_button;
 }
 static void
-init_convert_array()
+init_convert_array(void)
 {
     conv_array_idx = 0;
 }
 
 static void
-add_to_convert(widget)
-    Widget	    widget;
+add_to_convert(Widget widget)
 {
     convert_array[conv_array_idx++] = widget;
 }
@@ -4739,8 +4619,7 @@ add_to_convert(widget)
 /* unit conversion for displaying coordinates */
 
 static double
-cvt_to_units(fig_unit)
-    int		    fig_unit;
+cvt_to_units(int fig_unit)
 {
     if (points_units == 1)
 	return (double) fig_unit;
@@ -4751,9 +4630,7 @@ cvt_to_units(fig_unit)
 /* unit conversion that writes ASCII to buf */
 
 static void
-cvt_to_units_str(x, buf)
-    int		    x;
-    char	   *buf;
+cvt_to_units_str(int x, char *buf)
 {
     double	    dval;
 
@@ -4766,8 +4643,7 @@ cvt_to_units_str(x, buf)
 }
 
 static int
-cvt_to_fig(real_unit)
-    double	    real_unit;
+cvt_to_fig(double real_unit)
 {
     if (points_units)
 	return round(real_unit);
@@ -4775,9 +4651,7 @@ cvt_to_fig(real_unit)
 }
 
 static void
-unit_select(w, new_unit, call_data)
-    Widget	    w;
-    XtPointer	    new_unit, call_data;
+unit_select(Widget w, XtPointer new_unit, XtPointer call_data)
 {
     int		    i, new_points_units;
     char	    buf[30];
@@ -4810,8 +4684,10 @@ unit_select(w, new_unit, call_data)
 }
 
 void
-Quit()
+Quit(void)
 {
+    /* turn off the point positioning indicator now */
+    update_indpanel(0);
     popup_up = False;
     XtDestroyWidget(popup);
     fill_style_exists = False;
@@ -4826,8 +4702,7 @@ Quit()
 }
 
 static int
-panel_get_dim_value(widg)
-    Widget	    widg;
+panel_get_dim_value(Widget widg)
 {
     char	*str = panel_get_value(widg);
 
@@ -4843,9 +4718,7 @@ panel_get_dim_value(widg)
    it from Fig to (double) user units */
 
 static void
-panel_set_scaled_int(widg, intval)
-    Widget	    widg;
-    int		    intval;
+panel_set_scaled_int(Widget widg, int intval)
 {
     char	    buf[80];
     cvt_to_units_str(intval, buf);
@@ -4853,8 +4726,7 @@ panel_set_scaled_int(widg, intval)
 }
 
 static void
-panel_clear_value(widg)
-    Widget	    widg;
+panel_clear_value(Widget widg)
 {
     FirstArg(XtNstring, " ");
     NextArg(XtNinsertPosition, 0);
@@ -4862,9 +4734,7 @@ panel_clear_value(widg)
 }
 
 static void
-arc_type_select(w, new_style, call_data)
-    Widget	    w;
-    XtPointer	    new_style, call_data;
+arc_type_select(Widget w, XtPointer new_style, XtPointer call_data)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(arc_type_panel);
@@ -4875,7 +4745,6 @@ arc_type_select(w, new_style, call_data)
 	/* unmanage arrow forms */
 	XtUnmanageChild(for_aform);
 	XtUnmanageChild(back_aform);
-	XtUnmanageChild(arrow_label);
 	/* unmanage and re-manage points form so it moves up */
 	XtUnmanageChild(arc_points_form);
 	/* position it just under the stuff above the arrow forms */
@@ -4886,7 +4755,6 @@ arc_type_select(w, new_style, call_data)
 	/* re-manage arrow forms */
 	XtManageChild(for_aform);
 	XtManageChild(back_aform);
-	XtManageChild(arrow_label);
 	/* unmanage and re-manage points form so it moves down */
 	XtUnmanageChild(arc_points_form);
 	/* position it just under the arrow forms */
@@ -4900,9 +4768,7 @@ arc_type_select(w, new_style, call_data)
 }
 
 static void
-cap_style_select(w, new_type, call_data)
-    Widget	    w;
-    XtPointer	    new_type, call_data;
+cap_style_select(Widget w, XtPointer new_type, XtPointer call_data)
 {
     choice_info	    *choice;
 
@@ -4914,9 +4780,7 @@ cap_style_select(w, new_type, call_data)
 }
 
 static void
-join_style_select(w, new_type, call_data)
-    Widget	    w;
-    XtPointer	    new_type, call_data;
+join_style_select(Widget w, XtPointer new_type, XtPointer call_data)
 {
     choice_info	    *choice;
 
@@ -4928,9 +4792,7 @@ join_style_select(w, new_type, call_data)
 }
 
 static void
-for_arrow_type_select(w, new_type, call_data)
-    Widget	    w;
-    XtPointer	    new_type, call_data;
+for_arrow_type_select(Widget w, XtPointer new_type, XtPointer call_data)
 {
     int	    	    choice;
 
@@ -4946,9 +4808,7 @@ for_arrow_type_select(w, new_type, call_data)
 }
 
 static void
-back_arrow_type_select(w, new_type, call_data)
-    Widget	    w;
-    XtPointer	    new_type, call_data;
+back_arrow_type_select(Widget w, XtPointer new_type, XtPointer call_data)
 {
     int	    	    choice;
 
@@ -4964,9 +4824,7 @@ back_arrow_type_select(w, new_type, call_data)
 }
 
 static void
-line_style_select(w, new_style, call_data)
-    Widget	    w;
-    XtPointer	    new_style, call_data;
+line_style_select(Widget w, XtPointer new_style, XtPointer call_data)
 {
     Boolean	    state;
     choice_info	    *choice;
@@ -5005,33 +4863,27 @@ line_style_select(w, new_style, call_data)
 }
 
 static void
-pen_color_select(w, new_color, call_data)
-    Widget	    w;
-    XtPointer	    new_color, call_data;
+pen_color_select(Widget w, XtPointer new_color, XtPointer call_data)
 {
     pen_color = (Color) new_color;
-    color_select(pen_col_button, new_color);
+    color_select(pen_col_button, pen_color);
     if (pen_color_popup) {
 	XtPopdown(pen_color_popup);
     }
 }
 
 static void
-fill_color_select(w, new_color, call_data)
-    Widget	    w;
-    XtPointer	    new_color, call_data;
+fill_color_select(Widget w, XtPointer new_color, XtPointer call_data)
 {
     fill_color = (Color) new_color;
-    color_select(fill_col_button, new_color);
+    color_select(fill_col_button, fill_color);
     if (fill_color_popup) {
 	XtPopdown(fill_color_popup);
     }
 }
 
 void
-color_select(w, color)
-    Widget	    w;
-    Color	    color;
+color_select(Widget w, Color color)
 {
     XFontStruct	   *f;
 
@@ -5071,9 +4923,7 @@ color_select(w, color)
 }
 
 static void
-hidden_text_select(w, new_hidden_text, call_data)
-    Widget	    w;
-    XtPointer	    new_hidden_text, call_data;
+hidden_text_select(Widget w, XtPointer new_hidden_text, XtPointer call_data)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(hidden_text_panel);
@@ -5081,9 +4931,7 @@ hidden_text_select(w, new_hidden_text, call_data)
 }
 
 static void
-rigid_text_select(w, new_rigid_text, call_data)
-    Widget	    w;
-    XtPointer	    new_rigid_text, call_data;
+rigid_text_select(Widget w, XtPointer new_rigid_text, XtPointer call_data)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(rigid_text_panel);
@@ -5091,9 +4939,7 @@ rigid_text_select(w, new_rigid_text, call_data)
 }
 
 static void
-special_text_select(w, new_special_text, call_data)
-    Widget	    w;
-    XtPointer	    new_special_text, call_data;
+special_text_select(Widget w, XtPointer new_special_text, XtPointer call_data)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(special_text_panel);
@@ -5101,9 +4947,7 @@ special_text_select(w, new_special_text, call_data)
 }
 
 static void
-textjust_select(w, new_textjust, call_data)
-    Widget	    w;
-    XtPointer	    new_textjust, call_data;
+textjust_select(Widget w, XtPointer new_textjust, XtPointer call_data)
 {
     FirstArg(XtNlabel, XtName(w));
     SetValues(textjust_panel);
@@ -5111,9 +4955,7 @@ textjust_select(w, new_textjust, call_data)
 }
 
 static void
-flip_pic_select(w, new_flipflag, call_data)
-    Widget	    w;
-    XtPointer	    new_flipflag, call_data;
+flip_pic_select(Widget w, XtPointer new_flipflag, XtPointer call_data)
 {
     struct f_point  p1, p2;
     int		    dx, dy, rotation;
@@ -5145,14 +4987,11 @@ flip_pic_select(w, new_flipflag, call_data)
 }
 
 static void
-rotation_select(w, new_rotation, call_data)
-    Widget	    w;
-    XtPointer	    new_rotation, call_data;
+rotation_select(Widget w, XtPointer new_rotation, XtPointer call_data)
 {
     struct f_point  p1, p2;
     int		    dx, dy, cur_rotation, rotation;
     int		    x1, y1, x2, y2;
-    float	    ratio;
 
     FirstArg(XtNlabel, XtName(w));
     SetValues(rotation_panel);
@@ -5258,9 +5097,7 @@ rotation_select(w, new_rotation, call_data)
 }
 
 static void
-fill_style_select(w, new_fillflag, call_data)
-    Widget	    w;
-    XtPointer	    new_fillflag, call_data;
+fill_style_select(Widget w, XtPointer new_fillflag, XtPointer call_data)
 {
     int		    fill;
     char	   *sval;
@@ -5318,16 +5155,14 @@ fill_style_select(w, new_fillflag, call_data)
     }
 }
 
-fill_style_sens(state)
-   Boolean state;
+void fill_style_sens(Boolean state)
 {
 	XtSetSensitive(fill_intens,state);
 	XtSetSensitive(fill_intens_label,state);
 	update_fill_image((Widget) 0, (XtPointer) 0, (XtPointer) 0);
 }
 
-fill_pat_sens(state)
-   Boolean state;
+void fill_pat_sens(Boolean state)
 {
 	XtSetSensitive(fill_pat,state);
 	XtSetSensitive(fill_pat_label,state);
@@ -5335,18 +5170,15 @@ fill_pat_sens(state)
 }
 
 void
-clear_text_key(w)
-Widget w;
+clear_text_key(Widget w)
 {
 	panel_set_value(w, "");
 }
 
-static void get_clipboard();
+static void get_clipboard(Widget w, XtPointer client_data, Atom *selection, Atom *type, XtPointer buf, long unsigned int *length, int *format);
 
 void
-paste_panel_key(w, event)
-Widget w;
-XKeyEvent *event;
+paste_panel_key(Widget w, XKeyEvent *event)
 {
 	Time event_time;
 
@@ -5355,14 +5187,7 @@ XKeyEvent *event;
 }
 
 static void
-get_clipboard(w, client_data, selection, type, buf, length, format)
-    Widget	   w;
-    XtPointer	   client_data;
-    Atom	  *selection;
-    Atom	  *type;
-    XtPointer	   buf;
-    unsigned long *length;
-    int		  *format;
+get_clipboard(Widget w, XtPointer client_data, Atom *selection, Atom *type, XtPointer buf, long unsigned int *length, int *format)
 {
 	char *c, *p;
 	int i;
@@ -5383,8 +5208,7 @@ get_clipboard(w, client_data, selection, type, buf, length, format)
 	panel_set_value(client_data, s);
 }
 
-text_transl(w)
-Widget w;
+void text_transl(Widget w)
 {
 	/* make CR finish edit */
 	XtOverrideTranslations(w, XtParseTranslationTable(edit_text_translations));
@@ -5395,9 +5219,7 @@ Widget w;
 
 
 void
-change_sfactor(x, y, button)
-     int             x, y;
-     unsigned int    button;     
+change_sfactor(int x, int y, unsigned int button)
 {
   F_spline *spl, *spline;
   F_point  *prev, *the_point;
@@ -5452,7 +5274,7 @@ change_sfactor(x, y, button)
   toggle_pointmarker(the_point->x, the_point->y);
 }
 
-check_depth()
+void check_depth(void)
 {
     int depth;
     depth = atoi(panel_get_value(depth_panel));
@@ -5465,7 +5287,7 @@ check_depth()
     panel_set_int(depth_panel, depth);
 }
 
-check_thick()
+void check_thick(void)
 {
     int thick;
     thick = atoi(panel_get_value(thickness_panel));
@@ -5486,7 +5308,7 @@ check_thick()
 */
 
 void
-push_apply_button()
+push_apply_button(void)
 {
     /* get rid of anything that ought to be done - X wise */
     app_flush();
@@ -5497,10 +5319,7 @@ push_apply_button()
 
 
 static          void
-grab_button(panel_local, closure, call_data)
-    Widget          panel_local;
-    XtPointer	    closure;
-    XtPointer	    call_data;
+grab_button(Widget panel_local, XtPointer closure, XtPointer call_data)
 {
     time_t	    tim;
     char	    tmpfile[PATH_MAX],tmpname[PATH_MAX];
@@ -5538,10 +5357,7 @@ grab_button(panel_local, closure, call_data)
 */
 
 static          void
-image_edit_button(panel_local, closure, call_data)
-    Widget          panel_local;
-    XtPointer	    closure;
-    XtPointer	    call_data;
+image_edit_button(Widget panel_local, XtPointer closure, XtPointer call_data)
 {
     int		argc;
     char	*argv[20];
@@ -5611,10 +5427,7 @@ image_edit_button(panel_local, closure, call_data)
 
 
 static          void
-browse_button(panel_local, closure, call_data)
-    Widget          panel_local;
-    XtPointer	    closure;
-    XtPointer	    call_data;
+browse_button(Widget panel_local, XtPointer closure, XtPointer call_data)
 {
     popup_browse_panel( form );
 }
@@ -5622,10 +5435,7 @@ browse_button(panel_local, closure, call_data)
 /* collapse the depths in new_c to min_compound_depth and update the max depth value */
 
 static void
-collapse_depth(panel_local, closure, call_data)
-    Widget	    panel_local;
-    XtPointer	    closure;
-    XtPointer	    call_data;
+collapse_depth(Widget panel_local, XtPointer closure, XtPointer call_data)
 {
     collapse_depths(new_c);
     sprintf(buf,"Maximum: %d", min_compound_depth);
@@ -5635,8 +5445,7 @@ collapse_depth(panel_local, closure, call_data)
 
 /* need this to recurse through compounds inside new_c */
 
-collapse_depths(compound)
-    F_compound	   *compound;
+void collapse_depths(F_compound *compound)
 {
 	F_line	 *l;
 	F_spline	 *s;

@@ -461,6 +461,14 @@ If you want to set the foreground color of everything in <b>xfig</b>
 (menus, etc), use the general <tt>-fg</tt> option.
 
 <p>
+<dt><kbd>-correct_font_size
+<dd>Normally, <i>fig2dev</i>
+uses 1/80 inch for font size increments (for historical reasons),
+instead of the more proper ``points'' (1/72 inch) that <i>xfig</i>
+uses.  This option makes xfig call fig2dev with the 
+<tt>-F</tt> option to make it use points (1/72 inch).
+
+<p>
 <dt><kbd>-depth </kbd> (<kbd>-dep</kbd>)
 <dd>Choose depth of visual desired.
 <br>
@@ -783,14 +791,6 @@ They are usually specified by putting lines
 into the resource database file of <b>xfig</b>,
 such as <tt>/usr/X11/lib/app-defaults/Fig</tt> or the user's
 own resource file which must be read by <tt>xrdb</tt>.
-
-<h3><img src="images/pict-info.png" alt="">A note about <b>xfig</b> color resources:</h3>
-Generally, the user should have a common resource `<tt>*customization: -color</tt>'
-set if they have a color display.  This signals the X system (version 4 and later)
-to look for the <tt>XXX-color</tt> app-defaults file in the applications
-defaults directory.
-In that file (e.g. &quot;<tt>Fig-color</tt>&quot;) the color definitions are used
-and it is responsible for including the main app-defaults file <tt>Fig</tt>.
 
 <hr>
 

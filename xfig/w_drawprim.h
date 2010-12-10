@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -42,6 +42,15 @@ extern void pw_lines(Window w, zXPoint *points, int npoints, int op, int depth,
 	 int line_width, int line_style, float style_val,
 	 int join_style, int cap_style, int fill_style,
 	 Color pen_color, Color fill_color);
+extern void init_font(void);
+extern void init_fill_gc (void);
+extern void init_fill_pm (void);
+extern void reset_clip_window (void);
+extern void set_clip_window (int xmin, int ymin, int xmax, int ymax);
+extern void set_fill_gc (int fill_style, int op, int pencolor, int fillcolor, int xorg, int yorg);
+extern void set_line_stuff (int width, int style, float style_val, int join_style, int cap_style, int op, int color);
+extern int x_color (int col);
+extern void init_gc(void);
 
 /* convert Fig units to pixels at current zoom */
 
@@ -80,13 +89,13 @@ extern void pw_lines(Window w, zXPoint *points, int npoints, int op, int depth,
 		(short)round(zoomscale*(w)),(short)round(zoomscale*(h)))
 
 
-extern pr_size      textsize();
+extern pr_size      textsize(XFontStruct *fstruct, int n, char *s);
 extern XFontStruct *bold_font;
 extern XFontStruct *roman_font;
 extern XFontStruct *button_font;
 extern XFontStruct *canvas_font;
-extern XFontStruct *lookfont();
-extern GC	    makegc();
+extern XFontStruct *lookfont(int fnum, int size);
+extern GC	    makegc(int op, Pixel fg, Pixel bg);
 
 /* patterns like bricks, etc */
 typedef struct _patrn_strct {

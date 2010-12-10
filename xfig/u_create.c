@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  * Parts Copyright (c) 1995 by C. Blanc and C. Schlick
  *
@@ -28,12 +28,21 @@
 #include "w_setup.h"
 #include "w_util.h"
 
+#include "e_scale.h"
+#include "u_free.h"
+#include "u_list.h"
+#include "w_cursor.h"
+#include "w_modepanel.h"
+#include "w_mousefun.h"
+
 static char	Err_mem[] = "Running out of memory.";
 
 /****************** ARROWS ****************/
 
+
+
 F_arrow *
-create_arrow()
+create_arrow(void)
 {
     F_arrow	   *a;
 
@@ -43,7 +52,7 @@ create_arrow()
 }
 
 F_arrow	       *
-forward_arrow()
+forward_arrow(void)
 {
     F_arrow	   *a;
 
@@ -67,7 +76,7 @@ forward_arrow()
 }
 
 F_arrow	       *
-backward_arrow()
+backward_arrow(void)
 {
     F_arrow	   *a;
 
@@ -91,9 +100,7 @@ backward_arrow()
 }
 
 F_arrow	       *
-new_arrow(type, style, thickness, wd, ht)
-    int		    type, style;
-    float	    thickness, wd, ht;
+new_arrow(int type, int style, float thickness, float wd, float ht)
 {
     F_arrow	   *a;
 
@@ -130,8 +137,7 @@ new_arrow(type, style, thickness, wd, ht)
 /************************ COMMENTS *************************/
 
 void
-copy_comments(source, dest)
-    char	   **source, **dest;
+copy_comments(char **source, char **dest)
 {
     if (*source == NULL) {
 	*dest = NULL;
@@ -145,9 +151,7 @@ copy_comments(source, dest)
 /************************ SMART LINKS *************************/
 
 F_linkinfo     *
-new_link(l, ep, pp)
-    F_line	   *l;
-    F_point	   *ep, *pp;
+new_link(F_line *l, F_point *ep, F_point *pp)
 {
     F_linkinfo	   *k;
 
@@ -165,7 +169,7 @@ new_link(l, ep, pp)
 /************************ POINTS *************************/
 
 F_point	       *
-create_point()
+create_point(void)
 {
     F_point	   *p;
 
@@ -180,7 +184,7 @@ create_point()
 }
 
 F_sfactor      *
-create_sfactor()
+create_sfactor(void)
 {
     F_sfactor	   *cp;
 
@@ -193,8 +197,7 @@ create_sfactor()
 }
 
 F_point	       *
-copy_points(orig_pt)
-    F_point	   *orig_pt;
+copy_points(F_point *orig_pt)
 {
     F_point	   *new_pt, *prev_pt, *first_pt;
 
@@ -219,8 +222,7 @@ copy_points(orig_pt)
 }
 
 F_sfactor *
-copy_sfactors(orig_sf)
-    F_sfactor	 *orig_sf;
+copy_sfactors(F_sfactor *orig_sf)
 {
     F_sfactor	 *new_sf, *prev_sf, *first_sf;
 
@@ -247,8 +249,7 @@ copy_sfactors(orig_sf)
 /* reverse points in list */
 
 void
-reverse_points(orig_pt)
-    F_point	   *orig_pt;
+reverse_points(F_point *orig_pt)
 {
     F_point	   *cur_pt;
     int		    npts,i;
@@ -281,8 +282,7 @@ reverse_points(orig_pt)
 /* reverse sfactors in list */
 
 void
-reverse_sfactors(orig_sf)
-    F_sfactor	   *orig_sf;
+reverse_sfactors(F_sfactor *orig_sf)
 {
     F_sfactor	   *cur_sf;
     int		    nsf,i;
@@ -313,7 +313,7 @@ reverse_sfactors(orig_sf)
 /************************ ARCS *************************/
 
 F_arc	       *
-create_arc()
+create_arc(void)
 {
     F_arc	   *a;
 
@@ -342,8 +342,7 @@ create_arc()
 }
 
 F_arc	       *
-copy_arc(a)
-    F_arc	   *a;
+copy_arc(F_arc *a)
 {
     F_arc	   *arc;
     F_arrow	   *arrow;
@@ -380,7 +379,7 @@ copy_arc(a)
 /************************ ELLIPSES *************************/
 
 F_ellipse      *
-create_ellipse()
+create_ellipse(void)
 {
     F_ellipse	   *e;
 
@@ -395,8 +394,7 @@ create_ellipse()
 }
 
 F_ellipse      *
-copy_ellipse(e)
-    F_ellipse	   *e;
+copy_ellipse(F_ellipse *e)
 {
     F_ellipse	   *ellipse;
 
@@ -416,7 +414,7 @@ copy_ellipse(e)
 /************************ LINES *************************/
 
 F_line	       *
-create_line()
+create_line(void)
 {
     F_line	   *l;
 
@@ -436,7 +434,7 @@ create_line()
 }
 
 F_pic	       *
-create_pic()
+create_pic(void)
 {
     F_pic	   *pic;
 
@@ -453,7 +451,7 @@ create_pic()
 /* create a new picture entry for the repository */
 
 struct _pics *
-create_picture_entry()
+create_picture_entry(void)
 {
     struct _pics *picture;
 
@@ -471,13 +469,11 @@ create_picture_entry()
 }
 
 F_line	       *
-copy_line(l)
-    F_line	   *l;
+copy_line(F_line *l)
 {
     F_line	   *line;
     F_arrow	   *arrow;
-    char	   *mask;
-    int		    width, height, nbytes;
+    int		    width, height;
     GC		    one_bit_gc;
 
     if ((line = create_line()) == NULL)
@@ -549,7 +545,7 @@ copy_line(l)
 /************************ SPLINES *************************/
 
 F_spline       *
-create_spline()
+create_spline(void)
 {
     F_spline	   *s;
 
@@ -564,8 +560,7 @@ create_spline()
 }
 
 F_spline       *
-copy_spline(s)
-    F_spline	   *s;
+copy_spline(F_spline *s)
 {
     F_spline	   *spline;
     F_arrow	   *arrow;
@@ -618,7 +613,7 @@ copy_spline(s)
 /************************ TEXTS *************************/
 
 F_text	       *
-create_text()
+create_text(void)
 {
     F_text	   *t;
 
@@ -637,8 +632,7 @@ create_text()
 /* allocate len+1 characters in a new string */
 
 char	       *
-new_string(len)
-    int		    len;
+new_string(int len)
 {
     char	   *c;
 
@@ -648,8 +642,7 @@ new_string(len)
 }
 
 F_text	       *
-copy_text(t)
-    F_text	   *t;
+copy_text(F_text *t)
 {
     F_text	   *text;
 
@@ -674,7 +667,7 @@ copy_text(t)
 /************************ COMPOUNDS *************************/
 
 F_compound     *
-create_compound()
+create_compound(void)
 {
     F_compound	   *c;
 
@@ -703,8 +696,7 @@ create_compound()
 }
 
 F_compound     *
-copy_compound(c)
-    F_compound	   *c;
+copy_compound(F_compound *c)
 {
     F_ellipse	   *e, *ee;
     F_arc	   *a, *aa;
@@ -789,9 +781,7 @@ copy_compound(c)
 */
 
 F_compound*
-create_dimension_line(line, add_to_figure)
-    F_line	   *line;
-    Boolean	    add_to_figure;
+create_dimension_line(F_line *line, Boolean add_to_figure)
 {
     F_compound	   *comp;
     F_line	   *box, *tick1, *tick2;
@@ -941,8 +931,7 @@ create_dimension_line(line, add_to_figure)
  */
 
 void
-create_dimline_ticks(line, tick1, tick2)
-    F_line	   *line, **tick1, **tick2;
+create_dimline_ticks(F_line *line, F_line **tick1, F_line **tick2)
 {
 	F_point	   *pnt;
 	F_line	   *tick;
@@ -985,7 +974,7 @@ create_dimline_ticks(line, tick1, tick2)
 }
 
 F_arrow*
-backward_dim_arrow()
+backward_dim_arrow(void)
 {
     F_arrow	   *a;
 
@@ -1009,7 +998,7 @@ backward_dim_arrow()
 }
 
 F_arrow*
-forward_dim_arrow()
+forward_dim_arrow(void)
 {
     F_arrow	   *a;
 

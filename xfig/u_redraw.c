@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -34,6 +34,13 @@
 #include "w_util.h"
 #include "w_zoom.h"
 
+#include "d_text.h"
+#include "u_bound.h"
+#include "u_elastic.h"
+#include "u_markers.h"
+#include "w_cursor.h"
+#include "w_rulers.h"
+
 /* EXPORTS */
 
 /* set in redisplay_region if called when preview_in_progress is true */
@@ -61,8 +68,18 @@ struct counts	counts[MAX_DEPTH + 1], saved_counts[MAX_DEPTH + 1];
  * Function to clear the array of object counts with file load or new command.
  */
 
+
+void redisplay_arcobject (F_arc *arcs, int depth);
+void redisplay_compoundobject (F_compound *compounds, int depth);
+void redisplay_ellipseobject (F_ellipse *ellipses, int depth);
+void redisplay_lineobject (F_line *lines, int depth);
+void redisplay_splineobject (F_spline *splines, int depth);
+void redisplay_textobject (F_text *texts, int depth);
+void redraw_pageborder (void);
+void draw_pb (int x, int y, int w, int h);
+
 void
-clearallcounts()
+clearallcounts(void)
 {
     register struct counts *cp;
 
@@ -81,7 +98,7 @@ clearallcounts()
  */
 
 void
-clearcounts()
+clearcounts(void)
 {
     register struct counts *cp;
 
@@ -94,8 +111,7 @@ clearcounts()
     }
 }
 
-redisplay_objects(active_objects)
-    F_compound	   *active_objects;
+void redisplay_objects(F_compound *active_objects)
 {
     int		    depth;
     F_compound	   *objects, *save_objects;
@@ -178,9 +194,7 @@ redisplay_objects(active_objects)
  * the counts array.
  */
 
-redisplay_arcobject(arcs, depth)
-    F_arc	   *arcs;
-    int		    depth;
+void redisplay_arcobject(F_arc *arcs, int depth)
 {
     F_arc	   *arc;
     struct counts  *cp;
@@ -205,9 +219,7 @@ redisplay_arcobject(arcs, depth)
  * appropriate depth in the counts array.
  */
 
-redisplay_ellipseobject(ellipses, depth)
-    F_ellipse	   *ellipses;
-    int		    depth;
+void redisplay_ellipseobject(F_ellipse *ellipses, int depth)
 {
     F_ellipse	   *ep;
     struct counts  *cp;
@@ -233,9 +245,7 @@ redisplay_ellipseobject(ellipses, depth)
  * depth in the counts array.
  */
 
-redisplay_lineobject(lines, depth)
-    F_line	   *lines;
-    int		    depth;
+void redisplay_lineobject(F_line *lines, int depth)
 {
     F_line	   *lp;
     struct counts  *cp;
@@ -261,9 +271,7 @@ redisplay_lineobject(lines, depth)
  * appropriate depth in the counts array.
  */
 
-redisplay_splineobject(splines, depth)
-    F_spline	   *splines;
-    int		    depth;
+void redisplay_splineobject(F_spline *splines, int depth)
 {
     F_spline	   *spline;
     struct counts  *cp;
@@ -288,9 +296,7 @@ redisplay_splineobject(splines, depth)
  * array.
  */
 
-redisplay_textobject(texts, depth)
-    F_text	   *texts;
-    int		    depth;
+void redisplay_textobject(F_text *texts, int depth)
 {
     F_text	   *text;
     struct counts  *cp;
@@ -314,9 +320,7 @@ redisplay_textobject(texts, depth)
  * work out to the objects contained in the compound.
  */
 
-redisplay_compoundobject(compounds, depth)
-    F_compound	   *compounds;
-    int		    depth;
+void redisplay_compoundobject(F_compound *compounds, int depth)
 {
     F_compound	   *c;
 
@@ -334,7 +338,7 @@ redisplay_compoundobject(compounds, depth)
  * Redisplay the entire drawing.
  */
 void
-redisplay_canvas()
+redisplay_canvas(void)
 {
     /* turn off Compose key LED */
     setCompLED(0);
@@ -345,7 +349,7 @@ redisplay_canvas()
 
 /* redisplay the object currently being created by the user (if any) */
 
-redisplay_curobj()
+void redisplay_curobj(void)
 {
     F_point	*p;
     int		 rx,ry,i;
@@ -438,8 +442,7 @@ redisplay_curobj()
     }
 }
 
-redisplay_region(xmin, ymin, xmax, ymax)
-    int		    xmin, ymin, xmax, ymax;
+void redisplay_region(int xmin, int ymin, int xmax, int ymax)
 {
     /* if we're generating a preview, don't redisplay the canvas 
        but set request flag so preview will call us with full canvas 
@@ -466,7 +469,7 @@ redisplay_region(xmin, ymin, xmax, ymax)
 
 /* update page border with new page size */
 
-update_pageborder()
+void update_pageborder(void)
 {
     if (appres.show_pageborder) {
 	clear_canvas();
@@ -478,7 +481,7 @@ update_pageborder()
 /* also make light blue lines vertically and horizontally through 0,0 if
    showaxislines is true */
 
-redisplay_pageborder()
+void redisplay_pageborder(void)
 {
 
     set_clip_window(clip_xmin, clip_ymin, clip_xmax, clip_ymax);
@@ -496,7 +499,7 @@ redisplay_pageborder()
 	redraw_pageborder();
 }
 
-redraw_pageborder()
+void redraw_pageborder(void)
 {
     int		   pwd, pht, ux;
     int		   x, y;
@@ -519,7 +522,7 @@ redraw_pageborder()
     }
     /* if multiple page mode, draw all page borders that are visible */
     if (appres.multiple) {
-	int	wd, ht, xoff, yoff;
+	int	wd, ht;
 
 	wd = CANVAS_WD/zoomscale;
 	ht = CANVAS_HT/zoomscale;
@@ -562,8 +565,7 @@ redraw_pageborder()
     XDrawString(tool_d,canvas_win,border_gc,ZOOMX(pwd)+3,ZOOMY(pht),pname,strlen(pname));
 }
 
-draw_pb(x, y, w, h)
-    int		   x, y, w, h;
+void draw_pb(int x, int y, int w, int h)
 {
 	zXDrawLine(tool_d, canvas_win, border_gc, x,   y,   x+w, y);
 	zXDrawLine(tool_d, canvas_win, border_gc, x+w, y,   x+w, y+h);
@@ -571,14 +573,12 @@ draw_pb(x, y, w, h)
 	zXDrawLine(tool_d, canvas_win, border_gc, x,   y+h, x,   y);
 }
 
-redisplay_zoomed_region(xmin, ymin, xmax, ymax)
-    int		    xmin, ymin, xmax, ymax;
+void redisplay_zoomed_region(int xmin, int ymin, int xmax, int ymax)
 {
     redisplay_region(ZOOMX(xmin), ZOOMY(ymin), ZOOMX(xmax), ZOOMY(ymax));
 }
 
-redisplay_ellipse(e)
-    F_ellipse	   *e;
+void redisplay_ellipse(F_ellipse *e)
 {
     int		    xmin, ymin, xmax, ymax;
 
@@ -586,8 +586,7 @@ redisplay_ellipse(e)
     redisplay_zoomed_region(xmin, ymin, xmax, ymax);
 }
 
-redisplay_ellipses(e1, e2)
-    F_ellipse	   *e1, *e2;
+void redisplay_ellipses(F_ellipse *e1, F_ellipse *e2)
 {
     int		    xmin1, ymin1, xmax1, ymax1;
     int		    xmin2, ymin2, xmax2, ymax2;
@@ -597,8 +596,7 @@ redisplay_ellipses(e1, e2)
     redisplay_regions(xmin1, ymin1, xmax1, ymax1, xmin2, ymin2, xmax2, ymax2);
 }
 
-redisplay_arc(a)
-    F_arc	   *a;
+void redisplay_arc(F_arc *a)
 {
     int		    xmin, ymin, xmax, ymax;
     int		    cx, cy;
@@ -627,8 +625,7 @@ redisplay_arc(a)
     redisplay_zoomed_region(xmin, ymin, xmax, ymax);
 }
 
-redisplay_arcs(a1, a2)
-    F_arc	   *a1, *a2;
+void redisplay_arcs(F_arc *a1, F_arc *a2)
 {
     int		    xmin1, ymin1, xmax1, ymax1;
     int		    xmin2, ymin2, xmax2, ymax2;
@@ -638,8 +635,7 @@ redisplay_arcs(a1, a2)
     redisplay_regions(xmin1, ymin1, xmax1, ymax1, xmin2, ymin2, xmax2, ymax2);
 }
 
-redisplay_spline(s)
-    F_spline	   *s;
+void redisplay_spline(F_spline *s)
 {
     int		    xmin, ymin, xmax, ymax;
 
@@ -647,8 +643,7 @@ redisplay_spline(s)
     redisplay_zoomed_region(xmin, ymin, xmax, ymax);
 }
 
-redisplay_splines(s1, s2)
-    F_spline	   *s1, *s2;
+void redisplay_splines(F_spline *s1, F_spline *s2)
 {
     int		    xmin1, ymin1, xmax1, ymax1;
     int		    xmin2, ymin2, xmax2, ymax2;
@@ -658,8 +653,7 @@ redisplay_splines(s1, s2)
     redisplay_regions(xmin1, ymin1, xmax1, ymax1, xmin2, ymin2, xmax2, ymax2);
 }
 
-redisplay_line(l)
-    F_line	   *l;
+void redisplay_line(F_line *l)
 {
     int		    xmin, ymin, xmax, ymax;
 
@@ -667,8 +661,7 @@ redisplay_line(l)
     redisplay_zoomed_region(xmin, ymin, xmax, ymax);
 }
 
-redisplay_lines(l1, l2)
-    F_line	   *l1, *l2;
+void redisplay_lines(F_line *l1, F_line *l2)
 {
     int		    xmin1, ymin1, xmax1, ymax1;
     int		    xmin2, ymin2, xmax2, ymax2;
@@ -678,15 +671,13 @@ redisplay_lines(l1, l2)
     redisplay_regions(xmin1, ymin1, xmax1, ymax1, xmin2, ymin2, xmax2, ymax2);
 }
 
-redisplay_compound(c)
-    F_compound	   *c;
+void redisplay_compound(F_compound *c)
 {
     redisplay_zoomed_region(c->nwcorner.x, c->nwcorner.y,
 			    c->secorner.x, c->secorner.y);
 }
 
-redisplay_compounds(c1, c2)
-    F_compound	   *c1, *c2;
+void redisplay_compounds(F_compound *c1, F_compound *c2)
 {
     redisplay_regions(c1->nwcorner.x, c1->nwcorner.y,
 		      c1->secorner.x, c1->secorner.y,
@@ -694,8 +685,7 @@ redisplay_compounds(c1, c2)
 		      c2->secorner.x, c2->secorner.y);
 }
 
-redisplay_text(t)
-    F_text	   *t;
+void redisplay_text(F_text *t)
 {
     int		    xmin, ymin, xmax, ymax;
     int		    dum;
@@ -705,8 +695,7 @@ redisplay_text(t)
     redisplay_zoomed_region(xmin, ymin, xmax, ymax);
 }
 
-redisplay_texts(t1, t2)
-    F_text	   *t1, *t2;
+void redisplay_texts(F_text *t1, F_text *t2)
 {
     int		    xmin1, ymin1, xmax1, ymax1;
     int		    xmin2, ymin2, xmax2, ymax2;
@@ -720,8 +709,7 @@ redisplay_texts(t1, t2)
 		      xmin2, ymin2, xmax2, ymax2);
 }
 
-redisplay_regions(xmin1, ymin1, xmax1, ymax1, xmin2, ymin2, xmax2, ymax2)
-    int		    xmin1, ymin1, xmax1, ymax1, xmin2, ymin2, xmax2, ymax2;
+void redisplay_regions(int xmin1, int ymin1, int xmax1, int ymax1, int xmin2, int ymin2, int xmax2, int ymax2)
 {
     if (xmin1 == xmin2 && ymin1 == ymin2 && xmax1 == xmax2 && ymax1 == ymax2) {
 	redisplay_zoomed_region(xmin1, ymin1, xmax1, ymax1);

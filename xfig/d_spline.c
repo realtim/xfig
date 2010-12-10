@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  * Parts Copyright (c) 1995 by C. Blanc and C. Schlick
  *
@@ -30,15 +30,23 @@
 #include "w_canvas.h"
 #include "w_mousefun.h"
 
+#include "f_util.h"
+#include "u_free.h"
+#include "u_redraw.h"
+#include "w_cursor.h"
+#include "w_msgpanel.h"
+
 /*************************** local declarations *********************/
 
-static void	init_spline_drawing();
-static void	create_splineobject();
-static void	init_spline_freehand_drawing();
-static void	init_spline_drawing2();
+static void	init_spline_drawing(int x, int y);
+static void	create_splineobject(int x, int y);
+static void	init_spline_freehand_drawing(int x, int y);
+static void	init_spline_drawing2(int x, int y);
+
+
 
 void
-spline_drawing_selected()
+spline_drawing_selected(void)
 {
     set_mousefun("first point", "freehand", "", "", "", "");
     canvas_kbd_proc = null_proc;
@@ -46,29 +54,26 @@ spline_drawing_selected()
     canvas_leftbut_proc = init_spline_drawing;
     canvas_middlebut_proc = init_spline_freehand_drawing;
     canvas_rightbut_proc = null_proc;
-    set_cursor(arrow_cursor);
+    set_cursor(crosshair_cursor);
     reset_action_on();
 }
 
 static void
-init_spline_freehand_drawing(x, y)
-    int		    x, y;
+init_spline_freehand_drawing(int x, int y)
 {
     freehand_line = True;
     init_spline_drawing2(x, y);
 }
 
 static void
-init_spline_drawing(x, y)
-    int		    x, y;
+init_spline_drawing(int x, int y)
 {
     freehand_line = False;
     init_spline_drawing2(x, y);
 }
 
 static void
-init_spline_drawing2(x, y)
-    int		    x, y;
+init_spline_drawing2(int x, int y)
 {
     if ((cur_mode == F_APPROX_SPLINE) || (cur_mode == F_INTERP_SPLINE)) {
 	min_num_points = OPEN_SPLINE_MIN_NUM_POINTS;
@@ -86,8 +91,7 @@ init_spline_drawing2(x, y)
 
 
 static void
-create_splineobject(x, y)
-    int		    x, y;
+create_splineobject(int x, int y)
 {
     F_spline	   *spline;
 
@@ -160,8 +164,7 @@ create_splineobject(x, y)
 }
 
 int
-make_sfactors(spl)
-     F_spline *spl;
+make_sfactors(F_spline *spl)
 {
   F_point   *p = spl->points;
   F_sfactor *sp, *cur_sp;

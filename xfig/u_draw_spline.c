@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -16,6 +16,9 @@
  */
 
 /* THIS FILE IS #included FROM u_draw.c and u_geom.c */
+
+#include "u_draw.h"
+#include "u_list.h"
 
 /********************* CURVES FOR SPLINES *****************************
 
@@ -40,9 +43,10 @@
 #define EQN_NUMERATOR(dim) \
   (A_blend[0]*p0->dim+A_blend[1]*p1->dim+A_blend[2]*p2->dim+A_blend[3]*p3->dim)
 
+
+
 static INLINE double
-f_blend(numerator, denominator)
-     double numerator, denominator;
+f_blend(double numerator, double denominator)
 {
   double p = 2 * denominator * denominator;
   double u = numerator / denominator;
@@ -52,40 +56,35 @@ f_blend(numerator, denominator)
 }
 
 static INLINE double
-g_blend(u, q)             /* p equals 2 */
-     double u, q;
+g_blend(double u, double q)             /* p equals 2 */
+                 
 {
   return(u*(q + u*(2*q + u*(8 - 12*q + u*(14*q - 11 + u*(4 - 5*q))))));
 }
 
 static INLINE double
-h_blend(u, q)
-     double u, q;
+h_blend(double u, double q)
 {
   double u2=u*u;
    return (u * (q + u * (2 * q + u2 * (-2*q - u*q))));
 }
 
 static INLINE
-negative_s1_influence(t, s1, A0, A2)
-     double       t, s1, *A0 ,*A2;
+void negative_s1_influence(double t, double s1, double *A0, double *A2)
 {
   *A0 = h_blend(-t, Q(s1));
   *A2 = g_blend(t, Q(s1));
 }
 
 static INLINE
-negative_s2_influence(t, s2, A1, A3)
-     double       t, s2, *A1 ,*A3;
+void negative_s2_influence(double t, double s2, double *A1, double *A3)
 {
   *A1 = g_blend(1-t, Q(s2));
   *A3 = h_blend(t-1, Q(s2));
 }
 
 static INLINE
-positive_s1_influence(k, t, s1, A0, A2)
-     int          k;
-     double       t, s1, *A0 ,*A2;
+void positive_s1_influence(int k, double t, double s1, double *A0, double *A2)
 {
   double Tk;
   
@@ -97,9 +96,7 @@ positive_s1_influence(k, t, s1, A0, A2)
 }
 
 static INLINE
-positive_s2_influence(k, t, s2, A1, A3)
-     int          k;
-     double       t, s2, *A1 ,*A3;
+void positive_s2_influence(int k, double t, double s2, double *A1, double *A3)
 {
   double Tk;
 
@@ -111,9 +108,7 @@ positive_s2_influence(k, t, s2, A1, A3)
 }
 
 static INLINE
-point_adding(A_blend, p0, p1, p2, p3)
-     F_point     *p0, *p1, *p2, *p3;
-     double      *A_blend;
+void point_adding(double *A_blend, F_point *p0, F_point *p1, F_point *p2, F_point *p3)
 {
   double weights_sum;
 
@@ -124,10 +119,7 @@ point_adding(A_blend, p0, p1, p2, p3)
 }
 
 static INLINE
-point_computing(A_blend, p0, p1, p2, p3, x, y)
-     F_point     *p0, *p1, *p2, *p3;
-     double      *A_blend;
-     int         *x, *y;
+void point_computing(double *A_blend, F_point *p0, F_point *p1, F_point *p2, F_point *p3, int *x, int *y)
 {
   double weights_sum;
 
@@ -138,11 +130,7 @@ point_computing(A_blend, p0, p1, p2, p3, x, y)
 }
 
 static float
-step_computing(k, p0, p1, p2, p3, s1, s2, precision)
-     int     k;
-     F_point *p0, *p1, *p2, *p3;
-     double  s1, s2;
-     float   precision;
+step_computing(int k, F_point *p0, F_point *p1, F_point *p2, F_point *p3, double s1, double s2, float precision)
 {
   double A_blend[4];
   int    xstart, ystart, xend, yend, xmid, ymid, xlength, ylength;
@@ -242,11 +230,7 @@ step_computing(k, p0, p1, p2, p3, s1, s2, precision)
 }
 
 static void
-spline_segment_computing(step, k, p0, p1, p2, p3, s1, s2)
-     float   step;
-     F_point *p0, *p1, *p2, *p3;
-     int     k;
-     double  s1, s2;
+spline_segment_computing(float step, int k, F_point *p0, F_point *p1, F_point *p2, F_point *p3, double s1, double s2)
 {
   double A_blend[4];
   double t;
@@ -309,9 +293,7 @@ spline_segment_computing(step, k, p0, p1, p2, p3, s1, s2)
 static Boolean DONE;
 
 static Boolean
-compute_open_spline(spline, precision)
-     F_spline	   *spline;
-     float         precision;
+compute_open_spline(F_spline *spline, float precision)
 {
   int       k;
   float     step;
@@ -357,13 +339,10 @@ compute_open_spline(spline, precision)
 }
 
 static Boolean
-compute_closed_spline(spline, precision)
-     F_spline	   *spline;
-     float         precision;
+compute_closed_spline(F_spline *spline, float precision)
 {
-  int k, npoints = num_points(spline->points), i;
+  int k, i;
   float     step;
-  double    t;
   F_point   *p0, *p1, *p2, *p3, *first;
   F_sfactor *s0, *s1, *s2, *s3, *s_first;
 

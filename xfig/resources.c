@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -20,39 +20,40 @@
 #include "object.h"
 
 fig_colors colorNames[] = {
-		"Default",	"NULL",
-		"Black",	"black",
-		"Blue",		"blue",
-		"Green",	"green",
-		"Cyan",		"cyan",
-		"Red",		"red",
-		"Magenta",	"magenta",
-		"Yellow",	"yellow",
-		"White",	"white",
-		"Blue4",	"#000090",	/* NOTE: hex colors must be 6 digits */
-		"Blue3",	"#0000b0",
-		"Blue2",	"#0000d0",
-		"LtBlue",	"#87ceff",
-		"Green4",	"#009000",
-		"Green3",	"#00b000",
-		"Green2",	"#00d000",
-		"Cyan4",	"#009090",
-		"Cyan3",	"#00b0b0",
-		"Cyan2",	"#00d0d0",
-		"Red4",		"#900000",
-		"Red3",		"#b00000",
-		"Red2",		"#d00000",
-		"Magenta4",	"#900090",
-		"Magenta3",	"#b000b0",
-		"Magenta2",	"#d000d0",
-		"Brown4",	"#803000",
-		"Brown3",	"#a04000",
-		"Brown2",	"#c06000",
-		"Pink4",	"#ff8080",
-		"Pink3",	"#ffa0a0",
-		"Pink2",	"#ffc0c0",
-		"Pink",		"#ffe0e0",
-		"Gold",		"gold" };
+		{"Default",	"NULL"},
+		{"Black",	"black"},
+		{"Blue",	"blue"},
+		{"Green",	"green"},
+		{"Cyan",	"cyan"},
+		{"Red",		"red"},
+		{"Magenta",	"magenta"},
+		{"Yellow",	"yellow"},
+		{"White",	"white"},
+		{"Blue4",	"#000090"},	/* NOTE: hex colors must be 6 digits */
+		{"Blue3",	"#0000b0"},
+		{"Blue2",	"#0000d0"},
+		{"LtBlue",	"#87ceff"},
+		{"Green4",	"#009000"},
+		{"Green3",	"#00b000"},
+		{"Green2",	"#00d000"},
+		{"Cyan4",	"#009090"},
+		{"Cyan3",	"#00b0b0"},
+		{"Cyan2",	"#00d0d0"},
+		{"Red4",	"#900000"},
+		{"Red3",	"#b00000"},
+		{"Red2",	"#d00000"},
+		{"Magenta4",	"#900090"},
+		{"Magenta3",	"#b000b0"},
+		{"Magenta2",	"#d000d0"},
+		{"Brown4",	"#803000"},
+		{"Brown3",	"#a04000"},
+		{"Brown2",	"#c06000"},
+		{"Pink4",	"#ff8080"},
+		{"Pink3",	"#ffa0a0"},
+		{"Pink2",	"#ffc0c0"},
+		{"Pink",	"#ffe0e0"},
+		{"Gold",	"gold" }
+		};
 
 char	*short_clrNames[] = {
 		"Default", 
@@ -138,6 +139,7 @@ Widget		canvas_sw, ps_fontmenu,		/* printer font menu tool */
 		msg_panel, name_panel, cmd_form, mode_panel, 
 		d_label, e_label, mousefun,
 		ind_panel, ind_box, upd_ctrl,	/* indicator panel */
+		snap_indicator_panel,		/* snap indicator */
 		unitbox_sw, sideruler_sw, topruler_sw;
 
 Display	       *tool_d;

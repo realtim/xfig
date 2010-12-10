@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1997 by T. Sato
- * Parts Copyright (c) 1997-2002 by Brian V. Smith
+ * Parts Copyright (c) 1997-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -55,6 +55,14 @@ There is currently no way to undo replace/update operations.
 #include "w_setup.h"
 #include "w_util.h"
 #include "u_create.h"
+
+#include "mode.h"
+#include "u_bound.h"
+#include "u_fonts.h"
+#include "u_redraw.h"
+#include "w_canvas.h"
+#include "w_color.h"
+
 #include <stdarg.h>
 
 #define MAX_MISSPELLED_WORDS	200
@@ -77,18 +85,18 @@ String	search_results_translations =
 	"<Btn4Down>:	scroll-one-line-up()\n\
 	<Btn5Down>:	scroll-one-line-down()";
 
-static void	search_panel_dismiss();
-static void	search_and_replace_text();
-static Boolean	search_text_in_compound();
-static Boolean	replace_text_in_compound();
-static void	found_text_panel_dismiss();
-static void	do_replace();
+static void	search_panel_dismiss(Widget widget, XtPointer closure, XtPointer call_data);
+static void	search_and_replace_text(Widget widget, XtPointer closure, XtPointer call_data);
+static Boolean	search_text_in_compound(F_compound *com, char *pattern, void (*proc) (/* ??? */));
+static Boolean	replace_text_in_compound(F_compound *com, char *pattern, char *dst);
+static void	found_text_panel_dismiss(void);
+static void	do_replace(Widget widget, XtPointer closure, XtPointer call_data);
 static void	show_search_result(char *format, ...);
 static void	show_search_msg(char *format, ...);
 
-static void	spell_panel_dismiss();
-static void	spell_select_word();
-static void	spell_correct_word();
+static void	spell_panel_dismiss(Widget widget, XtPointer closure, XtPointer call_data);
+static void	spell_select_word(Widget widget, XtPointer closure, XtPointer call_data);
+static void	spell_correct_word(Widget widget, XtPointer closure, XtPointer call_data);
 static void	show_spell_msg(char *format, ...);
 
 static XtActionsRec search_actions[] =
@@ -133,9 +141,8 @@ static Boolean	 do_replace_called;
 
 DeclareStaticArgs(14);
 
-static Boolean compare_string(str, pattern)
-     char *str;
-     char *pattern;
+
+static Boolean compare_string(char *str, char *pattern)
 {
   if (case_sensitive) {
     return strncmp(str, pattern, strlen(pattern)) == 0;
@@ -145,10 +152,7 @@ static Boolean compare_string(str, pattern)
 }
 
 static void
-do_replace(widget, closure, call_data)
-    Widget	    widget;
-    XtPointer	    closure;
-    XtPointer	    call_data;
+do_replace(Widget widget, XtPointer closure, XtPointer call_data)
 {
   int cnt;
 
@@ -172,10 +176,7 @@ do_replace(widget, closure, call_data)
 }
 
 static Boolean 
-replace_text_in_compound(com, pattern, dst)
-     F_compound *com;
-     char *pattern;
-     char *dst;
+replace_text_in_compound(F_compound *com, char *pattern, char *dst)
 {
   F_compound	*c;
   F_text	*t;
@@ -240,10 +241,7 @@ replace_text_in_compound(com, pattern, dst)
 }
 
 static void 
-do_update(widget, closure, call_data)
-    Widget	    widget;
-    XtPointer	    closure;
-    XtPointer	    call_data;
+do_update(Widget widget, XtPointer closure, XtPointer call_data)
 {
   if (found_text_cnt > 0) {
     search_text_in_compound(&objects,
@@ -257,7 +255,7 @@ do_update(widget, closure, call_data)
 }
 
 static void 
-found_text_panel_dismiss()
+found_text_panel_dismiss(void)
 {
   if (found_text_panel != None) 
 	XtDestroyWidget(found_text_panel);
@@ -314,8 +312,7 @@ show_search_msg(char *format,...)
 }
 
 static void 
-show_text_object(t)
-     F_text *t;
+show_text_object(F_text *t)
 {
   float x, y;
   char *unit;
@@ -333,10 +330,7 @@ show_text_object(t)
 }
 
 static void 
-search_and_replace_text(widget, closure, call_data)
-    Widget	    widget;
-    XtPointer	    closure;
-    XtPointer	    call_data;
+search_and_replace_text(Widget widget, XtPointer closure, XtPointer call_data)
 {
   char	*string;
 
@@ -371,10 +365,7 @@ search_and_replace_text(widget, closure, call_data)
 }
 
 static Boolean 
-search_text_in_compound(com, pattern, proc)
-     F_compound *com;
-     char *pattern;
-     void (*proc)();
+search_text_in_compound(F_compound *com, char *pattern, void (*proc) (/* ??? */))
 {
   F_compound *c;
   F_text *t;
@@ -409,10 +400,7 @@ search_text_in_compound(com, pattern, proc)
 }
 
 static void 
-search_panel_dismiss(widget, closure, call_data)
-    Widget	    widget;
-    XtPointer	    closure;
-    XtPointer	    call_data;
+search_panel_dismiss(Widget widget, XtPointer closure, XtPointer call_data)
 {
   found_text_panel_dismiss();
   if (search_panel != None) 
@@ -423,7 +411,7 @@ search_panel_dismiss(widget, closure, call_data)
 /* create and popup the search panel */
 
 void 
-popup_search_panel()
+popup_search_panel(void)
 {
     static Boolean actions_added = False;
     Widget below = None;
@@ -617,9 +605,7 @@ popup_search_panel()
 /***********************/
 
 void 
-popup_spell_check_panel(list, nitems)
-    char   **list;
-    int	     nitems;
+popup_spell_check_panel(char **list, int nitems)
 {
   static Boolean actions_added = False;
   Widget form, dismiss_button, below, label;
@@ -786,26 +772,23 @@ popup_spell_check_panel(list, nitems)
 }
 
 static void 
-spell_panel_dismiss(widget, closure, call_data)
-    Widget	    widget;
-    XtPointer	    closure;
-    XtPointer	    call_data;
+spell_panel_dismiss(Widget widget, XtPointer closure, XtPointer call_data)
 {
   if (spell_check_panel != None) 
 	XtDestroyWidget(spell_check_panel);
   spell_check_panel = None;
 }
 
-static void write_text_from_compound();
+static void write_text_from_compound(FILE *fp, F_compound *com);
 
 void 
-spell_check()
+spell_check(void)
 {
   char	  filename[PATH_MAX];
   char	 *cmd;
   char	  str[300];
   FILE	 *fp;
-  int	  len, i;
+  int	  len, i, fd;
   Boolean done = FALSE;
   static int lines = 0;
 
@@ -821,9 +804,12 @@ spell_check()
   }
   lines = 0;
 
-  sprintf(filename, "%s/xfig-spell.%d", TMPDIR, (int)getpid());
-  fp = fopen(filename, "w");
-  if (fp == NULL) {
+  snprintf(filename, sizeof(filename), "%s/xfig-spell.XXXXXX", TMPDIR);
+  if ((fd = mkstemp(filename)) == -1 || (fp = fdopen(fd, "w")) == NULL) {
+    if (fd != -1) {
+	unlink(filename);
+	close(fd);
+    }
     file_msg("Can't open temporary file: %s: %s\n", filename, strerror(errno));
   } else {
     /* locate all text objects and write them to file fp */
@@ -878,9 +864,7 @@ spell_check()
 /* locate all text objects and write them to file fp */
 
 static void 
-write_text_from_compound(fp, com)
-     FILE *fp;
-     F_compound *com;
+write_text_from_compound(FILE *fp, F_compound *com)
 {
     F_compound *c;
     F_text *t;
@@ -895,10 +879,7 @@ write_text_from_compound(fp, com)
 /* user has selected a word from the list */
 
 static void
-spell_select_word(widget, closure, call_data)
-    Widget	    widget;
-    XtPointer	    closure;
-    XtPointer	    call_data;
+spell_select_word(Widget widget, XtPointer closure, XtPointer call_data)
 {
     XawListReturnStruct *ret_struct = (XawListReturnStruct *) call_data;
 
@@ -918,10 +899,7 @@ spell_select_word(widget, closure, call_data)
 /* correct word that user has selected */
 
 static void
-spell_correct_word(widget, closure, call_data)
-    Widget	    widget;
-    XtPointer	    closure;
-    XtPointer	    call_data;
+spell_correct_word(Widget widget, XtPointer closure, XtPointer call_data)
 {
     char	   *corrected_word;
 

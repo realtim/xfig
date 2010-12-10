@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -28,14 +28,19 @@
 #include "w_canvas.h"
 #include "w_mousefun.h"
 
-static void	add_arrow_head();
-static void	delete_arrow_head();
-static void	add_linearrow();
-static void	add_arcarrow();
-static void	add_splinearrow();
+#include "u_redraw.h"
+#include "w_cursor.h"
+
+static void	add_arrow_head(F_line *obj, int type, int x, int y, F_point *p, F_point *q);
+static void	delete_arrow_head(F_line *obj, int type, int x, int y, F_point *p, F_point *q);
+static void	add_linearrow(F_line *line, F_point *prev_point, F_point *selected_point);
+static void	add_arcarrow(F_arc *arc, int point_num);
+static void	add_splinearrow(F_spline *spline, F_point *prev_point, F_point *selected_point);
+
+
 
 void
-arrow_head_selected()
+arrow_head_selected(void)
 {
     set_mousefun("add arrow", "delete arrow", "", LOC_OBJ, LOC_OBJ, LOC_OBJ);
     canvas_kbd_proc = null_proc;
@@ -51,10 +56,7 @@ arrow_head_selected()
 }
 
 static void
-add_arrow_head(obj, type, x, y, p, q)
-    F_line	   *obj;
-    int		    type, x, y;
-    F_point	   *p, *q;
+add_arrow_head(F_line *obj, int type, int x, int y, F_point *p, F_point *q)
 {
     switch (type) {
     case O_POLYLINE:
@@ -74,10 +76,7 @@ add_arrow_head(obj, type, x, y, p, q)
 }
 
 static void
-delete_arrow_head(obj, type, x, y, p, q)
-    F_line	   *obj;
-    int		    type, x, y;
-    F_point	   *p, *q;
+delete_arrow_head(F_line *obj, int type, int x, int y, F_point *p, F_point *q)
 {
     switch (type) {
     case O_POLYLINE:
@@ -97,9 +96,7 @@ delete_arrow_head(obj, type, x, y, p, q)
 }
 
 static void
-add_linearrow(line, prev_point, selected_point)
-    F_line	   *line;
-    F_point	   *prev_point, *selected_point;
+add_linearrow(F_line *line, F_point *prev_point, F_point *selected_point)
 {
     if (line->points->next == NULL)
 	return;			/* A single point line */
@@ -125,9 +122,7 @@ add_linearrow(line, prev_point, selected_point)
 }
 
 static void
-add_arcarrow(arc, point_num)
-    F_arc	   *arc;
-    int		    point_num;
+add_arcarrow(F_arc *arc, int point_num)
 {
 
     /* only allow arrowheads on open arc */
@@ -153,9 +148,7 @@ add_arcarrow(arc, point_num)
 }
 
 static void
-add_splinearrow(spline, prev_point, selected_point)
-    F_spline	   *spline;
-    F_point	   *prev_point, *selected_point;
+add_splinearrow(F_spline *spline, F_point *prev_point, F_point *selected_point)
 {
     if (prev_point == NULL) {	/* add backward arrow */
 	if (spline->back_arrow)
@@ -177,9 +170,7 @@ add_splinearrow(spline, prev_point, selected_point)
 }
 
 void
-delete_linearrow(line, prev_point, selected_point)
-    F_line	   *line;
-    F_point	   *prev_point, *selected_point;
+delete_linearrow(F_line *line, F_point *prev_point, F_point *selected_point)
 {
     if (line->points->next == NULL)
 	return;			/* A single point line */
@@ -215,9 +206,7 @@ delete_linearrow(line, prev_point, selected_point)
 }
 
 void
-delete_arcarrow(arc, point_num)
-    F_arc	   *arc;
-    int		    point_num;
+delete_arcarrow(F_arc *arc, int point_num)
 {
     if (arc->type == T_PIE_WEDGE_ARC)
 	return;;
@@ -251,9 +240,7 @@ delete_arcarrow(arc, point_num)
 }
 
 void
-delete_splinearrow(spline, prev_point, selected_point)
-    F_spline	   *spline;
-    F_point	   *prev_point, *selected_point;
+delete_splinearrow(F_spline *spline, F_point *prev_point, F_point *selected_point)
 {
     if (closed_spline(spline))
 	return;

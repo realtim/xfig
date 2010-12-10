@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -15,5 +15,9 @@
  *
  */
 
-extern void	set_cursor();
-extern void	set_temp_cursor();
+extern void	set_cursor(Cursor cursor);
+extern void	set_temp_cursor(Cursor cursor);
+extern void	init_cursor(void);
+extern void     recolor_cursors(void);
+
+extern void reset_cursor (void);

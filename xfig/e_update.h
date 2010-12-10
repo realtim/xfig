@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Parts Copyright (c) 1997 by T. Sato
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -14,4 +14,6 @@
  *
  */
 
-extern		update_text();
+extern void update_text(F_text *text);
+extern void fix_fillstyle (void *object);
+extern void update_selected (void);

@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -15,7 +15,8 @@
  *
  */
 
-extern void	delete_linearrow();
-extern void	delete_arcarrow();
-extern void	delete_splinearrow();
+extern void	delete_linearrow(F_line *line, F_point *prev_point, F_point *selected_point);
+extern void	delete_arcarrow(F_arc *arc, int point_num);
+extern void	delete_splinearrow(F_spline *spline, F_point *prev_point, F_point *selected_point);
 
+extern void arrow_head_selected (void);

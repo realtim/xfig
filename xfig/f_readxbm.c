@@ -1,6 +1,6 @@
 /*
  * FIG : Facility for Interactive Generation of figures
- * Copyright (c) 1989-2002 by Brian V. Smith
+ * Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright, 1987, Massachusetts Institute of Technology
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -26,11 +26,11 @@
 		  FileInvalid (-2) : invalid file
 */
 
+
+int ReadDataFromBitmapFile (FILE *file, unsigned int *width, unsigned int *height, char **data_ret);
+
 int
-read_xbm(file,filetype,pic)
-    FILE	   *file;
-    int		    filetype;
-    F_pic	   *pic;
+read_xbm(FILE *file, int filetype, F_pic *pic)
 {
     int status;
     unsigned int x, y;
@@ -103,7 +103,7 @@ static Bool initialized = False;	/* easier to fill in at run time */
  *	Used for translation value or delimiter significance lookup.
  */
 static void
-initHexTable()
+initHexTable(void)
 {
     /*
      * We build the table at run time for several reasons:
@@ -137,8 +137,7 @@ initHexTable()
  *	read next hex value in the input stream, return -1 if EOF
  */
 static int
-NextInt(fstream)
-    FILE *fstream;
+NextInt(FILE *fstream)
 {
     int	ch;
     int	value = 0;
@@ -187,10 +186,10 @@ NextInt(fstream)
 }
 
 int
-ReadDataFromBitmapFile(file, width, height, data_ret)
-    FILE *file;
-    unsigned int *width, *height;	/* RETURNED */
-    char **data_ret;			/* RETURNED */
+ReadDataFromBitmapFile(FILE *file, unsigned int *width, unsigned int *height, char **data_ret)
+               
+                                 	/* RETURNED */
+                    			/* RETURNED */
 {
     char *data = NULL;			/* working variable */
     char line[MAX_SIZE];		/* input line from file */

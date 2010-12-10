@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1992 by Brian Boyter
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -32,18 +32,23 @@
 #include "w_setup.h"
 #include "mode.h"
 
-extern	int	read_gif();
-extern	int	read_pcx();
-extern	int	read_epsf();
-extern	int	read_png();
-extern	int	read_ppm();
-extern	int	read_tif();
-extern	int	read_xbm();
+#include "w_file.h"
+#include "w_util.h"
+
+extern	int	read_gif(FILE *file, int filetype, F_pic *pic);
+extern	int	read_pcx(FILE *file, int filetype, F_pic *pic);
+extern	int	read_epsf(FILE *file, int filetype, F_pic *pic);
+extern	int	read_pdf(FILE *file, int filetype, F_pic *pic);
+extern	int	read_png(FILE *file, int filetype, F_pic *pic);
+extern	int	read_ppm(FILE *file, int filetype, F_pic *pic);
+extern	int	read_tif(char *filename, int filetype, F_pic *pic);
+extern	int	read_xbm(FILE *file, int filetype, F_pic *pic);
+
 #ifdef USE_JPEG
-extern	int	read_jpg();
+extern	int	read_jpg(FILE *file, int filetype, F_pic *pic);
 #endif /* USE_JPEG */
 #ifdef USE_XPM
-extern	int	read_xpm();
+extern	int	read_xpm(FILE *file, int filetype, F_pic *pic);
 #endif /* USE_XPM */
 
 #define MAX_SIZE 255
@@ -58,6 +63,7 @@ static	 struct hdr {
 	headers[]= {    {"GIF", "GIF",		    3, read_gif,	True},
 			{"PCX", "\012\005\001",	    3, read_pcx,	True},
 			{"EPS", "%!",		    2, read_epsf,	True},
+			{"PDF", "%PDF",		    2, read_pdf,	True},
 			{"PPM", "P3",		    2, read_ppm,	True},
 			{"PPM", "P6",		    2, read_ppm,	True},
 			{"TIFF", "II*\000",	    4, read_tif,	False},
@@ -84,12 +90,9 @@ static	 struct hdr {
  * If "force" is true, read the file unconditionally.
  */
 
-read_picobj(pic, file, color, force, existing)
-    F_pic	   *pic;
-    char	   *file;
-    Color	    color;
-    Boolean	    force;
-    Boolean	   *existing;
+
+
+void read_picobj(F_pic *pic, char *file, int color, Boolean force, Boolean *existing)
 {
     FILE	   *fd;
     int		    type;
@@ -243,11 +246,7 @@ read_picobj(pic, file, color, force, existing)
 */
 
 FILE *
-open_picfile(name, type, pipeok, retname)
-    char	*name;
-    int		*type;
-    Boolean	 pipeok;
-    char	*retname;
+open_picfile(char *name, int *type, Boolean pipeok, char *retname)
 {
     char	 unc[PATH_MAX+20];	/* temp buffer for gunzip command */
     FILE	*fstream;		/* handle on file  */
@@ -325,9 +324,7 @@ open_picfile(name, type, pipeok, retname)
 }
 
 void
-close_picfile(file,type)
-    FILE	*file;
-    int		 type;
+close_picfile(FILE *file, int type)
 {
     char	 line[MAX_SIZE];
     int		 stat;

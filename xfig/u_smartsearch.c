@@ -22,6 +22,10 @@
 
 #include "u_smartsearch.h"
 
+#include "u_geom.h"
+#include "u_markers.h"
+#include "u_search.h"
+
 /* how close to user-selected location? */
 #define TOLERANCE (zoomscale>1?2:(int)(2/zoomscale))
 
@@ -30,27 +34,27 @@
 
 /***************************************************************************/
 
-Boolean smart_next_arc_found();
-Boolean smart_next_ellipse_found();
-Boolean smart_next_line_found();
-Boolean smart_next_spline_found();
-Boolean smart_next_text_found();
-Boolean smart_next_compound_found();
+Boolean smart_next_arc_found(int x, int y, int tolerance, int *px, int *py, int shift);
+Boolean smart_next_ellipse_found(int x, int y, int tolerance, int *px, int *py, int shift);
+Boolean smart_next_line_found(int x, int y, int tolerance, int *px, int *py, int shift);
+Boolean smart_next_spline_found(int x, int y, int tolerance, int *px, int *py, int shift);
+Boolean smart_next_text_found(int x, int y, int tolerance, int *px, int *py, int shift);
+Boolean smart_next_compound_found(int x, int y, int tolerance, int *px, int *py, int shift);
 
-void do_smart_object_search();
+void do_smart_object_search(int x, int y, unsigned int shift);
 
-int smart_show_objecthighlight();
-int smart_erase_objecthighlight();
-int smart_toggle_objecthighlight();
+void smart_show_objecthighlight(void);
+void smart_erase_objecthighlight(void);
+void smart_toggle_objecthighlight(void);
 
 /* exports: */
 F_point  smart_point1, smart_point2;
 
 /* locals: */
-static		(*manipulate) ();
-static		(*handlerproc_left) ();
-static		(*handlerproc_middle) ();
-static		(*handlerproc_right) ();
+static void	(*manipulate) ();
+static void	(*handlerproc_left) ();
+static void	(*handlerproc_middle) ();
+static void	(*handlerproc_right) ();
 static int	type;
 static long	objectcount;
 static long	n;
@@ -67,53 +71,49 @@ static F_compound *c;
 
 /* functions: */
 
-void
-init_smart_searchproc_left(handlerproc)
-    int		    (*handlerproc) ();
 
+
+void
+init_smart_searchproc_left(void (*handlerproc) (/* ??? */))
 {
     handlerproc_left = handlerproc;
 }
 
 void
-init_smart_searchproc_middle(handlerproc)
-    int		    (*handlerproc) ();
-
+init_smart_searchproc_middle(void (*handlerproc) (/* ??? */))
 {
     handlerproc_middle = handlerproc;
 }
 
 void
-init_smart_searchproc_right(handlerproc)
-    int		    (*handlerproc) ();
-
+init_smart_searchproc_right(void (*handlerproc) (/* ??? */))
 {
     handlerproc_right = handlerproc;
 }
 
 
 void
-smart_object_search_left(x, y, shift)
-    int		    x, y;
-    unsigned int    shift;	/* Shift Key Status from XEvent */
+smart_object_search_left(int x, int y, unsigned int shift)
+       		         
+                          	/* Shift Key Status from XEvent */
 {
     manipulate = handlerproc_left;
     do_smart_object_search(x, y, shift);
 }
 
 void
-smart_object_search_middle(x, y, shift)
-    int		    x, y;
-    unsigned int    shift;	/* Shift Key Status from XEvent */
+smart_object_search_middle(int x, int y, unsigned int shift)
+       		         
+                          	/* Shift Key Status from XEvent */
 {
     manipulate = handlerproc_middle;
     do_smart_object_search(x, y, shift);
 }
 
 void
-smart_object_search_right(x, y, shift)
-    int		    x, y;
-    unsigned int    shift;	/* Shift Key Status from XEvent */
+smart_object_search_right(int x, int y, unsigned int shift)
+       		         
+                          	/* Shift Key Status from XEvent */
 {
     manipulate = handlerproc_right;
     do_smart_object_search(x, y, shift);
@@ -122,8 +122,7 @@ smart_object_search_right(x, y, shift)
 /***************************************************************************/
 
 static void
-set_smart_points(x1, y1, x2, y2)
-    int x1, y1, x2, y2;
+set_smart_points(int x1, int y1, int x2, int y2)
 {
     smart_point1.x = x1;
     smart_point1.y = y1;
@@ -132,7 +131,7 @@ set_smart_points(x1, y1, x2, y2)
 }
 
 static void
-init_smart_search()
+init_smart_search(void)
 {
     if (highlighting)
 	smart_erase_objecthighlight();
@@ -165,9 +164,9 @@ init_smart_search()
 }
 
 void
-do_smart_object_search(x, y, shift)
-    int		    x, y;
-    unsigned int    shift;	/* Shift Key Status from XEvent */
+do_smart_object_search(int x, int y, unsigned int shift)
+       		         
+                          	/* Shift Key Status from XEvent */
 {
     int		    px, py;
     Boolean	    found = False;
@@ -263,9 +262,7 @@ do_smart_object_search(x, y, shift)
 /***************************************************************************/
 
 Boolean
-smart_next_arc_found(x, y, tolerance, px, py, shift)
-   int 	x, y, tolerance, *px, *py;
-   int	shift;
+smart_next_arc_found(int x, int y, int tolerance, int *px, int *py, int shift)
 {
    float ax, ay;
    int x1, y1, x2, y2;
@@ -292,9 +289,7 @@ smart_next_arc_found(x, y, tolerance, px, py, shift)
 }
 
 Boolean
-smart_next_ellipse_found(x, y, tolerance, px, py, shift)
-   int		    x, y, tolerance, *px, *py;
-   int		    shift;
+smart_next_ellipse_found(int x, int y, int tolerance, int *px, int *py, int shift)
 {
    float ex, ey, vx, vy;
    int x1, y1, x2, y2;
@@ -329,8 +324,7 @@ smart_next_ellipse_found(x, y, tolerance, px, py, shift)
 }
 
 Boolean
-smart_next_line_found(x, y, tolerance, px, py, shift)
-    int		    x, y, tolerance, *px, *py, shift;
+smart_next_line_found(int x, int y, int tolerance, int *px, int *py, int shift)
 {				/* return the pointer to lines object if the
 				 * search is successful otherwise return
 				 * NULL.  The value returned via (px, py) is
@@ -360,12 +354,12 @@ smart_next_line_found(x, y, tolerance, px, py, shift)
 }              
 
 Boolean
-smart_next_spline_found(x, y, tolerance, px, py, shift)
+smart_next_spline_found(int x, int y, int tolerance, int *px, int *py, int shift)
 /* We call `close_to_spline' which uses HIGH_PRECISION.
    Think about it. 
    */
-    int		    x, y, tolerance, *px, *py;
-    int		    shift;
+       		                              
+       		          
 {
     int lx1, ly1, lx2, ly2;
 
@@ -392,9 +386,7 @@ smart_next_spline_found(x, y, tolerance, px, py, shift)
 /* actually, the following are not very smart */
 
 Boolean
-smart_next_text_found(x, y, tolerance, px, py, shift)
-    int		    x, y, tolerance, *px, *py;
-    int		    shift;
+smart_next_text_found(int x, int y, int tolerance, int *px, int *py, int shift)
 {
     int		    dum, tlength;
 
@@ -422,9 +414,7 @@ smart_next_text_found(x, y, tolerance, px, py, shift)
 }
 
 Boolean
-smart_next_compound_found(x, y, tolerance, px, py, shift)
-    int		    x, y, tolerance, *px, *py;
-    int		    shift;
+smart_next_compound_found(int x, int y, int tolerance, int *px, int *py, int shift)
 {
     float	    tol2;
 
@@ -462,7 +452,7 @@ smart_next_compound_found(x, y, tolerance, px, py, shift)
     return 0;
 }
 
-smart_show_objecthighlight()
+void smart_show_objecthighlight(void)
 {   
     if (highlighting)
 	return;
@@ -470,7 +460,7 @@ smart_show_objecthighlight()
     smart_toggle_objecthighlight();
 }
 
-smart_erase_objecthighlight()
+void smart_erase_objecthighlight(void)
 {
     if (!highlighting)
 	return;
@@ -482,7 +472,7 @@ smart_erase_objecthighlight()
     }
 }
 
-smart_toggle_objecthighlight()
+void smart_toggle_objecthighlight(void)
 {
     switch (type) {
     case O_ELLIPSE:
@@ -509,7 +499,7 @@ smart_toggle_objecthighlight()
 }
 
 void
-smart_null_proc()
+smart_null_proc(void)
 {
     /* almost does nothing */
     if (highlighting)

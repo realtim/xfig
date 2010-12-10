@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -24,19 +24,28 @@
 #include "u_fonts.h"
 #include "u_create.h"
 #include "version.h"
-#include "w_color.h"
 #include "w_drawprim.h"
 #include "w_export.h"
 #include "w_file.h"
 #include "w_print.h"
 #include "w_indpanel.h"
+#include "w_color.h"
 #include "w_msgpanel.h"
 #include "w_setup.h"
 #include "w_util.h"
 #include "w_zoom.h"
-#ifdef I18N
-#include <locale.h>
-#endif  /* I18N */
+
+#include "d_spline.h"
+#include "e_update.h"
+#include "f_picobj.h"
+#include "f_readold.h"
+#include "f_util.h"
+#include "u_bound.h"
+#include "u_free.h"
+#include "u_scale.h"
+#include "u_translate.h"
+#include "w_util.h"
+#include "w_layers.h"
 
 /* EXPORTS */
 
@@ -49,17 +58,17 @@ char		*read_file_name;	/* current input file name */
 
 static char	Err_incomp[] = "Incomplete %s object at line %d.";
 
-static void        read_colordef();
-static F_ellipse  *read_ellipseobject();
-static F_line     *read_lineobject();
-static F_text     *read_textobject();
-static F_spline   *read_splineobject();
-static F_arc      *read_arcobject();
-static F_compound *read_compoundobject();
-static char	  *attach_comments();
-static void	   count_lines_correctly();
-static int	   read_return();
-static Boolean	   contains_picture();
+static void        read_colordef(FILE *fp);
+static F_ellipse  *read_ellipseobject(void);
+static F_line     *read_lineobject(FILE *fp);
+static F_text     *read_textobject(FILE *fp);
+static F_spline   *read_splineobject(FILE *fp);
+static F_arc      *read_arcobject(FILE *fp);
+static F_compound *read_compoundobject(FILE *fp);
+static char	  *attach_comments(void);
+static void	   count_lines_correctly(FILE *fp);
+static int	   read_return(int status);
+static Boolean	   contains_picture(F_compound *compound);
 
 #define FILL_CONVERT(f) \
 	   ((proto >= 22) ? (f): \
@@ -86,13 +95,26 @@ float	         fproto, xfigproto;	/* floating values for protocol of figure
    Called from load_file(), merge_file(), preview_figure(), load_lib_obj(),
    and paste(), but NOT from read_figure() (import Fig as picture) */
 
+
+void merge_colors (F_compound *objects);
+void swap_colors (void);
+int readfp_fig (FILE *fp, F_compound *obj, Boolean merge, int xoff, int yoff, fig_settings *settings);
+int read_line (FILE *fp);
+int read_objects (FILE *fp, F_compound *obj, int *res);
+void scale_figure (F_compound *obj, float mul, int offset);
+void shift_figure (F_compound *obj);
+void fix_depth (int *depth);
+void check_color (int *color);
+void convert_arrow (int *type, float *wd, float *ht);
+void fix_angle (float *angle);
+void skip_line (FILE *fp);
+int backslash_count (char *cp, int start);
+int save_comment (FILE *fp);
+void renumber_comp (F_compound *compound);
+void renumber (int *color);
+
 int
-read_figc(file_name, obj, merge, remapimages, xoff, yoff, settings)
-    char	   *file_name;
-    F_compound	   *obj;
-    Boolean	    merge, remapimages;
-    int		    xoff, yoff;
-    fig_settings   *settings;
+read_figc(char *file_name, F_compound *obj, Boolean merge, Boolean remapimages, int xoff, int yoff, fig_settings *settings)
 {
     int i,status;
 
@@ -101,7 +123,7 @@ read_figc(file_name, obj, merge, remapimages, xoff, yoff, settings)
 	n_colorFree[i] = True;
 
     /* now read the file */
-    status = read_fig(file_name, obj, merge, xoff, yoff, settings, False);
+    status = read_fig(file_name, obj, merge, xoff, yoff, settings);
 
     if (status != 0)
 	return status;
@@ -126,8 +148,7 @@ read_figc(file_name, obj, merge, remapimages, xoff, yoff, settings)
 }
 
 static Boolean
-contains_picture(compound)
-    F_compound	   *compound;
+contains_picture(F_compound *compound)
 {
     F_line	   *l;
     F_compound	   *c;
@@ -172,12 +193,7 @@ to bring them up-to-date.
 **********************************************************/
 
 int
-read_fig(file_name, obj, merge, xoff, yoff, settings)
-    char	   *file_name;
-    F_compound	   *obj;
-    Boolean	    merge;
-    int		    xoff, yoff;
-    fig_settings   *settings;
+read_fig(char *file_name, F_compound *obj, Boolean merge, int xoff, int yoff, fig_settings *settings)
 {
     FILE	   *fp;
     int		    status;
@@ -208,12 +224,7 @@ read_fig(file_name, obj, merge, xoff, yoff, settings)
 }
 
 int
-readfp_fig(fp, obj, merge, xoff, yoff, settings)
-    FILE	   *fp;
-    F_compound	   *obj;
-    Boolean	    merge;
-    int		    xoff, yoff;
-    fig_settings   *settings;
+readfp_fig(FILE *fp, F_compound *obj, Boolean merge, int xoff, int yoff, fig_settings *settings)
 {
     int		    status;
     int		    i;
@@ -340,7 +351,7 @@ readfp_fig(fp, obj, merge, xoff, yoff, settings)
 	file_msg("Seeing if this figure is Fig format 1.3");
 	file_msg("If this doesn't work then this is not a Fig file.");
 	proto = 13;
-	status = read_1_3_objects(fp, buf, obj, &resolution);
+	status = read_1_3_objects(fp, buf, obj);
     }
     /* don't go any further if there was an error in reading the figure */
     if (status != 0) {
@@ -408,7 +419,6 @@ readfp_fig(fp, obj, merge, xoff, yoff, settings)
 	/* metric, only choice */
 	settings->grid_unit = MM_UNIT;
     }
-
     /* return with status */
     return read_return(status);
 }
@@ -416,8 +426,7 @@ readfp_fig(fp, obj, merge, xoff, yoff, settings)
 /* clear defer_update_layers counter, update the layer buttons and return status */
 
 static int
-read_return(status)
-    int		    status;
+read_return(int status)
 {
     defer_update_layers = 0;
     if (!update_figs)
@@ -425,10 +434,7 @@ read_return(status)
     return status;
 }
 
-read_objects(fp, obj, res)
-    FILE	   *fp;
-    F_compound	   *obj;
-    int		   *res;
+int read_objects(FILE *fp, F_compound *obj, int *res)
 {
     F_ellipse	   *e, *le = NULL;
     F_line	   *l, *ll = NULL;
@@ -535,8 +541,7 @@ read_objects(fp, obj, res)
 	return errno;
 }				/* read_objects */
 
-parse_papersize(size)
-    char	   *size;
+int parse_papersize(char *size)
 {
     int i,len;
     char *c;
@@ -563,8 +568,7 @@ parse_papersize(size)
 }
 
 static void
-read_colordef(fp)
-    FILE	   *fp;
+read_colordef(FILE *fp)
 {
     int		    c,r,g,b;
 
@@ -586,8 +590,7 @@ read_colordef(fp)
 }
 
 static F_arc   *
-read_arcobject(fp)
-    FILE	   *fp;
+read_arcobject(FILE *fp)
 {
     F_arc	   *a;
     int		    n, fa, ba;
@@ -673,8 +676,7 @@ read_arcobject(fp)
 }
 
 static F_compound *
-read_compoundobject(fp)
-    FILE	   *fp;
+read_compoundobject(FILE *fp)
 {
     F_arc	   *a, *la = NULL;
     F_ellipse	   *e, *le = NULL;
@@ -787,7 +789,7 @@ read_compoundobject(fp)
 }
 
 static F_ellipse *
-read_ellipseobject()
+read_ellipseobject(void)
 {
     F_ellipse	   *e;
     int		    n;
@@ -834,8 +836,7 @@ read_ellipseobject()
 }
 
 static F_line  *
-read_lineobject(fp)
-    FILE	   *fp;
+read_lineobject(FILE *fp)
 {
     F_line	   *l;
     F_point	   *p, *q;
@@ -932,7 +933,7 @@ read_lineobject(fp)
 	    free((char *) l);
 	    return NULL;
 	}
-	if (sscanf(buf, "%d %s", &l->pic->flipped, s1) != 2) {
+	if (sscanf(buf, "%d %[^\n]", &l->pic->flipped, s1) != 2) {
 	    file_msg(Err_incomp, "Picture Object", save_line);
 	    free((char *) l);
 	    return NULL;
@@ -1037,8 +1038,7 @@ read_lineobject(fp)
 }
 
 static F_spline *
-read_splineobject(fp)
-    FILE	   *fp;
+read_splineobject(FILE *fp)
 {
     F_spline	   *s;
     F_point	   *p, *q;
@@ -1223,8 +1223,7 @@ read_splineobject(fp)
 }
 
 static F_text  *
-read_textobject(fp)
-    FILE	   *fp;
+read_textobject(FILE *fp)
 {
     F_text	   *t;
     int		    l,n,len;
@@ -1276,7 +1275,6 @@ read_textobject(fp)
     /* remove any trailing carriage returns (^M, possibly from a PC) */
     if (s[strlen(s)-1] == '\r')
 	s[strlen(s)-1] = '\0';
-
     /* use these for now, but recalculate later in read_scale_text if not update_figs */
     t->ascent = round(height);
     t->descent = 0;
@@ -1440,9 +1438,7 @@ read_textobject(fp)
 
 /* akm 28/2/95 - count consecutive backslashes backwards */
 int
-backslash_count(cp, start)
-char cp[];
-int start;
+backslash_count(char *cp, int start)
 {
   int i, count = 0;
 
@@ -1458,7 +1454,7 @@ int start;
 /* attach comments together */ 
 
 static char *
-attach_comments()
+attach_comments(void)
 {
     int		    i,len;
     char	   *comp;
@@ -1471,7 +1467,7 @@ attach_comments()
 	len += strlen(comments[i])+1;
     if ((comp = new_string(len)) == NULL) {
 	numcom = 0;
-	return;
+	return NULL;
     }
     /* now make them into one string */
     comp[0] = '\0';
@@ -1488,8 +1484,7 @@ attach_comments()
     return comp;
 }
 
-read_line(fp)
-    FILE	   *fp;
+int read_line(FILE *fp)
 {
     while (1) {
 	if (NULL == fgets(buf, BUF_SIZE, fp)) {
@@ -1506,8 +1501,7 @@ read_line(fp)
 
 /* save a comment line to be stored with the *subsequent* object */
 
-save_comment(fp)
-    FILE	   *fp;
+int save_comment(FILE *fp)
 {
     int		    i;
 
@@ -1530,8 +1524,7 @@ save_comment(fp)
 
 /* skip to the end of the current line */
 
-skip_line(fp)
-    FILE	   *fp;
+void skip_line(FILE *fp)
 {
     while (fgetc(fp) != '\n') {
 	if (feof(fp))
@@ -1541,8 +1534,7 @@ skip_line(fp)
 
 /* make sure angle is 0 to 2PI */
 
-fix_angle(angle)
-    float	  *angle;
+void fix_angle(float *angle)
 {
     while (*angle < 0.0)
 	*angle += M_2PI;
@@ -1550,8 +1542,7 @@ fix_angle(angle)
 	*angle -= M_2PI;
 }
 
-fix_depth(depth)
-    int		  *depth;
+void fix_depth(int *depth)
 {
     if (*depth>MAX_DEPTH) {
 	    *depth=MAX_DEPTH;
@@ -1567,8 +1558,7 @@ fix_depth(depth)
 
 char shift_msg[] = "The figure has objects which have negative coordinates,\ndo you wish to shift it back on the page?";
 
-shift_figure(obj)
-F_compound	   *obj;
+void shift_figure(F_compound *obj)
 {
     F_ellipse	   *e;
     F_arc	   *a;
@@ -1620,10 +1610,7 @@ F_compound	   *obj;
 	translate_text(t, dx, dy);
 }
 
-scale_figure(obj,mul,offset)
-F_compound	   *obj;
-float		    mul;
-int		    offset;
+void scale_figure(F_compound *obj, float mul, int offset)
 {
     /* scale the whole figure for new pixels per inch */
     if (mul != 1.0)
@@ -1640,8 +1627,7 @@ int		    offset;
 
 /* check if user color <color> is defined */
 
-check_color(color)
-    int		    *color;
+void check_color(int *color)
 {
     if (*color < NUM_STD_COLS)
 	return;
@@ -1655,7 +1641,7 @@ check_color(color)
 
 /* swap new colors (n_...) with current for file load or undo load */
 
-swap_colors()
+void swap_colors(void)
 {
     int		i,num;
     Boolean	saveFree[MAX_USR_COLS];
@@ -1721,8 +1707,7 @@ swap_colors()
 
 static int    renum[MAX_USR_COLS];
 
-merge_colors(objects)
-    F_compound	   *objects;
+void merge_colors(F_compound *objects)
 {
     Boolean	    found_exist;
     int		    i,j,newval;
@@ -1805,8 +1790,7 @@ merge_colors(objects)
     num_usr_cols = n_num_usr_cols;
 }
 
-renumber_comp(compound)
-	F_compound *compound;
+void renumber_comp(F_compound *compound)
 {
 	F_arc	   *a;
 	F_text	   *t;
@@ -1841,8 +1825,7 @@ renumber_comp(compound)
 	}
 }
 
-renumber(color)
-    Color	   *color;
+void renumber(int *color)
 {
     if (*color < NUM_STD_COLS)
 	return;
@@ -1863,8 +1846,7 @@ renumber(color)
  */
 
 static void
-count_lines_correctly(fp)
-    FILE *fp;
+count_lines_correctly(FILE *fp)
 {
     int cc;
     do{
@@ -1880,9 +1862,7 @@ count_lines_correctly(fp)
 /* make sure arrow style value is legal and convert arrow width and height to
  * same units as thickness in V4.0 and later we will save the values in these units */
 
-convert_arrow(type, wd, ht)
-	int	*type;
-	float	*wd, *ht;
+void convert_arrow(int *type, float *wd, float *ht)
 {
     if (*type >= NUM_ARROW_TYPES/2)
 	*type = 0;

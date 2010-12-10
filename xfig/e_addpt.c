@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -31,14 +31,22 @@
 #include "w_mousefun.h"
 #include "w_modepanel.h"
 
-static void	init_point_adding();
-static void	fix_linepoint_adding();
-static void	fix_splinepoint_adding();
-static void	init_linepointadding();
-static void	init_splinepointadding();
+#include "u_geom.h"
+#include "u_markers.h"
+#include "u_redraw.h"
+#include "u_undo.h"
+#include "w_cursor.h"
+
+static void	init_point_adding(F_line *p, int type, int x, int y, int px, int py);
+static void	fix_linepoint_adding(int x, int y);
+static void	fix_splinepoint_adding(int x, int y);
+static void	init_linepointadding(int px, int py);
+static void	init_splinepointadding(int px, int py);
+
+
 
 void
-point_adding_selected()
+point_adding_selected(void)
 {
     set_mousefun("break/add here", "", "", LOC_OBJ, LOC_OBJ, LOC_OBJ);
     canvas_kbd_proc = null_proc;
@@ -56,11 +64,7 @@ point_adding_selected()
 }
 
 static void
-init_point_adding(p, type, x, y, px, py)
-    F_line	   *p;
-    int		    type;
-    int		    x, y;
-    int		    px, py;
+init_point_adding(F_line *p, int type, int x, int y, int px, int py)
 {
     set_action_on();
     set_mousefun("place new point", "", "cancel", LOC_OBJ, LOC_OBJ, LOC_OBJ);
@@ -102,7 +106,7 @@ init_point_adding(p, type, x, y, px, py)
 }
 
 static void
-wrapup_pointadding()
+wrapup_pointadding(void)
 {
     reset_action_on();
     point_adding_selected();
@@ -110,7 +114,7 @@ wrapup_pointadding()
 }
 
 static void
-cancel_pointadding()
+cancel_pointadding(void)
 {
     canvas_ref_proc = canvas_locmove_proc = null_proc;
     elastic_linelink();
@@ -120,7 +124,7 @@ cancel_pointadding()
 }
 
 static void
-cancel_line_pointadding()
+cancel_line_pointadding(void)
 {
     canvas_ref_proc = canvas_locmove_proc = null_proc;
     if (left_point != NULL && right_point != NULL)
@@ -134,8 +138,7 @@ cancel_line_pointadding()
 /**************************  spline  *******************************/
 
 static void
-init_splinepointadding(px, py)
-    int		    px, py;
+init_splinepointadding(int px, int py)
 {
     find_endpoints(cur_s->points, px, py, &left_point, &right_point);
 
@@ -157,8 +160,7 @@ init_splinepointadding(px, py)
 }
 
 static void
-fix_splinepoint_adding(x, y)
-    int		    x, y;
+fix_splinepoint_adding(int x, int y)
 {
     F_point	   *p;
 
@@ -193,10 +195,7 @@ fix_splinepoint_adding(x, y)
  */
 
 void
-splinepoint_adding(spline, left_point, added_point, right_point, sfactor)
-    F_spline	   *spline;
-    F_point	   *left_point, *added_point, *right_point;
-    double         sfactor;
+splinepoint_adding(F_spline *spline, F_point *left_point, F_point *added_point, F_point *right_point, double sfactor)
 {
     F_sfactor	   *c, *prev_sfactor;
 
@@ -251,8 +250,7 @@ splinepoint_adding(spline, left_point, added_point, right_point, sfactor)
 /***************************  line  ********************************/
 
 static void
-init_linepointadding(px, py)
-    int		    px, py;
+init_linepointadding(int px, int py)
 {
     find_endpoints(cur_l->points, px, py, &left_point, &right_point);
 
@@ -277,8 +275,7 @@ init_linepointadding(px, py)
 }
 
 static void
-fix_linepoint_adding(x, y)
-    int x, y;
+fix_linepoint_adding(int x, int y)
 {
     F_point	   *p;
 
@@ -305,9 +302,7 @@ fix_linepoint_adding(x, y)
 }
 
 void
-linepoint_adding(line, left_point, added_point)
-    F_line	   *line;
-    F_point	   *left_point, *added_point;
+linepoint_adding(F_line *line, F_point *left_point, F_point *added_point)
 {
     /* turn off all markers */
     update_markers(0);
@@ -342,9 +337,7 @@ linepoint_adding(line, left_point, added_point)
  */
 
 void
-find_endpoints(p, x, y, fp, sp)
-    F_point	   *p, **fp, **sp;
-    int		    x, y;
+find_endpoints(F_point *p, int x, int y, F_point **fp, F_point **sp)
 {
     int		    d;
     F_point	   *a = NULL, *b = p;

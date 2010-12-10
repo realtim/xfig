@@ -1,6 +1,6 @@
 /*
  * FIG : Facility for Interactive Generation of figures
- * Parts Copyright (c) 1989-2003 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -49,17 +49,17 @@ static XtResource resources[] = {
  * Semi Public function definitions. 
  */
 
-static	void ClassInitialize();
-static	void HighlightCascade();
-static	void UnhighlightCascade();
-static	void Notify();
+static	void ClassInitialize(void);
+static	void HighlightCascade(Widget w);
+static	void UnhighlightCascade(Widget w);
+static	void Notify(Widget w);
 
 /* 
  * Private Function Definitions.
  */
 
-void	popdown_subs();
-static	void popdown();
+void	popdown_subs(void);
+static	void popdown(Widget w);
 
 #define superclass (&smeBSBClassRec)
 SmeCascadeClassRec smeCascadeClassRec = {
@@ -143,7 +143,7 @@ static int	popped;		/* index into popped_up[] */
  */
 
 void
-popdown_subs()
+popdown_subs(void)
 {
     int		     i;
 
@@ -166,7 +166,7 @@ popdown_subs()
  */
 
 static void 
-ClassInitialize()
+ClassInitialize(void)
 {
     XawInitializeWidgetSet();
     XtAddConverter( XtRString, XtRWidget, XmuCvtStringToWidget, NULL, 0 );
@@ -184,13 +184,10 @@ ClassInitialize()
  */
 
 static void
-MoveMenu(w, x, y)
-Widget w;
-Position x, y;
+MoveMenu(Widget w, Position x, Position y)
 {
     Arg			arglist[2];
     Cardinal		num_args = 0;
-    SimpleMenuWidget	smw = (SimpleMenuWidget) w;
     int			width = w->core.width + 2 * w->core.border_width;
     int			height = w->core.height + 2 * w->core.border_width;
 
@@ -222,11 +219,10 @@ Position x, y;
  ************************************************************/
 
 static void
-HighlightCascade(w)
-Widget	w;
+HighlightCascade(Widget w)
 {
     SmeCascadeObject	entry = (SmeCascadeObject) w;
-    int			destX, destY, x, i;
+    int			destX, destY, i;
     Window		childRtrn;
     ShellWidget		shellparent;
     Widget		parent, submenu;
@@ -310,8 +306,7 @@ Widget	w;
  ************************************************************/
 
 static void
-UnhighlightCascade(w)
-    Widget	     w;
+UnhighlightCascade(Widget w)
 {
     Dimension	     height, width;
     Window	     root, child;
@@ -365,8 +360,7 @@ UnhighlightCascade(w)
 }
 
 static void
-Notify(w)
-    Widget	     w;
+Notify(Widget w)
 {
     Window	     root, child;
     int		     root_x, root_y, px, py;
@@ -393,16 +387,13 @@ Notify(w)
 extern void	_XtDefaultWarningMsg();
 
 static void
-null_sme_proc()
+null_sme_proc(void)
 {
 }
 
 static void
-popdown(w)
-    Widget	     w;
+popdown(Widget w)
 {
-    int i;
-
     /* nullify the warning handler because we may have an unmatched grab */
     XtAppSetWarningMsgHandler(XtWidgetToApplicationContext(w), null_sme_proc);
     XtPopdown(w);

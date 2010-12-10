@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1995 by C. Blanc and C. Schlick
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -18,8 +18,8 @@
 #ifndef D_SUBSPLINE_H
 #define D_SUBSPLINE_H
 
-extern F_spline  *create_subspline();
-extern int        free_subspline();
-extern void       draw_subspline();
+extern F_spline  *create_subspline(int *num_pts, F_spline *spline, F_point *point, F_sfactor **sfactor, F_sfactor **sub_sfactor);
+extern void       free_subspline(int num_pts, F_spline **spline);
+extern void       draw_subspline(int num_pts, F_spline *spline, int op);
 
 #endif /* D_SUBSPLINE_H */

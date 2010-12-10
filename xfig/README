@@ -61,7 +61,7 @@ version 3.2.5.  It now states that:
 
 	FIG : Facility for Interactive Generation of figures
 	Copyright (c) 1985-1988 by Supoj Sutanthavibul
-	Parts Copyright (c) 1989-2002 by Brian V. Smith
+	Parts Copyright (c) 1989-2007 by Brian V. Smith
 	Parts Copyright (c) 1991 by Paul King
 
 	Any party obtaining a copy of these files is granted, free of charge, a
@@ -235,12 +235,6 @@ INSTALLATION NOTES:
 	there.
 
 5. Type "make install.man".
-
-6. For X11R5 and later color X servers, specify "*customization: -color" in
-	your .Xdefaults or .Xresources file.  This will make the system look
-	in "Fig-color" for the resources, which then includes "Fig" for the
-	non-color related resources.
-	NOTE: this only works under X11R5 and later.
 
 ------------------------------
 IMPORTANT GENERAL NOTE:

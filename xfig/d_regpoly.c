@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1991 by Paul King
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -26,14 +26,20 @@
 #include "w_canvas.h"
 #include "w_mousefun.h"
 
+#include "u_redraw.h"
+#include "w_cursor.h"
+#include "w_msgpanel.h"
+
 /*************************** local declarations *********************/
 
-static void	init_regpoly_drawing();
-static void	create_regpoly();
-static void	cancel_regpoly();
+static void	init_regpoly_drawing(int x, int y);
+static void	create_regpoly(int x, int y);
+static void	cancel_regpoly(void);
+
+
 
 void
-regpoly_drawing_selected()
+regpoly_drawing_selected(void)
 {
     set_mousefun("center point", "", "", "", "", "");
     canvas_kbd_proc = null_proc;
@@ -41,13 +47,12 @@ regpoly_drawing_selected()
     canvas_leftbut_proc = init_regpoly_drawing;
     canvas_middlebut_proc = null_proc;
     canvas_rightbut_proc = null_proc;
-    set_cursor(arrow_cursor);
+    set_cursor(crosshair_cursor);
     reset_action_on();
 }
 
 static void
-init_regpoly_drawing(x, y)
-    int		    x, y;
+init_regpoly_drawing(int x, int y)
 {
     cur_x = fix_x = x;
     cur_y = fix_y = y;
@@ -64,7 +69,7 @@ init_regpoly_drawing(x, y)
 }
 
 static void
-cancel_regpoly()
+cancel_regpoly(void)
 {
     elastic_poly(fix_x, fix_y, cur_x, cur_y, work_numsides);
     /* erase any length info if appres.showlengths is true */
@@ -74,8 +79,7 @@ cancel_regpoly()
 }
 
 static void
-create_regpoly(x, y)
-    int		    x, y;
+create_regpoly(int x, int y)
 {
     register float  angle;
     register int    nx, ny, i;

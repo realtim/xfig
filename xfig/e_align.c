@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1991 by Paul King
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -29,31 +29,38 @@
 #include "w_msgpanel.h"
 #include "w_setup.h"
 
+#include "u_bound.h"
+#include "u_markers.h"
+#include "u_translate.h"
+#include "w_cursor.h"
+
 static int	llx, lly, urx, ury;
 static int	xcmin, ycmin, xcmax, ycmax;
 static int	dx, dy;
 
-static Boolean	pos_arc();
-static Boolean	pos_ellipse();
-static Boolean	pos_line();
-static Boolean	pos_spline();
-static Boolean	pos_text();
-static Boolean	pos_compound();
+static Boolean	pos_arc(F_arc *a, int *min, int *size, int dir);
+static Boolean	pos_ellipse(F_ellipse *e, int *min, int *size, int dir);
+static Boolean	pos_line(F_line *l, int *min, int *size, int dir);
+static Boolean	pos_spline(F_spline *s, int *min, int *size, int dir);
+static Boolean	pos_text(F_text *t, int *min, int *size, int dir);
+static Boolean	pos_compound(F_compound *c, int *min, int *size, int dir);
 
-static void	init_align();
-static void	init_align_canvas();
-static void	align_arc();
-static void	align_ellipse();
-static void	align_line();
-static void	align_spline();
-static void	align_text();
-static void	align_compound();
-static void	get_dx_dy();
-static void	distribute_horizontally();
-static void	distribute_vertically();
+static void	init_align(F_line *p, int type, int x, int y, int px, int py);
+static void	init_align_canvas(int x, int y, unsigned int shift);
+static void	align_arc(void);
+static void	align_ellipse(void);
+static void	align_line(void);
+static void	align_spline(void);
+static void	align_text(void);
+static void	align_compound(void);
+static void	get_dx_dy(void);
+static void	distribute_horizontally(void);
+static void	distribute_vertically(void);
+
+
 
 void
-align_selected()
+align_selected(void)
 {
     set_mousefun("align compound", "align canvas", "", LOC_OBJ, "", LOC_OBJ);
     canvas_kbd_proc = null_proc;
@@ -70,9 +77,9 @@ align_selected()
 /* align objects to the whole canvas */
 
 static void
-init_align_canvas(x, y, shift)
-    int		    x, y;
-    unsigned int    shift;	/* Shift Key Status from XEvent */
+init_align_canvas(int x, int y, unsigned int shift)
+       		         
+                          	/* Shift Key Status from XEvent */
 {
     int		    ux;
 
@@ -124,11 +131,7 @@ init_align_canvas(x, y, shift)
 }
 
 static void
-init_align(p, type, x, y, px, py)
-    F_line	   *p;
-    int		    type;
-    int		    x, y;
-    int		    px, py;
+init_align(F_line *p, int type, int x, int y, int px, int py)
 {
     if (type != O_COMPOUND)
 	return;
@@ -169,7 +172,7 @@ init_align(p, type, x, y, px, py)
 }
 
 static void
-align_ellipse()
+align_ellipse(void)
 {
     F_ellipse	   *e;
 
@@ -183,7 +186,7 @@ align_ellipse()
 }
 
 static void
-align_arc()
+align_arc(void)
 {
     F_arc	   *a;
 
@@ -197,7 +200,7 @@ align_arc()
 }
 
 static void
-align_line()
+align_line(void)
 {
     F_line	   *l;
 
@@ -211,7 +214,7 @@ align_line()
 }
 
 static void
-align_spline()
+align_spline(void)
 {
     F_spline	   *s;
 
@@ -225,7 +228,7 @@ align_spline()
 }
 
 static void
-align_compound()
+align_compound(void)
 {
     F_compound	   *c;
 
@@ -239,7 +242,7 @@ align_compound()
 }
 
 static void
-align_text()
+align_text(void)
 {
     F_text	   *t;
     int		    dum;
@@ -255,7 +258,7 @@ align_text()
 }
 
 static void
-get_dx_dy()
+get_dx_dy(void)
 {
     switch (cur_valign) {
 	case ALIGN_NONE:
@@ -309,9 +312,7 @@ get_dx_dy()
  * If dir == 0, handle horizontal, otherwise vertical.
  */
 static Boolean
-pos_arc (a, min, size, dir)
-  F_arc *a;
-  int *min, *size, dir;
+pos_arc (F_arc *a, int *min, int *size, int dir)
 {
   int center;
 
@@ -348,9 +349,7 @@ pos_arc (a, min, size, dir)
  * If dir == 0, handle horizontal, otherwise vertical.
  */
 static Boolean
-pos_ellipse (e, min, size, dir)
-  F_ellipse *e;
-  int *min, *size, dir;
+pos_ellipse (F_ellipse *e, int *min, int *size, int dir)
 {
   int center;
 
@@ -387,9 +386,7 @@ pos_ellipse (e, min, size, dir)
  * If dir == 0, handle horizontal, otherwise vertical.
  */
 static Boolean
-pos_line (l, min, size, dir)
-  F_line *l;
-  int *min, *size, dir;
+pos_line (F_line *l, int *min, int *size, int dir)
 {
   int center;
 
@@ -426,9 +423,7 @@ pos_line (l, min, size, dir)
  * If dir == 0, handle horizontal, otherwise vertical.
  */
 static Boolean
-pos_spline (s, min, size, dir)
-  F_spline *s;
-  int *min, *size, dir;
+pos_spline (F_spline *s, int *min, int *size, int dir)
 {
   int center;
 
@@ -465,9 +460,7 @@ pos_spline (s, min, size, dir)
  * If dir == 0, handle horizontal, otherwise vertical.
  */
 static Boolean
-pos_text (t, min, size, dir)
-  F_text *t;
-  int *min, *size, dir;
+pos_text (F_text *t, int *min, int *size, int dir)
 {
   int center, dum;
 
@@ -504,9 +497,7 @@ pos_text (t, min, size, dir)
  * If dir == 0, handle horizontal, otherwise vertical.
  */
 static Boolean
-pos_compound (c, min, size, dir)
-  F_compound *c;
-  int *min, *size, dir;
+pos_compound (F_compound *c, int *min, int *size, int dir)
 {
   int center;
 
@@ -557,8 +548,7 @@ pos_compound (c, min, size, dir)
  * dir = 0 for horizontal, 1 for vertical.
  */
 static int
-init_distrib_centres (min, max, dir)
-  int *min, *max, dir;
+init_distrib_centres (int *min, int *max, int dir)
 {
   F_ellipse	*e;
   F_arc		*a;
@@ -649,8 +639,7 @@ init_distrib_centres (min, max, dir)
  * dir = 0 for horizontal, 1 for vertical.
  */
 static int
-init_distrib_edges (min, max, sum, dir)
-  int *min, *max, *sum, dir;
+init_distrib_edges (int *min, int *max, int *sum, int dir)
 {
   F_ellipse	*e;
   F_arc		*a;
@@ -761,10 +750,7 @@ init_distrib_edges (min, max, sum, dir)
 
 
 static void
-adjust_object_pos (obj_ptr, obj_type, delta_x, delta_y)
-  F_line	   *obj_ptr;
-  int		   obj_type;
-  int		   delta_x, delta_y;
+adjust_object_pos (F_line *obj_ptr, int obj_type, int delta_x, int delta_y)
 {
   F_ellipse	   *e;
   F_arc		   *a;
@@ -812,7 +798,7 @@ adjust_object_pos (obj_ptr, obj_type, delta_x, delta_y)
 } /* adjust_object_pos */
 
 static void
-distribute_horizontally()
+distribute_horizontally(void)
 {
   int		 num_objects = 0;
   F_ellipse	*e;
@@ -837,7 +823,7 @@ distribute_horizontally()
     num_objects = init_distrib_edges (&min_x, &max_x, &sum_obj_width, 0);
     req_pos = min_x;
   }
-  if (num_objects <= 2)
+  if (num_objects <= 1)
     return;
 
   /* Determine the amount of space between objects (centres or edges) */
@@ -889,7 +875,7 @@ distribute_horizontally()
 } /* distribute_horizontally */
 
 static void
-distribute_vertically()
+distribute_vertically(void)
 {
   int		 num_objects = 0;
   F_ellipse	*e;
@@ -914,7 +900,7 @@ distribute_vertically()
     num_objects = init_distrib_edges (&min_y, &max_y, &sum_obj_height, 1);
     req_pos = min_y;
   }
-  if (num_objects <= 2)
+  if (num_objects <= 1)
     return;
 
   /* Determine the amount of space between objects (centres or edges) */

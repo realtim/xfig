@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1987 Christopher A. Kent
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -20,9 +20,20 @@
 #define USE_EXISTING_COLOR	True
 #define DONT_USE_EXISTING_COLOR	False
 
-extern	void	show_pencolor(), next_pencolor(), prev_pencolor();
-extern	void	show_fillcolor(), next_fillcolor(), prev_fillcolor();
-extern	void	count_user_colors();
+extern	void	show_pencolor(void), next_pencolor(ind_sw_info *sw), prev_pencolor(ind_sw_info *sw);
+extern	void	show_fillcolor(void), next_fillcolor(ind_sw_info *sw), prev_fillcolor(ind_sw_info *sw);
+extern	void	count_user_colors(void);
+extern void YStoreColors (Colormap colormap, XColor *color, int ncolors);
+extern int add_color_cell (Boolean use_exist, int indx, int r, int g, int b);
+extern void color_borders (void);
+extern void create_color_panel (Widget form, Widget label, Widget cancel, ind_sw_info *isw);
+extern void del_color_cell (int indx);
+extern void pen_fill_activate (int func);
+extern void pick_contrast (XColor color, Widget widget);
+extern void restore_mixed_colors (void);
+extern void set_cmap (Window window);
+
+
 extern	Widget	delunusedColors;
 
 /* 
@@ -34,8 +45,8 @@ extern	Widget	delunusedColors;
  * Date:	Sun Dec 13 1987
  */
 
-Boolean switch_colormap();
-Boolean alloc_color_cells();
+Boolean switch_colormap(void);
+Boolean alloc_color_cells(Pixel *pixels, int n);
 
 /*
  * $Log: w_color.h,v $
@@ -72,10 +83,10 @@ extern RGB	RGBWhite, RGBBlack;
 
 RGB	MixRGB();
 RGB	MixHSV();
-RGB	HSVToRGB();
-HSV	RGBToHSV();
+RGB	HSVToRGB(HSV hsv);
+HSV	RGBToHSV(RGB rgb);
 float	RGBDist();
-RGB	PctToRGB();
+RGB	PctToRGB(float rr, float gg, float bb);
 HSV	PctToHSV();
 RGB	CMYToRGB();
 CMY	RGBToCMY();

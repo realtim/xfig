@@ -33,6 +33,8 @@
 <a href="i18n.html">Internationalization</a>
 <dd><img src="images/redballdot.png" alt="-">
 <a href="#y2k">Year 2000 Compliancy</a>
+<dd><img src="images/redballdot.png" alt="-">
+<a href="#keyboard-entry">Keyboard Coordinate Entry</a>
 </dl>
 
 <hr>
@@ -240,6 +242,52 @@ Here is an example:
 <h2><a name="y2k">Year 2000 Compliancy</a></h2>
 Both <b>Xfig</b> and <b>TransFig/fig2dev</b> are Year 2000 compliant.
 They don't rely on any dates for their operation.
+
+<hr>
+
+<h2><a name="keyboard-entry">Keyboard Coordinate Entry</a></h2>
+In any drawing or edit mode, the location of the next point may be specified from the
+keyboard rather from the pointer.  Pressing Ctrl-k while the pointer is in the
+canvas will pop up a dialog that allows a coordinate to be entered.
+<p>
+The coordinates may be specified  in either rectangular or polar form, either
+absolutely or realative to the current point, and in either decimal or
+fractional notation.  Rectangular coordinates are specified as
+<p>
+<center><i>x-coord</i>, <i>y-coord</i></center>
+<p>
+or
+<p>
+<center>r <i>x-coord, y-coord</i></center>
+<p>
+where the comma is optional and a leading 'r' (or 'R') indicates that the point
+specified is relative to the current point.  Coordinates may be entered either in
+decimal form or fraction form like, for example "2-7/8" and are in the
+currently selected units.
+<p>
+Polar coordinates are entered as:
+<p>
+<center><i>distance</i> &lt; <i>angle</i></center>
+<p>
+where the <i>distance</i> is always relative to the current point and, like
+rectangular coordinates, may be expresed as a decimal or a fraction.
+<p>
+The <i>angle</i> may be suffixed with any of the three letters "d", "r", or
+"p", in either upper or lower case.  A "d" suffix indicates that the angle is in
+degrees, an "r" suffix indicates radians, and a "p" suffix indicates
+pi-radians.  (Pi-radians are a multipler of &pi;; ".5p" would represent the
+angle &pi;/2.)  The default if no suffix is specified is degrees.
+<p>
+Keyboard entry is completed by pressing the Enter key.  An unshifted Enter is
+equivalent to a left-button pointer click at the entered location; Shift-Enter 
+is the equivalent of a middle-button (Button2) click and Ctrl-Enter is the 
+equivalent of a right-button (Button3) click.
+<p>
+Keyboard entry may be cancelled by pressing Escape.
+<p>
+The keyboard entry mechanism maintains a stack of recently entered coordinates.
+While the text cursor is in the keyboard entry text field, the Ctrl-P, Ctrl-N,
+Up-arrow, and Down-arrow keys navigate up and down in the stack.
 
 <hr>
 

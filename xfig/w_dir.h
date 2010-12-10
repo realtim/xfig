@@ -2,7 +2,7 @@
 
 /*
  * FIG : Facility for Interactive Generation of figures
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -67,12 +67,15 @@ char	       *re_comp();
 #define streq(a, b)	(! strcmp((a), (b)))
 
 extern Widget	popup_dir_text;
-extern void	create_dirinfo();
+extern void	create_dirinfo(Boolean file_exp, Widget parent, Widget below, Widget *ret_beside, Widget *ret_below, Widget *mask_w, Widget *dir_w, Widget *flist_w, Widget *dlist_w, int file_width, Boolean file_panel);
 
 /* Xdir function declarations. */
 
-Boolean		MakeFileList();
-char	       *SaveString();
-void		MakeFullPath();
-Boolean		IsDirectory();
+extern Boolean		MakeFileList(char *dir_name, char *mask, char ***dir_list, char ***file_list);
+extern char	       *SaveString();
+extern void		MakeFullPath(char *root, char *filename, char *pathname);
+extern Boolean		IsDirectory(char *path, char *file);
+extern void parseuserpath (char *path, char *longpath);
+extern void Rescan (Widget widget, XEvent *event, String *params, Cardinal *num_params);
+
 #endif /* W_DIR_H */

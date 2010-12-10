@@ -1,6 +1,6 @@
 /*
  * FIG : Facility for Interactive Generation of figures
- * Copyright (c) 2000-2002 by Brian V. Smith
+ * Copyright (c) 2000-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -36,9 +36,9 @@
 
 /* new translations for scrolling up/down in the list */
 
-static void SelectHome(), SelectEnd();
-static void SelectNext(), SelectPrev();
-static void SelectLeft(), SelectRight();
+static void SelectHome(Widget w, XEvent *event, String *params, Cardinal *num_params), SelectEnd(Widget w, XEvent *event, String *params, Cardinal *num_params);
+static void SelectNext(Widget w, XEvent *event, String *params, Cardinal *num_params), SelectPrev(Widget w, XEvent *event, String *params, Cardinal *num_params);
+static void SelectLeft(Widget w, XEvent *event, String *params, Cardinal *num_params), SelectRight(Widget w, XEvent *event, String *params, Cardinal *num_params);
 
 static char defaultTranslations[] =
 	"<Btn1Down>:	Set()\n\
@@ -120,12 +120,11 @@ WidgetClass figListWidgetClass = (WidgetClass) &figListClassRec;
 
 /* highlight the first (home) entry */
 
+
+void FigListFinishUp (Widget w, int item);
+
 static void
-SelectHome(w, event, params, num_params)
-    Widget	 w;
-    XEvent	*event;
-    String	*params;
-    Cardinal	*num_params;
+SelectHome(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     /* highlight and call any callbacks */
     FigListFinishUp(w, 0);
@@ -134,11 +133,7 @@ SelectHome(w, event, params, num_params)
 /* highlight the last (end) entry */
 
 static void
-SelectEnd(w, event, params, num_params)
-    Widget	 w;
-    XEvent	*event;
-    String	*params;
-    Cardinal	*num_params;
+SelectEnd(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     
     FigListWidget  lw = (FigListWidget) w;
@@ -150,11 +145,7 @@ SelectEnd(w, event, params, num_params)
 /* highlight the next entry */
 
 static void
-SelectNext(w, event, params, num_params)
-    Widget	 w;
-    XEvent	*event;
-    String	*params;
-    Cardinal	*num_params;
+SelectNext(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     
     FigListWidget  lw = (FigListWidget) w;
@@ -177,11 +168,7 @@ SelectNext(w, event, params, num_params)
 /* highlight the previous entry */
 
 static void
-SelectPrev(w, event, params, num_params)
-    Widget	 w;
-    XEvent	*event;
-    String	*params;
-    Cardinal	*num_params;
+SelectPrev(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     FigListWidget	lw = (FigListWidget) w;
     int		   item;
@@ -203,11 +190,7 @@ SelectPrev(w, event, params, num_params)
 /* move left (if there is more than 1 column) and highlight the entry */
 
 static void
-SelectLeft(w, event, params, num_params)
-    Widget	 w;
-    XEvent	*event;
-    String	*params;
-    Cardinal	*num_params;
+SelectLeft(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     FigListWidget	lw = (FigListWidget) w;
     int		   item;
@@ -229,11 +212,7 @@ SelectLeft(w, event, params, num_params)
 /* move right (if there is more than 1 column) and highlight the entry */
 
 static void
-SelectRight(w, event, params, num_params)
-    Widget	 w;
-    XEvent	*event;
-    String	*params;
-    Cardinal	*num_params;
+SelectRight(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     FigListWidget	lw = (FigListWidget) w;
     int		   item;
@@ -254,9 +233,7 @@ SelectRight(w, event, params, num_params)
 
 /* call any callbacks and highlight the new item */
 
-FigListFinishUp(w, item)
-    Widget	 w;
-    int		 item;
+void FigListFinishUp(Widget w, int item)
 {
     FigListWidget lw = (FigListWidget) w;
     int		  item_len;

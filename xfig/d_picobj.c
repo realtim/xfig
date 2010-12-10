@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -28,14 +28,21 @@
 #include "w_mousefun.h"
 #include "w_msgpanel.h"
 
+#include "d_box.h"
+#include "e_edit.h"
+#include "u_redraw.h"
+#include "w_cursor.h"
+
 /*************************** local declarations *********************/
 
-static void	init_picobj_drawing();
-static void	create_picobj();
-static void 	cancel_picobj();
+static void	init_picobj_drawing(int x, int y);
+static void	create_picobj(int x, int y);
+static void 	cancel_picobj(void);
+
+
 
 void
-picobj_drawing_selected()
+picobj_drawing_selected(void)
 {
     set_mousefun("corner point", "", "", "", "", "");
     canvas_kbd_proc = null_proc;
@@ -43,13 +50,12 @@ picobj_drawing_selected()
     canvas_leftbut_proc = init_picobj_drawing;
     canvas_middlebut_proc = null_proc;
     canvas_rightbut_proc = null_proc;
-    set_cursor(arrow_cursor);
+    set_cursor(crosshair_cursor);
     reset_action_on();
 }
 
 static void
-init_picobj_drawing(x, y)
-    int		    x, y;
+init_picobj_drawing(int x, int y)
 {
     init_box_drawing(x, y);
     canvas_leftbut_proc = create_picobj;
@@ -57,7 +63,7 @@ init_picobj_drawing(x, y)
 }
 
 static void
-cancel_picobj()
+cancel_picobj(void)
 {
     elastic_box(fix_x, fix_y, cur_x, cur_y);
     picobj_drawing_selected();
@@ -65,8 +71,7 @@ cancel_picobj()
 }
 
 static void
-create_picobj(x, y)
-    int		    x, y;
+create_picobj(int x, int y)
 {
     F_line	   *box;
     F_point	   *point;
@@ -122,7 +127,7 @@ create_picobj(x, y)
     /* draw it and anything on top of it */
     redisplay_line(box);
     put_msg("Please enter name of Picture Object file in EDIT window");
-    edit_item((char *) box, O_POLYLINE, 0, 0);
+    edit_item(box, O_POLYLINE, 0, 0);
     picobj_drawing_selected();
     draw_mousefun_canvas();
 }

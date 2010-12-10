@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -15,7 +15,26 @@
  *
  */
 
-extern void	init_topruler();
-extern void	popup_unit_panel();
-extern void	erase_rulermark();
-extern void	set_unit_indicator();
+extern void	init_topruler(Widget tool);
+extern void	popup_unit_panel(void);
+extern void	erase_rulermark(void);
+extern void	set_unit_indicator(Boolean use_userscale);
+extern void init_unitbox(Widget tool);
+extern void init_sideruler(Widget tool);
+extern void redisplay_sideruler (void);
+extern void redisplay_topruler (void);
+extern void reset_sideruler (void);
+extern void reset_topruler (void);
+extern void resize_sideruler (void);
+extern void resize_topruler (void);
+extern void setup_sideruler (void);
+extern void reset_rulers (void);
+extern void update_rulerpanel ();
+extern void setup_rulers(void);
+extern void set_rulermark(int x, int y);
+extern void erase_siderulermark(void);
+extern void erase_toprulermark(void);
+extern void set_rulermark(int x, int y);
+extern void set_siderulermark(int y);
+extern void set_toprulermark(int x);
+extern void setup_topruler(void);

@@ -1,6 +1,6 @@
 /*
  * FIG : Facility for Interactive Generation of figures
- * Copyright (c) 1989-2002 by Brian V. Smith
+ * Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1990 by Digital Equipment Corporation. All Rights Reserved.
  * Parts Copyright (c) 1991 by Paul King
  * Parts Copyright (c) 1990 by Digital Equipment Corporation
@@ -63,6 +63,11 @@
 #include "w_msgpanel.h"
 #include "w_setup.h"
 #include "w_util.h"
+
+#include "object.h"
+#include "f_util.h"
+#include "w_cursor.h"
+
 #ifdef HAVE_NO_DIRENT
 #include <sys/dir.h>
 #else
@@ -80,12 +85,12 @@ static Boolean	show_hidden = False;
 
 /* Functions */
 
-void		DoChangeDir(),
-		SetDir(),
-		Rescan(),
-		CallbackRescan();
+void		DoChangeDir(char *dir),
+		SetDir(Widget widget, XEvent *event, String *params, Cardinal *num_params),
+		Rescan(Widget widget, XEvent *event, String *params, Cardinal *num_params),
+		CallbackRescan(Widget widget, XtPointer closure, XtPointer call_data);
 
-static void	ParentDir();
+static void	ParentDir(Widget w, XEvent *event, String *params, Cardinal *num_params);
 
 /* Static variables */
 
@@ -118,11 +123,12 @@ static XtActionsRec actionTable[] = {
  * Notes:
  */
 
+
+int wild_match (char *string, char *pattern);
+void NewList (Widget listwidget, String *list);
+
 void
-FileSelected(w, client_data, call_data)
-    Widget	    w;
-    XtPointer	    client_data;
-    XtPointer	    call_data;
+FileSelected(Widget w, XtPointer client_data, XtPointer call_data)
 {
     XawListReturnStruct *ret_struct = (XawListReturnStruct *) call_data;
 
@@ -153,10 +159,7 @@ FileSelected(w, client_data, call_data)
  */
 
 void
-DirSelected(w, client_data, call_data)
-    Widget	    w;
-    XtPointer	    client_data;
-    XtPointer	    call_data;
+DirSelected(Widget w, XtPointer client_data, XtPointer call_data)
 {
     XawListReturnStruct *ret_struct = (XawListReturnStruct *) call_data;
 
@@ -165,10 +168,7 @@ DirSelected(w, client_data, call_data)
 }
 
 void
-ShowHidden(w, client_data, ret_val)
-    Widget	    w;
-    XtPointer	    client_data;
-    XtPointer	    ret_val;
+ShowHidden(Widget w, XtPointer client_data, XtPointer ret_val)
 {
     show_hidden = !show_hidden;
     FirstArg(XtNlabel, show_hidden? "Hide Hidden": "Show Hidden");
@@ -178,10 +178,7 @@ ShowHidden(w, client_data, ret_val)
 }
 
 void
-GoHome(w, client_data, ret_val)
-    Widget	    w;
-    XtPointer	    client_data;
-    XtPointer	    ret_val;
+GoHome(Widget w, XtPointer client_data, XtPointer ret_val)
 {
     char	    dir[PATH_MAX];
 
@@ -210,11 +207,7 @@ GoHome(w, client_data, ret_val)
  */
 
 void
-SetDir(widget, event, params, num_params)
-    Widget	    widget;
-    XEvent	   *event;
-    String	   *params;
-    Cardinal	   *num_params;
+SetDir(Widget widget, XEvent *event, String *params, Cardinal *num_params)
 {
     char	   *ndir;
 
@@ -241,8 +234,7 @@ SetDir(widget, event, params, num_params)
 }
 
 /* make the full path from ~/partialpath */
-parseuserpath(path,longpath)
-    char *path, *longpath;
+void parseuserpath(char *path, char *longpath)
 {
     char	  *p;
     struct passwd *who;
@@ -278,14 +270,7 @@ static Boolean      actions_added=False;
 /* make the filename list file_width wide */
 
 void
-create_dirinfo(file_exp, parent, below, ret_beside, ret_below,
-	       mask_w, dir_w, flist_w, dlist_w, file_width, file_panel)
-    Boolean	    file_exp;
-    Widget	    parent, below, *ret_beside, *ret_below, *mask_w, *dir_w,
-		   *flist_w, *dlist_w;
-    int		    file_width;
-    Boolean	    file_panel;
-
+create_dirinfo(Boolean file_exp, Widget parent, Widget below, Widget *ret_beside, Widget *ret_below, Widget *mask_w, Widget *dir_w, Widget *flist_w, Widget *dlist_w, int file_width, Boolean file_panel)
 {
     Widget	    w,dir_alt,home;
     Widget	    file_viewport;
@@ -461,6 +446,7 @@ create_dirinfo(file_exp, parent, below, ret_beside, ret_below,
     XtAddCallback(hidden, XtNcallback, ShowHidden, (XtPointer) NULL);
 
     FirstArg(XtNallowVert, True);
+    NextArg(XtNforceBars, True);
     NextArg(XtNfromHoriz, dir_alt);
     NextArg(XtNfromVert, *dir_w);
     NextArg(XtNborderWidth, INTERNAL_BW);
@@ -530,8 +516,7 @@ create_dirinfo(file_exp, parent, below, ret_beside, ret_below,
  */
 
 static int
-SPComp(s1, s2)
-    char	  **s1, **s2;
+SPComp(char **s1, char **s2)
 {
     return (strcmp(*s1, *s2));
 }
@@ -539,9 +524,7 @@ SPComp(s1, s2)
 #define MAX_MASKS 20
 
 Boolean
-MakeFileList(dir_name, mask, dir_list, file_list)
-    char	   *dir_name;
-    char	   *mask, ***dir_list, ***file_list;
+MakeFileList(char *dir_name, char *mask, char ***dir_list, char ***file_list)
 {
     DIR		  *dirp;
     DIRSTRUCT	  *dp;
@@ -603,6 +586,7 @@ MakeFileList(dir_name, mask, dir_list, file_list)
 	    match=False;
 	    for (i=0; i<nmasks; i++) {
 		if (wild_match(dp->d_name, wild[i])) {
+		    int wild_match (char *string, char *pattern);
 		    match = True;
 		    break;
 		}
@@ -642,11 +626,7 @@ MakeFileList(dir_name, mask, dir_list, file_list)
  */
 
 static void
-ParentDir(w, event, params, num_params)
-    Widget	    w;
-    XEvent*	    event;
-    String*	    params;
-    Cardinal*	    num_params;
+ParentDir(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     DoChangeDir("..");
 }
@@ -661,11 +641,10 @@ ParentDir(w, event, params, num_params)
  */
 
 void
-DoChangeDir(dir)
-    char	   *dir;
+DoChangeDir(char *dir)
 {
     char	   *p;
-    char	    ndir[PATH_MAX], tmpdir[PATH_MAX];
+    char	    ndir[PATH_MAX];
 
     
     if (browse_up) {
@@ -727,20 +706,13 @@ DoChangeDir(dir)
 }
 
 void 
-CallbackRescan(widget, closure, call_data)
-    Widget    widget;
-    XtPointer closure;
-    XtPointer call_data;
+CallbackRescan(Widget widget, XtPointer closure, XtPointer call_data)
 {
      Rescan(0, 0, 0, 0);
 }
 
 void
-Rescan(widget, event, params, num_params)
-    Widget	widget;
-    XEvent*	event;
-    String*	params;
-    Cardinal*	num_params;
+Rescan(Widget widget, XEvent *event, String *params, Cardinal *num_params)
 {
     char	*dir;
 
@@ -785,9 +757,7 @@ Rescan(widget, event, params, num_params)
     }
 }
 
-NewList(listwidget, list)
-    Widget    listwidget;
-    String   *list;
+void NewList(Widget listwidget, String *list)
 {
 	/* install the new list */
 	XawListChange(listwidget, list, 0, 0, True);
@@ -804,9 +774,7 @@ NewList(listwidget, list)
  */
 
 Boolean
-IsDirectory(path, file)
-    char	   *path;
-    char	   *file;
+IsDirectory(char *path, char *file)
 {
     char	    fullpath[PATH_MAX];
     struct stat	    statbuf;
@@ -830,10 +798,7 @@ IsDirectory(path, file)
  */
 
 void
-MakeFullPath(root, filename, pathname)
-    char	   *root;
-    char	   *filename;
-    char	   *pathname;
+MakeFullPath(char *root, char *filename, char *pathname)
 {
     strcpy(pathname, root);
     strcat(pathname, "/");
@@ -878,14 +843,13 @@ MakeFullPath(root, filename, pathname)
 /* The character that inverts a character class; '!' or '^'. */
 #define INVERT '!'
 
-static int	star();
+static int	star(char *string, char *pattern);
 
 /* Return nonzero if `string' matches Unix-style wildcard pattern
    `pattern'; zero if not. */
 
 int
-wild_match(string, pattern)
-    char	   *string, *pattern;
+wild_match(char *string, char *pattern)
 {
     int		    prev;	/* Previous character in character class. */
     int		    matched;	/* If 1, character class has been matched. */
@@ -928,8 +892,7 @@ wild_match(string, pattern)
 }
 
 static int
-star(string, pattern)
-    char	   *string, *pattern;
+star(char *string, char *pattern)
 {
     while (wild_match(string, pattern) == 0)
 	if (*++string == '\0')

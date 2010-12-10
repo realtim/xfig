@@ -34,6 +34,10 @@ See also <a href="#select-object">Selecting Objects</a>.
     align="middle" alt="">
   Join/Split Lines/Splines/etc</a>
 
+<dt><a href="#chop"><img src="images/chop-button.png"
+    align="middle" alt="">
+  Chop Object</a>
+
 <dt><a href="#scale"><img src="images/scale-button.png"
     align="middle" alt="">
   Scale Object</a>
@@ -229,6 +233,44 @@ To split a line or spline into two separate objects or to convert a box
 or polygon to a line, or to open a closed spline,
 click mouse button 2 (`Spline line/spline') 
 between two the points on the line/spline etc.
+
+
+
+<hr>
+
+<dt><img src="images/chop-button.png" alt="">
+  <a name="chop"></a>
+Chopping objects.
+<dd>
+<p>
+The Chop operation allows you to chop polylines, arcs, and circles into
+individual opjects that, together, approximate the original object.
+(Ellipses will be supported in a future release.)
+<p>
+Left-clicking on one or more objects selects them as "axes".  When another
+object is subsequently selected with a middle click, all possible intersections
+between that object and all "axe" objects are computed.  These intersections
+are then used to create a collection of new objects that approximate the
+original.  Additional "axe" objects can be added at anytime, and any number of
+objects may be chopped.  Right-clicking clears the axe list.
+<p>
+Circles will be partitioned into pie-wedge arcs and arcs will be partitioned
+into either open or pie-wedge arcs, depending on the type of the original arc.
+(In both cases, the type can be changed by editing the newly created objects.)
+Open polylines and unconstrained polygons (i.e., closed polylines other than
+boxes, arcboxes, and picture boxes) will be chopped into one or more objects of
+the same type.  Constrained polygons cannot be chopped.
+<p>
+How polygons are chopped is controlled by the "Arc Type" mode in the indicator
+panel.  If "Open" mode is selected, the polygons that result from the cut
+operation will defined only by the vertices of the original polygon and the
+intersection points; "Closed" mode will result in polygons that include, in
+addition to the original vertices and intersects, the geometric centerpoint of
+the  original polygon.
+<p>
+Chop operations cannot (yet) be undone.
+
+
 
 <hr>
 

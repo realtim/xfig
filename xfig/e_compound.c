@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  * Parts Copyright (c) 1994 by Bill Taylor
  *       "Enter Compound" written by Bill Taylor (bill@mainstream.com) 1994
@@ -39,17 +39,26 @@
 #include "w_setup.h"
 #include "w_util.h"
 
+#include "e_scale.h"
+#include "u_bound.h"
+#include "u_list.h"
+#include "u_markers.h"
+#include "u_redraw.h"
+#include "w_color.h"
+#include "w_cursor.h"
+#include "w_modepanel.h"
+#include "w_mousefun.h"
+
 Widget	close_compound_popup;
 Boolean	close_popup_isup = False;
-void	open_this_compound();
+void	open_this_compound(F_compound *c, Boolean vis);
 int	save_mask;
 
+
+void popup_close_compound (void);
+
 static void
-init_open_compound(c, type, x, y, px, py)
-    F_compound	   *c;
-    int		    type;
-    int		    x, y;
-    int		    px, py;
+init_open_compound(F_compound *c, int type, int x, int y, int px, int py)
 {
     if (type != O_COMPOUND)
 	return;
@@ -57,12 +66,7 @@ init_open_compound(c, type, x, y, px, py)
 }
 
 static void
-init_open_compound_vis(c, type, x, y, px, py, loc_tag)
-    F_compound	   *c;
-    int		    type;
-    int		    x, y;
-    int		    px, py;
-    int 	    loc_tag;
+init_open_compound_vis(F_compound *c, int type, int x, int y, int px, int py, int loc_tag)
 {
     if (type != O_COMPOUND)
 	return;
@@ -70,9 +74,7 @@ init_open_compound_vis(c, type, x, y, px, py, loc_tag)
 }
 
 void
-open_this_compound(c, vis)
-    F_compound	   *c;
-    Boolean	    vis;
+open_this_compound(F_compound *c, Boolean vis)
 {
   F_compound *d;
 
@@ -95,7 +97,7 @@ open_this_compound(c, vis)
 }
 
 void
-open_compound_selected()
+open_compound_selected(void)
 {
   /* prepatory functions done for mode operations by sel_mode_but */
   update_markers((int)M_COMPOUND);
@@ -115,7 +117,7 @@ open_compound_selected()
 }
 
 void
-close_compound()
+close_compound(void)
 {
   F_compound *c;
   F_compound *d;		/* Destination */
@@ -157,7 +159,7 @@ close_compound()
 }
 
 void
-close_all_compounds()
+close_all_compounds(void)
 {
   F_compound *c;
   F_compound *d;		/* Destination */
@@ -191,7 +193,7 @@ close_all_compounds()
   }
 }
 
-popup_close_compound()
+void popup_close_compound(void)
 {
     Widget	    close_compound_form;
     Widget	    close_compoundw, close_compound_allw;

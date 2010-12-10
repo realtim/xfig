@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Based on (public domain) code from Russell Marks
- * Parts Copyright (c) 2000-2002 by Brian V. Smith
+ * Parts Copyright (c) 2000-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -20,6 +20,7 @@
 #include "f_neuclrtab.h"
 #include "f_picobj.h"
 #include "f_util.h"
+#include "w_indpanel.h"
 #include "w_color.h"
 #include "w_msgpanel.h"
 #include "w_setup.h"
@@ -55,13 +56,11 @@ struct pcxhed
 void dispbyte(unsigned char *ptr,int *xp,int *yp,int c,int w,int h,
               int real_bpp,int byteline,int *planep,int *pmaskp);
 
-int	_read_pcx();
+int	_read_pcx(FILE *pcxfile, F_pic *pic);
+
 
 int
-read_pcx(file,filetype,pic)
-    FILE	   *file;
-    int		    filetype;
-    F_pic	   *pic;
+read_pcx(FILE *file, int filetype, F_pic *pic)
 {
     int		    status;
 
@@ -96,9 +95,7 @@ read_pcx(file,filetype,pic)
 
 void pcx_decode();
 
-_read_pcx(pcxfile,pic)
-    FILE	*pcxfile;
-    F_pic	*pic;
+int _read_pcx(FILE *pcxfile, F_pic *pic)
 {
 	int		 i,w,h,bytepp,x,y,yy,byteline,plane,pmask;
 	unsigned char	*pal;

@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -32,8 +32,9 @@
 #define CHANGED_MASK(msk) \
     ((oldmask & msk) != (newmask & msk))
 
-center_marker(x, y)
-    int		    x, y;
+
+
+void center_marker(int x, int y)
 {
 
     pw_vector(canvas_win, x, y - (int)(CENTER_MARK/zoomscale),
@@ -45,48 +46,45 @@ center_marker(x, y)
 
 }
 
-toggle_csrhighlight(x, y)
-    int		    x, y;
+void toggle_csrhighlight(int x, int y)
 {
     set_line_stuff(1, RUBBER_LINE, 0.0, JOIN_MITER, CAP_BUTT, INV_PAINT, DEFAULT);
     set_marker(canvas_win, x - 2, y - 2, MARK_SIZ, MARK_SIZ);
     set_marker(canvas_win, x - 1, y - 1, MARK_SIZ-2, MARK_SIZ-2);
 }
 
-ellipse_in_mask()
+int ellipse_in_mask(void)
 {
     return (cur_objmask & M_ELLIPSE);
 }
 
-arc_in_mask()
+int arc_in_mask(void)
 {
     return (cur_objmask & M_ARC);
 }
 
-compound_in_mask()
+int compound_in_mask(void)
 {
     return (cur_objmask & M_COMPOUND);
 }
 
-anytext_in_mask()
+int anytext_in_mask(void)
 {
     return (cur_objmask & M_TEXT);
 }
 
-validtext_in_mask(t)
-    F_text	   *t;
+int validtext_in_mask(F_text *t)
 {
     return ((hidden_text(t) && (cur_objmask & M_TEXT_HIDDEN)) ||
 	    ((!hidden_text(t)) && (cur_objmask & M_TEXT_NORMAL)));
 }
 
-anyline_in_mask()
+int anyline_in_mask(void)
 {
     return (cur_objmask & M_POLYLINE);
 }
 
-validline_in_mask(l)
-    F_line	   *l;
+int validline_in_mask(F_line *l)
 {
     return ((((l->type == T_BOX) || (l->type == T_ARCBOX)) && (cur_objmask & M_POLYLINE_BOX)) ||
 	    ((l->type == T_PICTURE) && (cur_objmask & M_POLYLINE_BOX)) ||
@@ -94,13 +92,12 @@ validline_in_mask(l)
 	    ((l->type == T_POLYGON) && (cur_objmask & M_POLYLINE_POLYGON)));
 }
 
-anyspline_in_mask()
+int anyspline_in_mask(void)
 {
     return (cur_objmask & M_SPLINE);
 }
 
-validspline_in_mask(s)
-    F_spline	   *s;
+int validspline_in_mask(F_spline *s)
 {
     return (((s->type == T_OPEN_INTERP) && (cur_objmask & M_SPLINE_O_INTERP)) ||
 	    ((s->type == T_OPEN_APPROX) && (cur_objmask & M_SPLINE_O_APPROX))   ||
@@ -110,55 +107,48 @@ validspline_in_mask(s)
 	    ((s->type == T_CLOSED_XSPLINE) && (cur_objmask & M_SPLINE_C_XSPLINE)));
 }
 
-mask_toggle_ellipsemarker(e)
-    F_ellipse	   *e;
+void mask_toggle_ellipsemarker(F_ellipse *e)
 {
     if (ellipse_in_mask())
 	toggle_ellipsemarker(e);
 }
 
-mask_toggle_arcmarker(a)
-    F_arc	   *a;
+void mask_toggle_arcmarker(F_arc *a)
 {
     if (arc_in_mask())
 	toggle_arcmarker(a);
 }
 
-mask_toggle_compoundmarker(c)
-    F_compound	   *c;
+void mask_toggle_compoundmarker(F_compound *c)
 {
     if (compound_in_mask())
 	toggle_compoundmarker(c);
 }
 
-mask_toggle_textmarker(t)
-    F_text	   *t;
+void mask_toggle_textmarker(F_text *t)
 {
     if (validtext_in_mask(t))
 	toggle_textmarker(t);
 }
 
-mask_toggle_linemarker(l)
-    F_line	   *l;
+void mask_toggle_linemarker(F_line *l)
 {
     if (validline_in_mask(l))
 	toggle_linemarker(l);
 }
 
-mask_toggle_splinemarker(s)
-    F_spline	   *s;
+void mask_toggle_splinemarker(F_spline *s)
 {
     if (validspline_in_mask(s))
 	toggle_splinemarker(s);
 }
 
-toggle_markers()
+void toggle_markers(void)
 {
     toggle_markers_in_compound(&objects);
 }
 
-toggle_markers_in_compound(cmpnd)
-    F_compound	   *cmpnd;
+void toggle_markers_in_compound(F_compound *cmpnd)
 {
     F_ellipse	   *e;
     F_arc	   *a;
@@ -211,8 +201,7 @@ toggle_markers_in_compound(cmpnd)
 		toggle_compoundmarker(c);
 }
 
-update_markers(mask)
-    int		    mask;
+void update_markers(int mask)
 {
     F_ellipse	   *e;
     F_arc	   *a;
@@ -269,8 +258,8 @@ update_markers(mask)
 		toggle_compoundmarker(c);
     cur_objmask = newmask;
 }
-toggle_ellipsemarker(e)
-    F_ellipse	   *e;
+
+void toggle_ellipsemarker(F_ellipse *e)
 {
     set_line_stuff(1, RUBBER_LINE, 0.0, JOIN_MITER, CAP_BUTT, INV_PAINT, DEFAULT);
     set_marker(canvas_win, e->start.x - 2, e->start.y - 2, MARK_SIZ, MARK_SIZ);
@@ -279,8 +268,7 @@ toggle_ellipsemarker(e)
 	toggle_ellipsehighlight(e);
 }
 
-toggle_ellipsehighlight(e)
-    F_ellipse	   *e;
+void toggle_ellipsehighlight(F_ellipse *e)
 {
     set_line_stuff(1, RUBBER_LINE, 0.0, JOIN_MITER, CAP_BUTT, INV_PAINT, DEFAULT);
     set_marker(canvas_win, e->start.x, e->start.y, 1, 1);
@@ -289,8 +277,7 @@ toggle_ellipsehighlight(e)
     set_marker(canvas_win, e->end.x - 1, e->end.y - 1, SM_MARK, SM_MARK);
 }
 
-toggle_arcmarker(a)
-    F_arc	   *a;
+void toggle_arcmarker(F_arc *a)
 {
     set_line_stuff(1, RUBBER_LINE, 0.0, JOIN_MITER, CAP_BUTT, INV_PAINT, DEFAULT);
     set_marker(canvas_win,a->point[0].x-2,a->point[0].y-2,MARK_SIZ,MARK_SIZ);
@@ -300,8 +287,7 @@ toggle_arcmarker(a)
 	toggle_archighlight(a);
 }
 
-toggle_archighlight(a)
-    F_arc	   *a;
+void toggle_archighlight(F_arc *a)
 {
     set_line_stuff(1, RUBBER_LINE, 0.0, JOIN_MITER, CAP_BUTT, INV_PAINT, DEFAULT);
     set_marker(canvas_win, a->point[0].x, a->point[0].y, 1, 1);
@@ -312,8 +298,7 @@ toggle_archighlight(a)
     set_marker(canvas_win, a->point[2].x-1, a->point[2].y-1, SM_MARK, SM_MARK);
 }
 
-toggle_textmarker(t)
-    F_text	   *t;
+void toggle_textmarker(F_text *t)
 {
     int		    dx, dy;
 
@@ -330,8 +315,7 @@ toggle_textmarker(t)
 	toggle_texthighlight(t);
 }
 
-toggle_texthighlight(t)
-    F_text	   *t;
+void toggle_texthighlight(F_text *t)
 {
     int		    dx, dy;
 
@@ -345,15 +329,14 @@ toggle_texthighlight(t)
     set_marker(canvas_win, t->base_x-1, t->base_y-1, SM_MARK, SM_MARK);
 }
 
-toggle_all_compoundmarkers()
+void toggle_all_compoundmarkers(void)
 {
     F_compound	   *c;
     for (c=objects.compounds; c!=NULL ; c=c->next)
 	toggle_compoundmarker(c);
 }
 
-toggle_compoundmarker(c)
-    F_compound	   *c;
+void toggle_compoundmarker(F_compound *c)
 {
     set_line_stuff(1, RUBBER_LINE, 0.0, JOIN_MITER, CAP_BUTT, INV_PAINT, DEFAULT);
     set_marker(canvas_win,c->nwcorner.x-2,c->nwcorner.y-2,MARK_SIZ,MARK_SIZ);
@@ -364,8 +347,7 @@ toggle_compoundmarker(c)
 	toggle_compoundhighlight(c);
 }
 
-toggle_compoundhighlight(c)
-    F_compound	   *c;
+void toggle_compoundhighlight(F_compound *c)
 {
     set_line_stuff(1, RUBBER_LINE, 0.0, JOIN_MITER, CAP_BUTT, INV_PAINT, DEFAULT);
     set_marker(canvas_win, c->nwcorner.x, c->nwcorner.y, 1, 1);
@@ -378,8 +360,7 @@ toggle_compoundhighlight(c)
     set_marker(canvas_win, c->secorner.x-1, c->nwcorner.y-1, SM_MARK, SM_MARK);
 }
 
-toggle_linemarker(l)
-    F_line	   *l;
+void toggle_linemarker(F_line *l)
 {
     F_point	   *p;
     int		    fx, fy, x, y;
@@ -401,8 +382,7 @@ toggle_linemarker(l)
 	toggle_linehighlight(l);
 }
 
-toggle_linehighlight(l)
-    F_line	   *l;
+void toggle_linehighlight(F_line *l)
 {
     F_point	   *p;
     int		    fx, fy, x, y;
@@ -424,8 +404,7 @@ toggle_linehighlight(l)
     }
 }
 
-toggle_splinemarker(s)
-    F_spline	   *s;
+void toggle_splinemarker(F_spline *s)
 {
     F_point	   *p;
     int		    fx, fy, x, y;
@@ -446,8 +425,7 @@ toggle_splinemarker(s)
 	toggle_splinehighlight(s);
 }
 
-toggle_splinehighlight(s)
-    F_spline	   *s;
+void toggle_splinehighlight(F_spline *s)
 {
     F_point	   *p;
     int		    fx, fy, x, y;
@@ -468,9 +446,7 @@ toggle_splinehighlight(s)
     }
 }
 
-void
-toggle_pointmarker(x, y)
-     int x, y;
+void toggle_pointmarker(int x, int y)
 {
   set_marker(canvas_win, x - MARK_SIZ/2, y - MARK_SIZ/2, MARK_SIZ, MARK_SIZ);
 }

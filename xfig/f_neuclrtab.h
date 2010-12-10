@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1994 Anthony Dekker
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
  * full and unrestricted irrevocable, world-wide, paid up, royalty-free,
@@ -39,6 +39,13 @@
 typedef unsigned char  BYTE;	/* 8-bit unsigned integer */
 typedef BYTE	 COLR[4];	/* red, green, blue, exponent */
 extern	BYTE	 clrtab[][3];
+
+extern int neu_init(long int npixels);
+extern int neu_init2 (long int npixels);
+extern int neu_clrtab(int ncolors);
+extern void neu_pixel(register BYTE *col);
+extern int neu_map_pixel(register BYTE *col);
+
 
 #define MIN_NEU_SAMPLES	600	/* min number of samples (npixels/samplefac) needed for network */
 #endif /* F_NEUCLRTAB_H */

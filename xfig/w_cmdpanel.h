@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -19,23 +19,6 @@
 #define CMD_BUT_WD 60
 #define CMD_BUT_HT 22
 
-extern void	init_cmd_panel();
-extern void	add_cmd_actions();
-extern void	quit();
-extern void	new();
-extern void	paste();
-extern void	delete_all_cmd();
-extern void	setup_cmd_panel();
-extern void	change_orient();
-extern void	setup_cmd_panel();
-extern void	change_orient();
-extern void	show_global_settings();
-extern void	acc_load_recent_file();
-extern int	num_main_menus();
-extern Widget	create_menu_item();
-extern void	refresh_view_menu();
-extern void	popup_character_map();
-extern void	refresh_character_panel();
 
 /* def for menu */
 
@@ -60,3 +43,26 @@ typedef struct main_menu_struct {
 }	main_menu_info;
 
 extern main_menu_info main_menus[];
+
+extern void	init_cmd_panel();
+extern void	add_cmd_actions(void);
+extern void	quit(Widget w, XtPointer closure, XtPointer call_data);
+extern void	new(Widget w, XtPointer closure, XtPointer call_data);
+extern void	paste(Widget w, XtPointer closure, XtPointer call_data);
+extern void	delete_all_cmd(Widget w, int closure, int call_data);
+extern void	setup_cmd_panel();
+extern void	change_orient();
+extern void	setup_cmd_panel();
+extern void	show_global_settings(Widget w);
+extern void	acc_load_recent_file(Widget w, XEvent *event, String *params, Cardinal *nparams);
+extern int	num_main_menus(void);
+extern Widget	create_menu_item(main_menu_info *menup);
+extern void	refresh_view_menu(void);
+extern void	popup_character_map(void);
+extern void	refresh_character_panel(void);
+extern void     init_main_menus(Widget tool, char *filename);
+
+extern void goodbye (Boolean abortflag);
+extern void update_cur_filename (char *newname);
+extern void rebuild_file_menu (Widget menu);
+void setup_main_menus(void);

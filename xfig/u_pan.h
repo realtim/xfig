@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  * Copyright (c) 1991 by Henning Spruth
  *
@@ -16,4 +16,8 @@
  *
  */
 
-extern void	pan_origin();
+extern void	pan_origin(void);
+extern int pan_down (int shift);
+extern int pan_left (int shift);
+extern int pan_right (int shift);
+extern int pan_up (int shift);

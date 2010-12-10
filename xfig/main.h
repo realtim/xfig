@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -17,6 +17,6 @@
 
 extern Atom	wm_protocols[];
 extern Boolean	geomspec;
-extern void	toggle_refresh_mode();
-extern void	cancel_autorefresh();
-extern void	set_autorefresh();
+extern void	toggle_refresh_mode(void);
+extern void	cancel_autorefresh(void);
+extern void	set_autorefresh(void);

@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1995 by C. Blanc and C. Schlick
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -21,7 +21,7 @@
 #define OPEN_SPLINE_MIN_NUM_POINTS     2
 #define CLOSED_SPLINE_MIN_NUM_POINTS   3
 
-extern void	spline_drawing_selected();
-extern int	make_sfactors();
+extern void	spline_drawing_selected(void);
+extern int	make_sfactors(F_spline *spl);
 
 #endif

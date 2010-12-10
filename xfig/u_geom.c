@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -29,10 +29,12 @@
 /*************************** ROTATE VECTOR **********************
 In fact, rotate & scale ;-)                                    */
 
+
+int compute_arccenter (F_pos p1, F_pos p2, F_pos p3, float *x, float *y);
+int gcd (int a, int b);
+
 static void
-rotate_vector(vx, vy, c, s) 
-    double         *vx, *vy;
-    double         c, s;
+rotate_vector(double *vx, double *vy, double c, double s)
 {
     double wx, wy;
     wx = c * (*vx) - s * (*vy);
@@ -53,9 +55,7 @@ Return value : none
 
 ******************************************************************/
 
-compute_normal(x1, y1, x2, y2, direction, x, y)
-    float	    x1, y1;
-    int		    x2, y2, direction, *x, *y;
+void compute_normal(float x1, float y1, int x2, int y2, int direction, int *x, int *y)
 {
     if (direction) {		/* counter clockwise  */
 	*x = round(x2 - (y2 - y1));
@@ -85,10 +85,7 @@ Return value :
 
 ******************************************************************/
 
-close_to_vector(x1, y1, x2, y2, xp, yp, d, dd, px, py)
-    int		    x1, y1, x2, y2, xp, yp, d;
-    float	    dd;
-    int		   *px, *py;
+int close_to_vector(int x1, int y1, int x2, int y2, int xp, int yp, int d, float dd, int *px, int *py)
 {
     int		    xmin, ymin, xmax, ymax;
     float	    x, y, slope, D2, dx, dy;
@@ -156,9 +153,7 @@ Return value :
 *************************************************************/
 
 int
-compute_arcradius(x1, y1, x2, y2, x3, y3, r)
-   int x1, y1, x2, y2, x3, y3;
-   float* r;
+compute_arcradius(int x1, int y1, int x2, int y2, int x3, int y3, float *r)
 {
    F_pos p1, p2, p3;
    float cx, cy, dx, dy;
@@ -197,9 +192,7 @@ Return value :
 *************************************************************/
 
 int
-compute_arccenter(p1, p2, p3, x, y)
-    F_pos	    p1, p2, p3;
-    float	   *x, *y;
+compute_arccenter(F_pos p1, F_pos p2, F_pos p3, float *x, float *y)
 {
     double	    a, b, c, d, e, f, g, h, i, j;
     double	    resx, resy;
@@ -254,10 +247,7 @@ Return value :
 *************************************************************/
 
 int
-close_to_arc(a, xp, yp, d, px, py)
-   F_arc* a;
-   int xp, yp, d;
-   float *px, *py;
+close_to_arc(F_arc *a, int xp, int yp, int d, float *px, float *py)
 {
    int i, ok;
    double ux, uy, vx, vy, wx, wy, dx, dy, rarc, rp, uang, vang, wang, pang;
@@ -338,9 +328,7 @@ Output arguments :
        *r         distance from center as should be
 *************************************************************/
 static void
-compute_ellipse_distance(dx, dy, a, b, dis, r)
-   double dx, dy, a, b;
-   double *dis, *r;
+compute_ellipse_distance(double dx, double dy, double a, double b, double *dis, double *r)
 {
     if (dx == 0.0 && dy == 0.0)
         *dis = 0.0;        /* prevent core dumps */
@@ -365,10 +353,7 @@ Return value :
 	0 on failure, 1 on success
 *************************************************************/
 int
-close_to_ellipse(e, xp, yp, d, ex, ey, vx, vy)
-   F_ellipse* e;
-   int xp, yp, d;
-   float *ex, *ey, *vx, *vy;
+close_to_ellipse(F_ellipse *e, int xp, int yp, int d, float *ex, float *ey, float *vx, float *vy)
 {
    double a, b, dx, dy, phi, cphi, sphi, qx, qy, dvx, dvy;
    double dis, r;
@@ -452,10 +437,7 @@ Return value :
 *************************************************************/
 
 int
-close_to_polyline(l, xp, yp, d, sd, px, py, lx1, ly1, lx2, ly2)
-   F_line* l;
-   int xp, yp, d, sd;
-   int *px, *py, *lx1, *ly1, *lx2, *ly2;
+close_to_polyline(F_line *l, int xp, int yp, int d, int sd, int *px, int *py, int *lx1, int *ly1, int *lx2, int *ly2)
 {
    F_point *point;
    int x1, y1, x2, y2;
@@ -508,9 +490,7 @@ Return value :
    Are those people mathematicians? */
 
 static int
-close_to_float_vector(x1, y1, x2, y2, xp, yp, d, px, py, lambda)
-    float	    x1, y1, x2, y2, xp, yp, d;
-    float	   *px, *py, *lambda;
+close_to_float_vector(float x1, float y1, float x2, float y2, float xp, float yp, float d, float *px, float *py, float *lambda)
 {
   /* always stores in (*px,*py) the orthogonal projection of (xp,yp)
      onto the line through (x1,y1) and (x2,y2)
@@ -557,24 +537,23 @@ static int tx, ty, td, px1, py1, px2, py2, foundx, foundy;
 /* dirty trick: redefine init_point_array to do nothing and 
    add_point to check distance */
 
-static void	init_point_array();
-static Boolean	add_point();
-static Boolean	add_closepoint();
-
 /**********************************/
 /* include common spline routines */
 /**********************************/
 
+static Boolean	add_point(int x, int y);
+static void	init_point_array(void);
+static Boolean	add_closepoint(void);
+
 #include "u_draw_spline.c"
 
 static void
-init_point_array()
+init_point_array(void)
 {
 }
 
 static Boolean
-add_point(x, y)
-  int x, y;
+add_point(int x, int y)
 {
     float ux, uy, lambda;
 
@@ -601,15 +580,12 @@ add_point(x, y)
 }
 
 static Boolean
-add_closepoint() {
+add_closepoint(void) {
     return add_point(firstx, firsty);
 }
 
 int
-close_to_spline(spline, xp, yp, d, px, py, lx1, ly1, lx2, ly2)
-    F_spline	*spline;
-    int		 xp, yp, d;
-    int		*px, *py, *lx1, *ly1, *lx2, *ly2;
+close_to_spline(F_spline *spline, int xp, int yp, int d, int *px, int *py, int *lx1, int *ly1, int *lx2, int *ly2)
 {
     float	precision;
 
@@ -643,8 +619,8 @@ Return value : the angle of the vector in the range [0, 2PI)
 *************************************************************/
 
 double
-compute_angle(dx, dy)		/* compute the angle between 0 to 2PI  */
-    double	dx, dy;
+compute_angle(double dx, double dy)		/* compute the angle between 0 to 2PI  */
+          	       
 {
     double	alpha;
 
@@ -682,8 +658,7 @@ Return value :
 *************************************************************/
 
 int
-compute_direction(p1, p2, p3)
-    F_pos	p1, p2, p3;
+compute_direction(F_pos p1, F_pos p2, F_pos p3)
 {
     double	diff, dx, dy, alpha, theta;
 
@@ -712,9 +687,7 @@ Return value : 0 on failure, 1 on success
 *************************************************************/
 
 int 
-compute_3p_angle(p1, p2, p3, alpha)
-    F_point	*p1, *p2, *p3;
-    double	*alpha;
+compute_3p_angle(F_point *p1, F_point *p2, F_point *p3, double *alpha)
 {
     double	 vx, vy, wx, wy;
     double	 dang;
@@ -744,10 +717,7 @@ Return value : 0 on failure, 1 on success
 *************************************************************/
 
 int 
-compute_line_angle(l, p, alpha)
-   F_line	*l;
-   F_point	*p;
-   double	*alpha;
+compute_line_angle(F_line *l, F_point *p, double *alpha)
 {
    F_point	*q, *vorq, *nachq;
 
@@ -779,9 +749,7 @@ Return value : 0 on failure, 1 on success
 *************************************************************/
 
 int 
-compute_arc_angle(a, alpha)
-   F_arc	*a;
-   double	*alpha;
+compute_arc_angle(F_arc *a, double *alpha)
 {
    double	 ux, uy, vx, vy, wx, wy;
    double	 uang, vang, wang, dang;
@@ -825,9 +793,7 @@ Output arguments :
 Return value : 0 on failure, 1 on success
 *************************************************************/
 int
-compute_poly_length(l, lp)
-   F_line	*l;
-   float	*lp;
+compute_poly_length(F_line *l, float *lp)
 {
    double	 length;
    F_point	*q, *prevq;
@@ -860,11 +826,9 @@ Output arguments :
 Return value : 0 on failure, 1 on success
 *************************************************************/
 int
-compute_arc_length(a, lp)
-   F_arc	*a;
-   float	*lp;
+compute_arc_length(F_arc *a, float *lp)
 {
-   double	 length, alpha, ux, uy, arcradius;
+   double	 alpha, ux, uy, arcradius;
 
    if (!compute_arc_angle(a, &alpha))
      return 0;
@@ -888,9 +852,7 @@ Return value : 0 on failure, 1 on success
 *************************************************************/
 
 void
-compute_poly_area(l, ap)
-   F_line	*l;
-   float	*ap;
+compute_poly_area(F_line *l, float *ap)
 {
    float	 area;
    F_point	*q, *prevq;
@@ -915,9 +877,7 @@ Return value : 0 on failure, 1 on success
 *************************************************************/
 
 int
-compute_arc_area(a, ap)
-   F_arc	*a;
-   float	*ap;
+compute_arc_area(F_arc *a, float *ap)
 {
    double	 area, tri_area, alpha, ux, uy, arcradius;
    
@@ -954,9 +914,7 @@ Return value : 0 on failure, 1 on success
 *************************************************************/
 
 int
-compute_ellipse_area(e, ap)
-    F_ellipse	*e;
-    float	*ap;
+compute_ellipse_area(F_ellipse *e, float *ap)
 {
     *ap = (float)(M_PI * e->radiuses.x * e->radiuses.y);
     return 1;
@@ -970,8 +928,7 @@ compute_ellipse_area(e, ap)
  */
 
 int
-pgcd(a, b)
-    int	a, b;
+pgcd(int a, int b)
 {
     b = b % a;
     return (b) ? gcd(b, a) : a;
@@ -982,8 +939,7 @@ pgcd(a, b)
  */
 
 int
-gcd(a, b)
-    int	a, b;
+gcd(int a, int b)
 {
     if (a < 0)
 	a = -a;
@@ -997,8 +953,7 @@ gcd(a, b)
  */
 
 int
-lcm(a, b)
-    int		    a, b;
+lcm(int a, int b)
 {
     return abs(a * b) / gcd(a, b);
 }
@@ -1055,8 +1010,7 @@ struct angle_table arrow_angles[13] =
 {4, 3, 36.869897645844021297},
 };
 
-get_slope(dx, dy, sxp, syp, arrow)
-    int		    dx, dy, *sxp, *syp, arrow;
+void get_slope(int dx, int dy, int *sxp, int *syp, int arrow)
 {
     double	    angle;
     int		    i, s, max;
@@ -1093,10 +1047,7 @@ get_slope(dx, dy, sxp, syp, arrow)
 	*syp = -*syp;
 }
 
-latex_endpoint(x1, y1, x2, y2, xout, yout, arrow, magnet)
-    int		    x1, y1, x2, y2;
-    int		   *xout, *yout;
-    int		    arrow, magnet;
+void latex_endpoint(int x1, int y1, int x2, int y2, int *xout, int *yout, int arrow, int magnet)
 {
     int		    dx, dy, sx, sy, ds, dsx, dsy;
 

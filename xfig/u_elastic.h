@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -43,66 +43,66 @@ extern double	cosa, sina;
 extern int	movedpoint_num;
 extern F_point *left_point, *right_point;
 
-extern void	elastic_box();
-extern void	elastic_fixedbox();
-extern void	elastic_movebox();
-extern void	resizing_box();
+extern void	elastic_box(int x1, int y1, int x2, int y2);
+extern void	elastic_fixedbox(void);
+extern void	elastic_movebox(void);
+extern void	resizing_box(int x, int y);
 extern void	elastic_box_constrained();
-extern void	constrained_resizing_box();
-extern void	constrained_resizing_scale_box();
-extern void	moving_box();
+extern void	constrained_resizing_box(int x, int y);
+extern void	constrained_resizing_scale_box(int x, int y);
+extern void	moving_box(int x, int y);
 
-extern void	elastic_poly();
-extern void	resizing_poly();
-extern void	scaling_compound();
-extern void	elastic_scalecompound();
-extern void	elastic_scale_curcompound();
+extern void	elastic_poly(int x1, int y1, int x2, int y2, int numsides);
+extern void	resizing_poly(int x, int y);
+extern void	scaling_compound(int x, int y);
+extern void	elastic_scalecompound(F_compound *c);
+extern void	elastic_scale_curcompound(void);
 
-extern void	resizing_cbr(), elastic_cbr(), resizing_cbd(), elastic_cbd();
-extern void	resizing_ebr(), elastic_ebr(), resizing_ebd(), elastic_ebd();
-extern void	constrained_resizing_ebr(), constrained_resizing_ebd();
-extern void	constrained_resizing_cbd();
-extern void	elastic_moveellipse();
-extern void	moving_ellipse();
-extern void	elastic_scaleellipse();
-extern void	scaling_ellipse();
-extern void	elastic_scale_curellipse();
+extern void	resizing_cbr(int x, int y), elastic_cbr(void), resizing_cbd(int x, int y), elastic_cbd(void);
+extern void	resizing_ebr(int x, int y), elastic_ebr(void), resizing_ebd(int x, int y), elastic_ebd(void);
+extern void	constrained_resizing_ebr(int x, int y), constrained_resizing_ebd(int x, int y);
+extern void	constrained_resizing_cbd(int x, int y);
+extern void	elastic_moveellipse(void);
+extern void	moving_ellipse(int x, int y);
+extern void	elastic_scaleellipse(F_ellipse *e);
+extern void	scaling_ellipse(int x, int y);
+extern void	elastic_scale_curellipse(void);
 
-extern void	unconstrained_line();
-extern void	latex_line();
-extern void	constrainedangle_line();
-extern void	elastic_moveline();
-extern void	elastic_movenewline();
-extern void	elastic_line();
+extern void	unconstrained_line(int x, int y);
+extern void	latex_line(int x, int y);
+extern void	constrainedangle_line(int x, int y);
+extern void	elastic_moveline(F_point *pts);
+extern void	elastic_movenewline(void);
+extern void	elastic_line(void);
 extern void	elastic_dimension_line();
-extern void	moving_line();
-extern void	reshaping_line();
+extern void	moving_line(int x, int y);
+extern void	reshaping_line(int x, int y);
 extern void	reshaping_latexline();
-extern void	elastic_linelink();
-extern void	elastic_scalepts();
-extern void	scaling_line();
-extern void	elastic_scale_curline();
+extern void	elastic_linelink(void);
+extern void	elastic_scalepts(F_point *pts);
+extern void	scaling_line(int x, int y);
+extern void	elastic_scale_curline(int x, int y);
 
-extern void	arc_point();
-extern void	moving_arc();
-extern void	elastic_movearc();
-extern void	elastic_movenewarc();
-extern void	reshaping_arc();
-extern void	elastic_arclink();
-extern void	scaling_arc();
-extern void	elastic_scalearc();
-extern void	elastic_scale_curarc();
+extern void	arc_point(int x, int y, int numpoint);
+extern void	moving_arc(int x, int y);
+extern void	elastic_movearc(F_arc *a);
+extern void	elastic_movenewarc(void);
+extern void	reshaping_arc(int x, int y);
+extern void	elastic_arclink(void);
+extern void	scaling_arc(int x, int y);
+extern void	elastic_scalearc(F_arc *a);
+extern void	elastic_scale_curarc(void);
 
-extern void	moving_text();
+extern void	moving_text(int x, int y);
 extern void	draw_movingtext();
-extern void	elastic_movetext();
+extern void	elastic_movetext(void);
 
-extern void	moving_spline();
-extern void	elastic_movenewspline();
-extern void	scaling_spline();
-extern void	elastic_scale_curspline();
+extern void	moving_spline(int x, int y);
+extern void	elastic_movenewspline(void);
+extern void	scaling_spline(int x, int y);
+extern void	elastic_scale_curspline(void);
 
-extern void	adjust_box_pos();
-extern void	adjust_pos();
+extern void	adjust_box_pos(int curs_x, int curs_y, int orig_x, int orig_y, int *ret_x, int *ret_y);
+extern void	adjust_pos(int curs_x, int curs_y, int orig_x, int orig_y, int *ret_x, int *ret_y);
 
 #endif /* U_ELASTIC_H */

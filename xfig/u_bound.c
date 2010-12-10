@@ -1,7 +1,7 @@
 /*
  * FIG : Facility for Interactive Generation of figures
  * Copyright (c) 1985-1988 by Supoj Sutanthavibul
- * Parts Copyright (c) 1989-2002 by Brian V. Smith
+ * Parts Copyright (c) 1989-2007 by Brian V. Smith
  * Parts Copyright (c) 1991 by Paul King
  *
  * Any party obtaining a copy of these files is granted, free of charge, a
@@ -23,8 +23,11 @@
 #include "u_bound.h"
 #include "w_drawprim.h"
 #include "w_file.h"
+#include "w_layers.h"
 #include "w_setup.h"
 #include "w_zoom.h"
+
+#include "u_draw.h"
 
 #define		Ninety_deg		M_PI_2
 #define		One_eighty_deg		M_PI
@@ -37,13 +40,12 @@
 	        *ymax = max2(*ymax, Y1); \
 	        *ymin = min2(*ymin, Y2)
 
-static void	points_bound();
-static void	general_spline_bound();
-static void	approx_spline_bound();
+static void	points_bound(F_point *points, int half_wd, int *xmin, int *ymin, int *xmax, int *ymax);
+static void	general_spline_bound(F_spline *s, int *xmin, int *ymin, int *xmax, int *ymax);
+static void	approx_spline_bound(F_spline *s, int *xmin, int *ymin, int *xmax, int *ymax);
+static void arrow_bound(int objtype, F_line *obj, int *xmin, int *ymin, int *xmax, int *ymax);
 
-arc_bound(arc, xmin, ymin, xmax, ymax)
-    F_arc	   *arc;
-    int		   *xmin, *ymin, *xmax, *ymax;
+void arc_bound(F_arc *arc, int *xmin, int *ymin, int *xmax, int *ymax)
 {
     float	    alpha, beta;
     double	    dx, dy, radius;
@@ -156,9 +158,12 @@ arc_bound(arc, xmin, ymin, xmax, ymax)
     arrow_bound(O_ARC, (F_line *)arc, xmin, ymin, xmax, ymax);
 }
 
-compound_bound(compound, xmin, ymin, xmax, ymax)
-    F_compound	   *compound;
-    int		   *xmin, *ymin, *xmax, *ymax;
+void compound_bound(F_compound *compound, int *xmin, int *ymin, int *xmax, int *ymax)
+{
+    active_compound_bound(compound, xmin, ymin, xmax, ymax, FALSE);
+}
+
+void active_compound_bound(F_compound *compound, int *xmin, int *ymin, int *xmax, int *ymax, Boolean active_only)
 {
     F_arc	   *a;
     F_ellipse	   *e;
@@ -177,6 +182,8 @@ compound_bound(compound, xmin, ymin, xmax, ymax)
     llx = lly = urx = ury = 0;
 
     for (a = compound->arcs; a != NULL; a = a->next) {
+    	if (active_only && !active_layer(a->depth))
+	    continue;
 	arc_bound(a, &sx, &sy, &bx, &by);
 	if (first) {
 	    first = 0;
@@ -193,6 +200,7 @@ compound_bound(compound, xmin, ymin, xmax, ymax)
     }
 
     for (c = compound->compounds; c != NULL; c = c->next) {
+    	active_compound_bound(c, &sx, &sy, &bx, &by, active_only);
 	sx = c->nwcorner.x;
 	sy = c->nwcorner.y;
 	bx = c->secorner.x;
@@ -212,6 +220,8 @@ compound_bound(compound, xmin, ymin, xmax, ymax)
     }
 
     for (e = compound->ellipses; e != NULL; e = e->next) {
+    	if (active_only && !active_layer(e->depth))
+	    continue;
 	ellipse_bound(e, &sx, &sy, &bx, &by);
 	if (first) {
 	    first = 0;
@@ -228,6 +238,8 @@ compound_bound(compound, xmin, ymin, xmax, ymax)
     }
 
     for (l = compound->lines; l != NULL; l = l->next) {
+    	if (active_only && !active_layer(l->depth))
+	    continue;
 	line_bound(l, &sx, &sy, &bx, &by);
 	if (first) {
 	    first = 0;
@@ -244,6 +256,8 @@ compound_bound(compound, xmin, ymin, xmax, ymax)
     }
 
     for (s = compound->splines; s != NULL; s = s->next) {
+    	if (active_only && !active_layer(s->depth))
+	    continue;
 	spline_bound(s, &sx, &sy, &bx, &by);
 	if (first) {
 	    first = 0;
@@ -261,6 +275,8 @@ compound_bound(compound, xmin, ymin, xmax, ymax)
 
     for (t = compound->texts; t != NULL; t = t->next) {
 	int    dum;
+    	if (active_only && !active_layer(t->depth))
+	    continue;
 	text_bound(t, &sx, &sy, &bx, &by,
 		  &dum,&dum,&dum,&dum,&dum,&dum,&dum,&dum);
 	if (first) {
@@ -278,10 +294,10 @@ compound_bound(compound, xmin, ymin, xmax, ymax)
     }
 
     /* round the corners to the current positioning grid */
-    llx = floor_coords(llx);
-    lly = floor_coords(lly);
-    urx = ceil_coords(urx);
-    ury = ceil_coords(ury);
+    llx = floor_coords_x(llx, lly);
+    lly = floor_coords_y(lly, lly);
+    urx = ceil_coords_x(urx, ury);
+    ury = ceil_coords_y(ury, ury);
     *xmin = llx;
     *ymin = lly;
     *xmax = urx;
@@ -298,9 +314,7 @@ compound_bound(compound, xmin, ymin, xmax, ymax)
 /* basically, use the code for drawing the ellipse to find its bounds */
 /* From James Tough (see u_draw.c: angle_ellipse() */
 
-ellipse_bound(e, xmin, ymin, xmax, ymax)
-    F_ellipse	   *e;
-    int		   *xmin, *ymin, *xmax, *ymax;
+void ellipse_bound(F_ellipse *e, int *xmin, int *ymin, int *xmax, int *ymax)
 {
 	int	    half_wd;
 	double	    c1, c2, c3, c4, c5, c6, v1, cphi, sphi, cphisqr, sphisqr;
@@ -410,9 +424,7 @@ ellipse_bound(e, xmin, ymin, xmax, ymax)
 	}
 }
 
-line_bound(l, xmin, ymin, xmax, ymax)
-    F_line	   *l;
-    int		   *xmin, *ymin, *xmax, *ymax;
+void line_bound(F_line *l, int *xmin, int *ymin, int *xmax, int *ymax)
 {
     points_bound(l->points, (l->thickness / 2), xmin, ymin, xmax, ymax);
     /* now add in the arrow (if any) boundaries */
@@ -422,9 +434,7 @@ line_bound(l, xmin, ymin, xmax, ymax)
     }
 }
 
-spline_bound(s, xmin, ymin, xmax, ymax)
-    F_spline	   *s;
-    int		   *xmin, *ymin, *xmax, *ymax;
+void spline_bound(F_spline *s, int *xmin, int *ymin, int *xmax, int *ymax)
 {
     if (approx_spline(s))
 	approx_spline_bound(s, xmin, ymin, xmax, ymax);
@@ -441,9 +451,7 @@ spline_bound(s, xmin, ymin, xmax, ymax)
 }
 
 static void
-general_spline_bound(s, xmin, ymin, xmax, ymax)
-    F_spline      *s;
-    int	          *xmin, *ymin, *xmax, *ymax;
+general_spline_bound(F_spline *s, int *xmin, int *ymin, int *xmax, int *ymax)
 {
   F_point   *cur_point, *next_point;
   F_sfactor *cur_sfactor;     
@@ -491,9 +499,7 @@ general_spline_bound(s, xmin, ymin, xmax, ymax)
 }
 
 static void
-approx_spline_bound(s, xmin, ymin, xmax, ymax)
-    F_spline	   *s;
-    int		   *xmin, *ymin, *xmax, *ymax;
+approx_spline_bound(F_spline *s, int *xmin, int *ymin, int *xmax, int *ymax)
 {
     F_point	   *p;
     int		    px, py;
@@ -515,11 +521,7 @@ approx_spline_bound(s, xmin, ymin, xmax, ymax)
    The actual corners of the rectangle are returned in (rx1,ry1)...(rx4,ry4)
  */
 
-text_bound(t, xmin, ymin, xmax, ymax,
-		  rx1, ry1, rx2, ry2, rx3, ry3, rx4, ry4)
-    F_text	   *t;
-    int		   *xmin, *ymin, *xmax, *ymax;
-    int		   *rx1,*ry1, *rx2,*ry2, *rx3,*ry3, *rx4,*ry4;
+void text_bound(F_text *t, int *xmin, int *ymin, int *xmax, int *ymax, int *rx1, int *ry1, int *rx2, int *ry2, int *rx3, int *ry3, int *rx4, int *ry4)
 {
     int		    h, l;
     int		    x1,y1, x2,y2, x3,y3, x4,y4;
@@ -570,10 +572,7 @@ text_bound(t, xmin, ymin, xmax, ymax,
 }
 
 static void
-points_bound(points, half_wd, xmin, ymin, xmax, ymax)
-    F_point	   *points;
-    int		    half_wd;
-    int		   *xmin, *ymin, *xmax, *ymax;
+points_bound(F_point *points, int half_wd, int *xmin, int *ymin, int *xmax, int *ymax)
 {
     int		    bx, by, sx, sy;
     F_point	   *p;
@@ -594,8 +593,7 @@ points_bound(points, half_wd, xmin, ymin, xmax, ymax)
 }
 
 int
-overlapping(xmin1, ymin1, xmax1, ymax1, xmin2, ymin2, xmax2, ymax2)
-    int		    xmin1, ymin1, xmax1, ymax1, xmin2, ymin2, xmax2, ymax2;
+overlapping(int xmin1, int ymin1, int xmax1, int ymax1, int xmin2, int ymin2, int xmax2, int ymax2)
 {
     if (xmin1 < xmin2)
 	if (ymin1 < ymin2)
@@ -610,10 +608,7 @@ overlapping(xmin1, ymin1, xmax1, ymax1, xmin2, ymin2, xmax2, ymax2)
 
 /* extend xmin, ymin xmax, ymax by the arrow boundaries of obj (if any) */
 
-arrow_bound(objtype, obj, xmin, ymin, xmax, ymax)
-    int		    objtype;
-    F_line	   *obj;
-    int		   *xmin, *ymin, *xmax, *ymax;
+void arrow_bound(int objtype, F_line *obj, int *xmin, int *ymin, int *xmax, int *ymax)
 {
     int		    fxmin, fymin, fxmax, fymax;
     int		    bxmin, bymin, bxmax, bymax;
@@ -699,42 +694,103 @@ arrow_bound(objtype, obj, xmin, ymin, xmax, ymax)
     }
 }
 
-/* rounds DOWN the coordinates depending on point positioning mode */
+/* rounds DOWN the coordinates depending on point positioning mode */		// isometric grid
 
 int
-floor_coords(x)
-int x;
+floor_coords_x( x, y )
+int x, y;
 {
-    register int tmp_t;
+    int x_old = x, y_old = y;
+    int i = 0;
+    
+    /* no grid */
+    if( cur_pointposn == P_ANY ) return x;
 
-    if (cur_pointposn == P_ANY)
-	return x;
+    /* smaller than zero inverts problem */
+    if( x < 0 ) return -ceil_coords_x( -x, y );
 
-    if (x < 0)
-	return -ceil_coords(-x);
-
-    tmp_t = x % posn_rnd[cur_gridunit][cur_pointposn];
-    x = x - tmp_t;
+    /* adjust x coordinate to be on grid */
+	do {
+		x = x_old - i++;
+		y = y_old;
+		round_coords( &x, &y );
+	} while( x > x_old );
+        
+    /* assign result */
     return x;
 }
+
+int
+floor_coords_y( x, y )
+int x, y;
+{
+    int x_old = x, y_old = y;
+    int i = 0;
+    
+    /* no grid */
+    if( cur_pointposn == P_ANY ) return y;
+
+    /* smaller than zero inverts problem */
+    if( y < 0 ) return -ceil_coords_y( x, -y );
+
+    /* adjust y coordinate to be on grid */
+	do {
+		x = x_old;
+		y = y_old - i++;
+		round_coords( &x, &y );
+	} while( y > y_old );
+        
+    /* assign result */
+    return y;
+}
+
 
 /* rounds UP the coordinates depending on point positioning mode */
 
 int
-ceil_coords(x)
-int x;
+ceil_coords_x( x, y )
+int x, y;
 {
-    register int tmp_t;
+    int x_old = x, y_old = y;
+    int i = 0;
+    
+    /* no grid */
+    if( cur_pointposn == P_ANY ) return x;
 
-    if (cur_pointposn == P_ANY)
-	return x;
+    /* smaller than zero inverts problem */
+    if( x < 0 ) return -floor_coords_x( -x, y );
 
-    if (x < 0)
-	return -floor_coords(-x);
-
-    x = x + posn_rnd[cur_gridunit][cur_pointposn]-1;
-    tmp_t = x%posn_rnd[cur_gridunit][cur_pointposn];
-    x = x - tmp_t;
+    /* adjust x coordinate to be on grid */
+	do {
+		x = x_old + i++;
+		y = y_old;
+		round_coords( &x, &y );
+	} while( x < x_old );
+        
+    /* assign result */
     return x;
 }
 
+int
+ceil_coords_y( x, y )
+int x, y;
+{
+    int x_old = x, y_old = y;
+    int i = 0;
+    
+    /* no grid */
+    if( cur_pointposn == P_ANY ) return y;
+
+    /* smaller than zero inverts problem */
+    if( y < 0 ) return -floor_coords_y( x, -y );
+
+    /* adjust y coordinate to be on grid */
+	do {
+		x = x_old;
+		y = y_old + i++;
+		round_coords( &x, &y );
+	} while( y < y_old );
+        
+    /* assign result */
+    return y;
+}
