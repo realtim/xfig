@@ -16,7 +16,7 @@ Fig.version:			3.2.5b
 Fig*AllowShellResize: false
 
 ! Image editor - can edit imported image
-Fig.image_editor:		xv
+Fig.image_editor:		/usr/bin/gimp
 
 ! name of ghostscript (not ghostview)
 Fig.ghostscript:		gs
@@ -25,11 +25,11 @@ Fig.ghostscript:		gs
 ! 		This is for viewing the xfig html reference.
 ! For firefox, this command will open the help pages in a running firefox,
 !     or start a new netscape if one isn't already running
-Fig.browser:	firefox -remote 'openFile(%f)' || firefox %f
+Fig.browser:	/usr/bin/url_handler.sh %
 
 ! pdfviewer - put your favorite pdf viewer here.  
 !		This is for viewing the xfig how-to guide and man pages
-Fig.pdfviewer:			xpdf %f
+Fig.pdfviewer:	/usr/bin/xpdf %f
 
 ! Spell check program - put your favorite spelling check program here.
 !		It must write the misspelled words to standard output.
